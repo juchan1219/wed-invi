@@ -212,7 +212,9 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
             미리보기
           </TabButton>
         </div>
-        <span className="pb-2 text-xs text-ink-faint">{body.length}자</span>
+        <span className="shrink-0 pb-2 text-xs whitespace-nowrap text-ink-faint">
+          {body.length}자
+        </span>
       </div>
 
       {tab === "write" ? (

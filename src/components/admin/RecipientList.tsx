@@ -40,13 +40,15 @@ export function RecipientList({ recipients }: { recipients: SerializedRecipient[
 
   return (
     <div className="pt-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-ink-soft">
           하객 {recipients.length}명 · {adminLabel(author)}님이 쓴 편지 {myCount}통
         </p>
+        {/* 하객이 100명을 넘으면 왼쪽 문구가 길어져 좁은 화면에서 이 버튼이 두 줄로
+            찌그러진다. 버튼은 줄이지 말고 문구가 줄바꿈되게 둔다. */}
         <Link
           href="/admin/letters/new"
-          className="rounded-full bg-ink px-4 py-2 text-xs text-paper"
+          className="shrink-0 rounded-full bg-ink px-4 py-2 text-xs whitespace-nowrap text-paper"
         >
           편지 쓰기
         </Link>
