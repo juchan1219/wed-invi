@@ -22,14 +22,20 @@ npm run db:migrate
 npm run dev
 ```
 
-`.env.local`에서 최소한 이 세 개는 채워야 한다:
+`.env.local`에 최소한 이 넷은 채워야 한다:
 
 ```bash
 DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
 ADMIN_PASSWORD="아무거나"
 SESSION_SECRET="$(openssl rand -base64 32)"
 TOKEN_SECRET="$(openssl rand -base64 32)"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
+
+> ⚠️ **이미 배포된 프로젝트라면 시크릿을 새로 만들지 말 것.**
+> `TOKEN_SECRET` 이 배포본과 다르면 이미 하객에게 나간 URL이 전부 열리지 않는다.
+> `vercel env pull .env.local` 로 받아오고 `NEXT_PUBLIC_SITE_URL` 만 localhost로 고친다.
+> 변수별 상세와 상황별 가이드는 [docs/env.md](docs/env.md).
 
 - 청첩장 `/` · 개인화 청첩장 `/i/<토큰>` · 관리자 `/admin`
 - 사진이 없으면 "사진을 넣어주세요" 안내가 뜨는 게 정상이다 (`npm run photos:prep`)

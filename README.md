@@ -25,33 +25,54 @@
 git clone https://github.com/juchan1219/wed-invi.git
 cd wed-invi
 npm install
+```
+
+환경변수(`.env.local`)는 저장소에 없으므로 **직접 만들어야 합니다.**
+어떤 값을 어디서 구하는지는 **[docs/env.md](docs/env.md)** 에 전부 정리돼 있습니다.
+상황에 따라 두 갈래입니다.
+
+### 아직 한 번도 배포하지 않았다면
+
+```bash
 cp .env.example .env.local
+openssl rand -base64 32     # 두 번 실행 → SESSION_SECRET, TOKEN_SECRET 에 각각
 ```
 
-`.env.local`을 열어 최소 4개를 채웁니다. 시크릿 두 개는 이렇게 만들면 됩니다:
+`.env.local` 을 이렇게 채웁니다.
 
 ```bash
-openssl rand -base64 32
-```
-
-```bash
-DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"   # 아래 Docker 방식 기준
+DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
 ADMIN_PASSWORD="아무거나-길게"
 SESSION_SECRET="<openssl 결과 1>"
-TOKEN_SECRET="<openssl 결과 2>"        # ⚠️ 이미 배포했다면 기존 값을 그대로 써야 합니다
+TOKEN_SECRET="<openssl 결과 2>"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
 
-DB를 띄우고 실행합니다.
+### 이미 배포한 뒤라면 — 🚨 시크릿을 새로 만들지 마세요
+
+`TOKEN_SECRET` 이 배포본과 다르면 **이미 카톡으로 보낸 하객 URL이 전부 열리지 않습니다.**
+직접 옮겨 적지 말고 Vercel에서 통째로 받아오세요.
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+npm i -g vercel
+vercel login
+vercel link                    # 물어보면 기존 프로젝트(wed-invi) 선택
+vercel env pull .env.local     # 올바른 값이 전부 채워집니다
+```
+
+받은 뒤 `NEXT_PUBLIC_SITE_URL` 만 `http://localhost:3000` 으로 고칩니다.
+실제 배포 DB에 붙으므로 Docker 없이 바로 `npm run dev` 하면 되고,
+로컬 DB로 안전하게 작업하고 싶다면 [docs/env.md](docs/env.md) 의 **상황 C** 를 보세요.
+
+### 실행
+
+```bash
+docker compose -f docker-compose.dev.yml up -d   # 로컬 DB를 쓸 때만
 npm run db:migrate
 npm run dev
 ```
 
 http://localhost:3000 (청첩장) · http://localhost:3000/admin (관리자)
-
-> **이미 배포한 뒤라면** `TOKEN_SECRET`은 Vercel에 등록된 값과 반드시 같아야 합니다. 다르면 이미 하객에게 보낸 URL이 전부 열리지 않습니다. `DATABASE_URL`도 Neon 주소를 그대로 쓰면 실제 편지를 로컬에서 그대로 볼 수 있습니다(그 경우 Docker는 필요 없습니다).
 
 코드를 고칠 계획이라면 [AGENTS.md](AGENTS.md)를 먼저 읽어주세요. 구조와 함정이 정리돼 있습니다.
 
@@ -151,8 +172,9 @@ npm run dev
 
 | 문서 | 내용 |
 |---|---|
+| [docs/env.md](docs/env.md) | **환경변수** — 무엇을 어디에 넣고 어디서 구하는지, 상황별 가이드 |
 | [docs/todo.md](docs/todo.md) | **남은 작업** — 채워야 할 내용, 인프라 연결, 실기기 확인 목록 |
-| [docs/deploy.md](docs/deploy.md) | 배포 절차 전체 + 무료 티어 한도 |
+| [docs/deploy.md](docs/deploy.md) | 배포 절차 (클릭 단위) + 안 될 때 + 무료 티어 한도 |
 | [docs/requirements.md](docs/requirements.md) | 최초 요구사항과 구현 매핑, 기술 선택 근거 |
 | [AGENTS.md](AGENTS.md) | 코드를 고치기 전에 읽을 것 — 구조와 함정 |
 
