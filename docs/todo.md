@@ -37,17 +37,24 @@
 
 ## 2. 인프라 연결
 
-- [ ] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
-- [ ] **Neon 연결** — Vercel 프로젝트 → Storage → Neon. `DATABASE_URL` 자동 주입
-- [ ] **Blob 스토어 생성** — Storage → Blob. `BLOB_READ_WRITE_TOKEN` 자동 주입
-      (없으면 편지에 이미지만 못 넣고 나머지는 정상)
-- [ ] **환경변수 등록** — `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`
-- [ ] **마이그레이션 실행** — `DATABASE_URL`을 배포용으로 두고 `npm run db:migrate`
-- [ ] **카카오 개발자 앱** — JavaScript 키 발급 + **플랫폼 > Web > 사이트 도메인 등록**
-      (도메인 등록을 빼먹으면 공유가 동작하지 않습니다)
-- [ ] 커스텀 도메인 (선택) — 붙였다면 `NEXT_PUBLIC_SITE_URL`과 카카오 도메인도 함께 갱신
+**클릭 단위 절차는 [deploy.md](deploy.md) 에 있습니다.** 여기서는 체크리스트만.
 
-자세한 절차는 [deploy.md](deploy.md).
+- [ ] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
+      — 환경변수가 없어도 첫 배포는 성공합니다. 청첩장 화면까지는 바로 보입니다
+- [ ] **Neon 연결** — Storage → Create Database → Neon → **Free** 플랜.
+      `DATABASE_URL` 이 자동 주입됩니다 (직접 입력할 필요 없음)
+- [ ] **Blob 스토어 생성** — Storage → Create Database → Blob.
+      ⚠️ **Access mode를 반드시 `Public` 으로** — 생성 후에는 바꿀 수 없습니다.
+      (건너뛰면 편지에 이미지만 못 넣고 나머지는 정상)
+- [ ] **환경변수 4개 직접 등록** — `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`,
+      `NEXT_PUBLIC_SITE_URL`. Production/Preview/Development 전부 체크
+- [ ] **재배포** — 환경변수는 다음 배포부터 적용됩니다
+- [ ] **마이그레이션 실행** — `vercel env pull .env.production.local` 후
+      `npm run db:migrate -- .env.production.local`.
+      출력의 `대상:` 이 Neon 호스트인지 확인할 것
+- [ ] **카카오 개발자 앱** — JavaScript 키를 `NEXT_PUBLIC_KAKAO_JS_KEY` 에 등록 +
+      **플랫폼 > Web > 사이트 도메인 등록** (도메인 등록을 빼먹으면 공유가 동작하지 않습니다)
+- [ ] 커스텀 도메인 (선택) — 붙였다면 `NEXT_PUBLIC_SITE_URL` **과** 카카오 사이트 도메인을 함께 갱신
 
 ---
 

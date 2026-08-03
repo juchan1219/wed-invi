@@ -9,6 +9,10 @@ import { put } from "@vercel/blob";
  * 원격 이미지는 next/image가 width/height를 미리 알 수 없는데,
  * 파일명에서 읽어오면 별도 저장소 없이 최적화와 레이아웃 안정성을 모두 얻는다.
  * (읽는 쪽: src/components/letter/LetterMarkdown.tsx)
+ *
+ * ⚠️ Vercel Blob 스토어는 반드시 **Public** 으로 만들어야 한다.
+ *    하객이 로그인 없이 편지 이미지를 봐야 하므로 access: "public" 으로 올린다.
+ *    Private 스토어는 생성 후 Public 으로 바꿀 수 없으니, 잘못 만들었다면 지우고 다시 만들 것.
  */
 
 const MAX_BYTES = 8 * 1024 * 1024;
