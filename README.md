@@ -132,23 +132,29 @@ npm run dev
 
 ## 배포 (Vercel + Neon, 전부 무료)
 
-1. **저장소를 GitHub에 올리고** [vercel.com/new](https://vercel.com/new)에서 import
-2. **Neon 연결** — Vercel 프로젝트 → Storage → Neon 추가. `DATABASE_URL`이 자동 주입됩니다
-3. **Blob 스토어 생성** — Storage → Blob. `BLOB_READ_WRITE_TOKEN`이 자동 주입됩니다
-   (없어도 배포는 되지만 편지에 이미지를 넣을 수 없습니다)
-4. **나머지 환경변수 등록** — Settings → Environment Variables에 `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`(실제 도메인)
-5. **마이그레이션 실행** — 로컬 `.env.local`의 `DATABASE_URL`을 배포용 Neon 주소로 잠깐 바꾸고 `npm run db:migrate`
-6. **카카오톡 공유 설정** — 아래 참고
+전체 절차는 **[docs/deploy.md](docs/deploy.md)** 에 있습니다. 요약하면:
 
-### 카카오톡 공유 설정
+1. GitHub 저장소를 [vercel.com/new](https://vercel.com/new)에서 import
+2. Storage → **Neon** 연결 (`DATABASE_URL` 자동 주입)
+3. Storage → **Blob** 스토어 생성 (`BLOB_READ_WRITE_TOKEN` 자동 주입)
+4. 환경변수 4개 등록 — `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`
+5. `npm run db:migrate` 로 테이블 생성
+6. 카카오 JavaScript 키 발급 + **플랫폼 > Web > 사이트 도메인 등록**
 
-1. [developers.kakao.com](https://developers.kakao.com) → 애플리케이션 추가
-2. 앱 키 → **JavaScript 키**를 `NEXT_PUBLIC_KAKAO_JS_KEY`에 등록
-3. 플랫폼 → Web → **사이트 도메인에 배포 주소를 등록** ← 이걸 빼먹으면 공유가 동작하지 않습니다
+그 뒤로는 `main`에 push하면 자동 배포됩니다.
 
-카카오 로그인 활성화는 필요 없습니다. 키를 넣지 않으면 카카오톡 버튼만 숨겨지고 OS 공유·링크 복사는 그대로 동작합니다.
+> ⚠️ 6번의 **도메인 등록을 빼먹으면 카카오톡 공유가 동작하지 않습니다.**
 
-> 링크 미리보기 이미지를 바꿨는데 카카오톡에 반영되지 않으면 [캐시 초기화 도구](https://developers.kakao.com/tool/clear/og)에서 URL을 넣어 갱신하세요.
+---
+
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [docs/todo.md](docs/todo.md) | **남은 작업** — 채워야 할 내용, 인프라 연결, 실기기 확인 목록 |
+| [docs/deploy.md](docs/deploy.md) | 배포 절차 전체 + 무료 티어 한도 |
+| [docs/requirements.md](docs/requirements.md) | 최초 요구사항과 구현 매핑, 기술 선택 근거 |
+| [AGENTS.md](AGENTS.md) | 코드를 고치기 전에 읽을 것 — 구조와 함정 |
 
 ---
 

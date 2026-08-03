@@ -136,6 +136,10 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 npm run typecheck && npm run build
 ```
 
+그리고 **요구사항 대조와 문서 갱신은 생략하지 않습니다.**
+[docs/todo.md](docs/todo.md)의 체크박스와 [docs/requirements.md](docs/requirements.md)의 구현 매핑을
+갱신한 뒤에 완료를 보고하세요. 자세한 절차는 [CLAUDE.md](CLAUDE.md)에 있습니다.
+
 **실기기에서만 검증되는 것** — 개발 환경이나 데스크톱 브라우저로는 확인할 수 없다:
 지도 앱 딥링크, 클립보드 복사, `navigator.share`, 카카오톡 공유·링크 미리보기, `.ics` 캘린더 연결.
 README 하단의 체크리스트를 볼 것.
