@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  /* 색 — 따뜻한 아이보리 바탕에 먹빛 글자. 톤을 바꿀 땐 여기만 고치면 된다. */
+  --color-paper: #fdfbf7;
+  --color-paper-deep: #f5f0e8;
+  --color-ink: #3f3a35;
+  --color-ink-soft: #6b635a;
+  --color-ink-faint: #9a9086;
+  --color-line: #e6dfd3;
+  --color-accent: #a8917a;
+  --color-accent-soft: #c9b8a5;
+
+  /* 폰트 — layout.tsx가 CSS 변수로 주입한다. */
+  --font-serif: var(--font-myeongjo), "Nanum Myeongjo", "Apple SD Gothic Neo",
+    serif;
+  --font-sans: var(--font-dodum), "Apple SD Gothic Neo", system-ui, sans-serif;
+
+  /* 청첩장 본문 폭 — 모바일 기준. 데스크톱에서도 이 폭을 유지해 카드처럼 보이게 한다. */
+  --container-sheet: 26rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* 한글은 어절 단위로 끊어야 읽기 자연스럽다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크롤 진입 시 페이드업. IntersectionObserver가 대상 요소에 .is-visible을 붙인다. */
+.reveal {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

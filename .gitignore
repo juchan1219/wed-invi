@@ -1,0 +1,57 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# 에디터 / 로컬 설정
+.idea/
+.vscode/
+# .claude/launch.json 은 개발 서버 실행 설정이라 공유한다.
+.claude/settings.local.json
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 환경변수. .env.local 에는 DB 접속 정보와 관리자 비밀번호,
+# 그리고 하객 URL을 만드는 TOKEN_SECRET 이 들어간다. 절대 커밋 금지.
+# .env.example 만 예외로 공유한다.
+.env*
+!.env.example
+
+# 사진 원본을 넣는 곳. `npm run photos:prep` 이 여기서 읽어
+# src/assets/photos/ 로 축소본을 출력한다(그쪽은 커밋 대상).
+# 스튜디오 원본은 장당 10MB를 넘기 일쑤라 저장소에 넣지 않는다.
+/photos/*
+!/photos/.gitkeep
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

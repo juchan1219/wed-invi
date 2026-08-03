@@ -1,0 +1,40 @@
+# 로컬 개발/검증 전용. 배포에는 쓰이지 않는다.
+#
+# 왜 프록시가 필요한가:
+#   프로덕션은 Neon serverless 드라이버(HTTP)로 DB에 붙는다. 그 드라이버는
+#   TCP가 아니라 HTTP로 말하기 때문에 평범한 Postgres에 바로 연결할 수 없다.
+#   이 프록시가 HTTP ↔ Postgres를 중계해 주므로, 로컬에서도 **배포와 똑같은 코드 경로**로
+#   테스트할 수 있다 (드라이버를 분기하지 않아도 된다).
+#
+# 사용:
+#   docker compose -f docker-compose.dev.yml up -d
+#   .env.local 에  DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
+#   npm run db:generate && npm run db:migrate
+#
+# Neon 계정이 있다면 이 파일은 필요 없다 — Neon 연결 문자열을 그대로 쓰면 된다.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: wedinvi
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Neon serverless 드라이버의 HTTP 요청(/sql)을 위 Postgres로 중계한다.
+  # 이 프록시는 4444 포트로 HTTP를 받는다.
+  neon-proxy:
+    image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+    environment:
+      PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/wedinvi
+    ports:
+      - "4444:4444"
+    depends_on:
+      postgres:
+        condition: service_healthy
