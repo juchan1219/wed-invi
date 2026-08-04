@@ -98,6 +98,10 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 원격 이미지는 `next/image`가 크기를 모르는데, 파일명에서 읽어오면 레이아웃이 밀리지 않는다.
 → `addRandomSuffix`를 켜면 확장자 앞에 무작위 문자열이 끼어 이 규칙이 깨진다. 켜지 말 것.
 
+`BLOB_READ_WRITE_TOKEN`이 없으면 **개발 환경에 한해** `public/uploads/`에 저장한다.
+파일명 규칙이 같아서 렌더링 경로는 Blob과 동일하다. 배포(`NODE_ENV=production`)에서는
+파일시스템이 읽기 전용이라 이 폴백을 타지 않고 503을 낸다.
+
 ### 관리자 인증
 
 `ADMIN_PASSWORD` 하나를 예찬·주은이 공유 → HMAC 서명 쿠키 30일. [`src/lib/auth.ts`](src/lib/auth.ts)
