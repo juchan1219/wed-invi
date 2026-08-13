@@ -2,7 +2,7 @@ import { ceremonyDate, wedding } from "@/config/wedding";
 
 /**
  * 예식은 한국에서 열린다. 하객이 해외에 있어도, 서버가 UTC로 돌아도
- * "10월 17일 토요일 오후 1시"는 똑같이 보여야 하므로 모든 포맷을 Asia/Seoul로 고정한다.
+ * "12월 19일 토요일 오후 12시 30분"은 똑같이 보여야 하므로 모든 포맷을 Asia/Seoul로 고정한다.
  */
 const TZ = "Asia/Seoul";
 
@@ -33,7 +33,7 @@ export function daysUntilCeremony(now: Date = new Date()): number {
   return toDayIndex(seoulYMD(ceremonyDate())) - toDayIndex(seoulYMD(now));
 }
 
-/** "2026년 10월 17일 토요일" */
+/** "2026년 12월 19일 토요일" */
 export function formatCeremonyDate(): string {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: TZ,
@@ -44,7 +44,7 @@ export function formatCeremonyDate(): string {
   }).format(ceremonyDate());
 }
 
-/** "2026. 10. 17" — 히어로 등 짧게 쓰는 자리용 */
+/** "2026. 12. 19" — 짧게 쓰는 자리용 */
 export function formatCeremonyDateShort(): string {
   const { year, month, day } = seoulYMD(ceremonyDate());
   return `${year}. ${String(month).padStart(2, "0")}. ${String(day).padStart(2, "0")}`;

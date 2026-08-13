@@ -28,7 +28,7 @@ export const wedding = {
     /** 배포 도메인. OG 절대 URL과 공유 링크 생성에 쓰인다. */
     url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
     title: "예찬 ♥ 주은 결혼합니다", // PLACEHOLDER
-    description: "2026년 10월 17일 토요일 오후 1시", // PLACEHOLDER
+    description: "2026년 12월 19일 토요일 오후 12시 30분",
     /** public/ 기준 경로. 1200×630 권장. */
     ogImage: "/og.jpg",
   },
@@ -55,32 +55,32 @@ export const wedding = {
      * 예식 시각. 반드시 KST 오프셋(+09:00)을 포함한 ISO 8601로 적는다.
      * 서버(UTC)와 브라우저(로컬)에서 같은 시각으로 해석되게 하기 위함.
      */
-    startsAt: "2026-10-17T13:00:00+09:00", // PLACEHOLDER
+    startsAt: "2026-12-19T12:30:00+09:00",
     /** 예식 소요 시간(분). 캘린더(.ics) 종료 시각 계산에 쓰인다. */
     durationMinutes: 90,
   },
 
   venue: {
-    name: "○○웨딩홀", // PLACEHOLDER
-    hall: "3층 그랜드홀", // PLACEHOLDER
-    address: "서울특별시 강남구 테헤란로 123", // PLACEHOLDER
-    tel: "02-000-0000", // PLACEHOLDER
+    name: "잠실 아펠가모",
+    hall: "2층 단독홀",
+    address: "서울특별시 송파구 올림픽로35길 137, 한국광고문화회관 2층",
+    tel: "02-2144-0230",
     /** 지도 앱 딥링크에 쓰이는 좌표. 네이버/카카오/티맵 모두 이 값을 쓴다. */
-    lat: 37.4979, // PLACEHOLDER
-    lng: 127.0276, // PLACEHOLDER
+    lat: 37.5159386,
+    lng: 127.0996469,
     // 지도 썸네일은 photos/map.jpg 로 넣으면 `npm run photos:prep` 이 처리한다.
     transport: [
       {
         title: "지하철",
-        lines: ["2호선 강남역 3번 출구에서 도보 5분"], // PLACEHOLDER
+        lines: ["2·8호선 잠실역 7번 출구에서 도보 약 5분"],
       },
       {
         title: "버스",
-        lines: ["간선 140, 401 / 지선 3412 — ○○사거리 하차"], // PLACEHOLDER
+        lines: ["잠실역·잠실나루역 인근 정류장 이용"],
       },
       {
         title: "주차",
-        lines: ["건물 지하 1~4층, 2시간 무료", "만차 시 인근 공영주차장 이용"], // PLACEHOLDER
+        lines: ["한국광고문화회관 주차장, 하객 2시간 무료", "주차장이 협소해 대중교통 이용을 권장합니다"],
       },
     ],
   },

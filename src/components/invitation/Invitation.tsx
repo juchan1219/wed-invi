@@ -1,7 +1,6 @@
 import { wedding } from "@/config/wedding";
 import { ToastProvider } from "@/components/ui/Toast";
 import { Guestbook } from "./Guestbook";
-import { Hero } from "./Hero";
 import { Greeting } from "./Greeting";
 import { CeremonyInfo } from "./CeremonyInfo";
 import { Gallery } from "./Gallery";
@@ -9,6 +8,7 @@ import { MapSection } from "./MapSection";
 import { AccountSection } from "./AccountSection";
 import { ContactSection } from "./ContactSection";
 import { ShareFooter } from "./ShareFooter";
+import { WeddingStory } from "./story/WeddingStory";
 
 /**
  * 청첩장 본문. `/` 와 `/i/[token]` 이 이 컴포넌트를 공유한다.
@@ -17,11 +17,13 @@ import { ShareFooter } from "./ShareFooter";
 export function Invitation({ letterSlot }: { letterSlot?: React.ReactNode }) {
   return (
     <ToastProvider>
-      <Hero />
-      <Greeting />
-      {/* 개인화 편지는 인사말 바로 뒤 — "당신을 초대합니다" 다음에 오는 게 자연스럽다. */}
-      {letterSlot}
-      <CeremonyInfo />
+      <WeddingStory contentTargetId="invitation-content" />
+      <div id="invitation-content">
+        {/* 스토리 직후 개인화 편지를 먼저 보여 준다. 편지가 없으면 날짜로 바로 이어진다. */}
+        {letterSlot}
+        <CeremonyInfo />
+        <Greeting />
+      </div>
       <Gallery />
       <MapSection />
       <AccountSection />

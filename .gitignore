@@ -56,6 +56,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# 로컬 브레인스토밍/콘티 미리보기 산출물
+.superpowers/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
