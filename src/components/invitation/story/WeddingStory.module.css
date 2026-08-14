@@ -169,8 +169,8 @@
 .layer_sidecar { z-index: 10; inset: 37% -15% 5% -10%; }
 .layer_wheel_front,
 .layer_wheel_back { z-index: 13; inset: auto; width: 56px; height: 56px; overflow: hidden; }
-.layer_wheel_front { right: -1%; bottom: 5%; }
-.layer_wheel_back { bottom: 7%; left: -1%; }
+.layer_wheel_front { top: var(--story-sidecar-wheel-front-top); left: var(--story-sidecar-wheel-front-left); }
+.layer_wheel_back { top: var(--story-sidecar-wheel-back-top); left: var(--story-sidecar-wheel-back-left); }
 
 .layer_name_labels { z-index: 26; inset: auto 7% 32% 12%; }
 .layer_name_labels .layerText { border: 0; background: transparent; color: #fff4cf; text-shadow: 2px 2px 0 #19374a; }

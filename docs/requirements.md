@@ -109,7 +109,9 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   focal point는 typed inline CSS custom property로 전달한다. sprite는 512px intrinsic atlas cell과 256px 논리 표시
   cell을 분리해 1024×512 표시 atlas를 정확한 row/column offset으로 이동한다. couple 레이어 하나 안에는 예찬·주은
   두 sprite를 선언형 part로 합성하고, wheel 레이어는 1024×768 sidecar에서 서로 다른 224×224 영역을 56×56으로
-  crop한다. shots 1–6의 세부 안무는 오프닝 배경의 36px 이동, sidecar의 520→70px 진입과 두 casual sprite
+  crop한다. wheel CSS 기준점은 sidecar contain box의 source crop center에서 계산한 전륜 `(80.171875, 650.10828125)`와
+  후륜 `(340.5234375, 650.10828125)`이고, 두 wheel은 sidecar와 같은 x/y keyframe 배열을 공유하되 각 rotate track과
+  crop은 독립적으로 유지한다. shots 1–6의 세부 안무는 오프닝 배경의 36px 이동, sidecar의 520→70px 진입과 두 casual sprite
   합성, 우하단 coral paper corner를 원점으로 한 0.15→2.4배 종이 확대, 0.72×0.58→1 tower card 진입,
   51%/43% 창 원점의 1→4.8배 camera zoom, 그 아래 1.35→1배 office background와 desk 연결로 구현했다.
 
@@ -120,16 +122,19 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   chroma-key하고 nearest-opaque edge 색으로 오염을 제거했으며, 실제 크기·alpha coverage·배경 sample·
   bounds를 자산 테스트로 고정했다. 이 자산의 renderer 연결은 완료했으며
   shots 7–9는 왼쪽 joke panel의 -430→0px 진입, 오른쪽 laugh panel의 우측 polygon reveal, 독립 캐릭터
-  sprite, 양 패널의 `scaleX: 0.5` 압축·합류, proposal 삼연작 분할축에 맞춘 0.2→1.6배 laugh burst로
-  안무했다. shots 10–16 세부 안무와 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
+  sprite, 양 패널의 `scaleX: 0.5` 압축·합류, 중앙·무회전 handoff 상태의 0.2→1.6배 laugh burst로
+  안무했다. burst ray와 proposal 삼연작 divider의 pixel-level 정렬은 unit test가 증명하지 않으며 Task 12
+  브라우저/image QA에 남긴다. shots 10–16 세부 안무와 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
   남아 있다. 렌더러 자체는 모든 장면을
   `next/image` 기반 장식 이미지, 정확한 sprite crop, 스크린리더 중복을 피하는 HTML text로만 구성하며 기존
   CSS 사람·건물·사이드카·군중·예식장 placeholder 분기를 제거했다.
 
   shots 1–9의 모든 경계와 최소 9→10 handoff는 전체 진행률 1.5% 구간에서 outgoing/incoming layer가
   각각 opacity 0.25를 넘긴다. 3→4는 paper scale, 4→5는 4.8배 camera zoom, 8→9는 polygon clip을
-  사용하므로 전체 화면 opacity만 바꾸는 crossfade가 아니다. 경계 전후 정방향·역방향 표본과
-  0.02↔0.58 직접 점프는 동일한 순수 sampling 결과를 내며 `npm run test:story` 49개,
+  사용하므로 전체 화면 opacity만 바꾸는 crossfade가 아니다. overlap 증명은 각 1.5% interval의 양 끝과 그 안의
+  모든 opacity keyframe, hold discontinuity 양쪽을 검사한다. 지원 easing이 단조이므로 이 점들이 piecewise segment
+  전체의 최솟값을 완전히 덮는다. 경계 전후 정방향·역방향 표본과 0.02↔0.58 직접 점프에서 실제 sequence가 반환한
+  destination state는 direct baseline과 동일하며 `npm run test:story` 50개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,

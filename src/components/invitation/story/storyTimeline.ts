@@ -167,6 +167,24 @@ export const SHOTS: readonly StoryShot[] = [
   { id: "invitation-rises", chapterId: "wedding", start: 0.93, end: 1, copyStart: 0.936, copyEnd: 0.987, copy: "우리 결혼합니다!!", layerIds: ["final-title", "confetti-back", "confetti", "confetti-front", "invitation-paper"] },
 ] as const;
 
+const SIDECAR_X_FRAMES = [
+  { at: 0, value: 520 },
+  { at: 0.0425, value: 520 },
+  { at: 0.1, value: 70 },
+  { at: 0.13, value: 108 },
+  { at: 0.15, value: 155 },
+  { at: 0.165, value: 240 },
+] as const satisfies readonly NumberFrame[];
+
+const SIDECAR_Y_FRAMES = [
+  { at: 0, value: 298 },
+  { at: 0.0425, value: 280 },
+  { at: 0.1, value: 28 },
+  { at: 0.13, value: 82 },
+  { at: 0.15, value: 186 },
+  { at: 0.165, value: 280 },
+] as const satisfies readonly NumberFrame[];
+
 const SOURCE_LAYERS: readonly SourceLayer[] = [
   {
     id: "bg-jeju",
@@ -196,25 +214,11 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
     id: "sidecar",
     kind: "character",
     frames: [f(0, 0, 0, 32, 0.72), f(0.0425, 0.3, 0, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.1, 1, 0, 3, 1.02, -1), f(0.15, 1, 0, 20, 1.08, 1), f(0.165, 0, 0, 30, 1.16)],
-    xFrames: [
-      { at: 0, value: 520 },
-      { at: 0.0425, value: 520 },
-      { at: 0.1, value: 70 },
-      { at: 0.13, value: 108 },
-      { at: 0.15, value: 155 },
-      { at: 0.165, value: 240 },
-    ],
-    yFrames: [
-      { at: 0, value: 298 },
-      { at: 0.0425, value: 280 },
-      { at: 0.1, value: 28 },
-      { at: 0.13, value: 82 },
-      { at: 0.15, value: 186 },
-      { at: 0.165, value: 280 },
-    ],
+    xFrames: SIDECAR_X_FRAMES,
+    yFrames: SIDECAR_Y_FRAMES,
   },
-  { id: "wheel-front", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
-  { id: "wheel-back", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
+  { id: "wheel-front", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: SIDECAR_X_FRAMES, yFrames: SIDECAR_Y_FRAMES },
+  { id: "wheel-back", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: SIDECAR_X_FRAMES, yFrames: SIDECAR_Y_FRAMES },
   { id: "name-labels", kind: "type", frames: [f(0, 0, 0, 3, 0.8), f(0.09, 0, 0, 3, 0.8), f(0.112, 1, 0, 0, 1.05, -2), f(0.14, 1, 0, -1, 1), f(0.155, 0, 0, -4, 1.1)] },
 
   {

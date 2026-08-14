@@ -15,6 +15,10 @@ const storyCanvasLayoutStyle = {
   "--story-casual-couple-left": STORY_CANVAS_LAYOUT.casualCouple.left,
   "--story-casual-couple-width": `${STORY_CANVAS_LAYOUT.casualCouple.width}px`,
   "--story-chapter-nav-min-bottom": `${STORY_CANVAS_LAYOUT.chapterNavMinimumBottom}px`,
+  "--story-sidecar-wheel-front-left": `${STORY_CANVAS_LAYOUT.sidecar.wheelFront.left}px`,
+  "--story-sidecar-wheel-front-top": `${STORY_CANVAS_LAYOUT.sidecar.wheelFront.top}px`,
+  "--story-sidecar-wheel-back-left": `${STORY_CANVAS_LAYOUT.sidecar.wheelBack.left}px`,
+  "--story-sidecar-wheel-back-top": `${STORY_CANVAS_LAYOUT.sidecar.wheelBack.top}px`,
   "--story-title-glyph-size": `${STORY_CANVAS_LAYOUT.titleGlyphSize}px`,
 } as CSSProperties;
 

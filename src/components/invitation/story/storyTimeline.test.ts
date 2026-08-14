@@ -170,8 +170,49 @@ test("canonical mobile canvas keeps the couple, title, and safe-area layout", ()
   assert.deepEqual(storyAssets.STORY_CANVAS_LAYOUT, {
     casualCouple: { bottom: "1%", left: "27%", width: 249.4 },
     chapterNavMinimumBottom: 17.6,
+    sidecar: {
+      wheelFront: { left: 80.171875, top: 650.10828125 },
+      wheelBack: { left: 340.5234375, top: 650.10828125 },
+    },
     titleGlyphSize: 68.8,
   });
+});
+
+test("both wheel crops follow the sidecar translation path without losing independent rotation", () => {
+  const sidecar = requiredTrack("sidecar");
+  const front = requiredTrack("wheel-front");
+  const back = requiredTrack("wheel-back");
+  const progressSamples = [...new Set([
+    0,
+    0.02,
+    ...[sidecar, front, back].flatMap((track) => [
+      ...(track.x ?? []).map(({ at }) => at),
+      ...(track.y ?? []).map(({ at }) => at),
+    ]),
+    0.05,
+    0.075,
+    0.115,
+    0.14,
+  ])].sort((left, right) => left - right);
+
+  for (const progress of progressSamples) {
+    const vehicleState = sampleLayerState(sidecar, progress);
+    for (const wheel of [front, back]) {
+      const wheelState = sampleLayerState(wheel, progress);
+      assert.deepEqual(
+        [wheelState.x, wheelState.y],
+        [vehicleState.x, vehicleState.y],
+        `${wheel.id} detached at ${progress}`,
+      );
+    }
+  }
+
+  assert.strictEqual(front.x, sidecar.x);
+  assert.strictEqual(front.y, sidecar.y);
+  assert.strictEqual(back.x, sidecar.x);
+  assert.strictEqual(back.y, sidecar.y);
+  assert.ok(front.rotate && back.rotate);
+  assert.notStrictEqual(front.rotate, back.rotate);
 });
 
 test("layer state uses stable spatial defaults when a track omits overrides", () => {
@@ -302,13 +343,26 @@ test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for
     { at: 0.455, outgoing: "panel-right", incoming: "laugh-burst", connector: "panel-right" },
     { at: 0.52, outgoing: "laugh-burst", incoming: "proposal-triptych", connector: "laugh-burst" },
   ] as const;
-  const overlapOffsets = [-0.0075, -0.005, -0.0025, 0, 0.0025, 0.005, 0.0075] as const;
 
   for (const boundary of boundaries) {
     const outgoing = requiredTrack(boundary.outgoing);
     const incoming = requiredTrack(boundary.incoming);
-    for (const offset of overlapOffsets) {
-      const progress = boundary.at + offset;
+    const intervalStart = boundary.at - 0.0075;
+    const intervalEnd = boundary.at + 0.0075;
+    const opacityTracks = [outgoing.opacity ?? [], incoming.opacity ?? []];
+    const authoredBreakpoints = opacityTracks.flatMap((frames) => frames.flatMap((frame, index) => {
+      if (frame.at < intervalStart || frame.at > intervalEnd) return [];
+      const previous = frames[index - 1];
+      return previous?.ease === "hold" && frame.at > intervalStart
+        ? [frame.at - Number.EPSILON, frame.at]
+        : [frame.at];
+    }));
+    const proofPoints = [...new Set([intervalStart, ...authoredBreakpoints, intervalEnd])]
+      .sort((left, right) => left - right);
+
+    // All supported easing functions are monotonic. Opacity is therefore bounded by
+    // each authored segment's endpoints; hold discontinuities add both one-sided values.
+    for (const progress of proofPoints) {
       assert.ok(
         sampleLayerState(outgoing, progress).opacity > 0.25,
         `${boundary.outgoing} must remain visible at ${progress}`,
@@ -321,8 +375,8 @@ test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for
 
     const connector = requiredTrack(boundary.connector);
     assert.notDeepEqual(
-      spatialState(sampleLayerState(connector, boundary.at - 0.0075)),
-      spatialState(sampleLayerState(connector, boundary.at + 0.0075)),
+      spatialState(sampleLayerState(connector, intervalStart)),
+      spatialState(sampleLayerState(connector, intervalEnd)),
       `${boundary.connector} must connect the boundary spatially`,
     );
   }
@@ -391,7 +445,7 @@ test("shots 1 through 9 land on the approved spatial anchors", () => {
   assert.deepEqual(
     [sampleLayerState(requiredTrack("laugh-burst"), 0.52).x, sampleLayerState(requiredTrack("laugh-burst"), 0.52).rotate],
     [0, 0],
-    "the centered final burst keeps its black rays on the triptych divider axes",
+    "the final burst is centered and unrotated for the triptych handoff",
   );
 });
 
@@ -412,23 +466,25 @@ test("boundary samples, reverse calls, and large direct jumps are deterministic"
     "laugh-burst",
     "proposal-triptych",
   ];
+  const captureState = (progress: number) => trackIds.map(
+    (id) => sampleLayerState(requiredTrack(id), progress),
+  );
   const capture = (progresses: readonly number[]) => new Map(
-    progresses.map((progress) => [
-      progress,
-      trackIds.map((id) => sampleLayerState(requiredTrack(id), progress)),
-    ]),
+    progresses.map((progress) => [progress, captureState(progress)]),
   );
 
   const forward = capture(samples);
   const reverse = capture([...samples].reverse());
   for (const progress of samples) assert.deepEqual(reverse.get(progress), forward.get(progress));
 
-  const lowBeforeJump = capture([0.02]).get(0.02);
-  capture([0.58, 0.02]);
-  assert.deepEqual(capture([0.02]).get(0.02), lowBeforeJump);
-  const highBeforeJump = capture([0.58]).get(0.58);
-  capture([0.02, 0.58]);
-  assert.deepEqual(capture([0.58]).get(0.58), highBeforeJump);
+  const lowBaseline = captureState(0.02);
+  const highBaseline = captureState(0.58);
+  const lowToHigh = [0.02, 0.58].map(captureState);
+  const highToLow = [0.58, 0.02].map(captureState);
+  assert.deepEqual(lowToHigh[0], lowBaseline);
+  assert.deepEqual(lowToHigh[1], highBaseline, "0.02→0.58 must return the direct destination state");
+  assert.deepEqual(highToLow[0], highBaseline);
+  assert.deepEqual(highToLow[1], lowBaseline, "0.58→0.02 must return the direct destination state");
 });
 
 test("the complete timeline passes its runtime invariant audit", () => {
