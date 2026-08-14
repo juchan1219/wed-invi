@@ -33,6 +33,32 @@ function spatialState(state: LayerState) {
   return spatial;
 }
 
+type StoryLayerNode = {
+  track: LayerTrack;
+  children: readonly StoryLayerNode[];
+};
+
+function transformPointThroughLayer(
+  point: { x: number; y: number },
+  box: { left: number; top: number; width: number; height: number },
+  state: LayerState,
+) {
+  const origin = {
+    x: box.width * state.originX / 100,
+    y: box.height * state.originY / 100,
+  };
+  const scaled = {
+    x: (point.x - origin.x) * state.scaleX,
+    y: (point.y - origin.y) * state.scaleY,
+  };
+  const radians = state.rotate * Math.PI / 180;
+
+  return {
+    x: box.left + origin.x + state.x + scaled.x * Math.cos(radians) - scaled.y * Math.sin(radians),
+    y: box.top + origin.y + state.y + scaled.x * Math.sin(radians) + scaled.y * Math.cos(radians),
+  };
+}
+
 test("the contained story canvas keeps the 430 by 932 logical layer contract", () => {
   assert.deepEqual(STORY_CANVAS, { width: 430, height: 932 });
 
@@ -171,14 +197,39 @@ test("canonical mobile canvas keeps the couple, title, and safe-area layout", ()
     casualCouple: { bottom: "1%", left: "27%", width: 249.4 },
     chapterNavMinimumBottom: 17.6,
     sidecar: {
-      wheelFront: { left: 80.171875, top: 650.10828125 },
-      wheelBack: { left: 340.5234375, top: 650.10828125 },
+      wheelFront: { left: 123.171875, top: 305.26828125 },
+      wheelBack: { left: 383.5234375, top: 305.26828125 },
     },
     titleGlyphSize: 68.8,
   });
 });
 
-test("both wheel crops follow the sidecar translation path without losing independent rotation", () => {
+test("the declarative layer tree nests each local wheel exactly once under the sidecar", () => {
+  const buildStoryLayerTree = (storyTimeline as unknown as {
+    buildStoryLayerTree?: (tracks: readonly LayerTrack[]) => readonly StoryLayerNode[];
+  }).buildStoryLayerTree;
+  assert.equal(typeof buildStoryLayerTree, "function");
+
+  const roots = buildStoryLayerTree!(LAYER_TRACKS);
+  const flattened: StoryLayerNode[] = [];
+  const visit = (node: StoryLayerNode) => {
+    flattened.push(node);
+    node.children.forEach(visit);
+  };
+  roots.forEach(visit);
+
+  assert.equal(flattened.length, 41);
+  assert.deepEqual(flattened.map(({ track }) => track.id), LAYER_TRACKS.map(({ id }) => id));
+  assert.equal(new Set(flattened.map(({ track }) => track.id)).size, LAYER_TRACKS.length);
+  const sidecarNode = flattened.find(({ track }) => track.id === "sidecar");
+  assert.deepEqual(sidecarNode?.children.map(({ track }) => track.id), ["wheel-front", "wheel-back"]);
+  for (const wheelId of ["wheel-front", "wheel-back"]) {
+    const wheel = requiredTrack(wheelId) as LayerTrack & { parentId?: string };
+    assert.equal(wheel.parentId, "sidecar");
+  }
+});
+
+test("both wheel crops keep a local identity transform except for independent rotation", () => {
   const sidecar = requiredTrack("sidecar");
   const front = requiredTrack("wheel-front");
   const back = requiredTrack("wheel-back");
@@ -196,23 +247,62 @@ test("both wheel crops follow the sidecar translation path without losing indepe
   ])].sort((left, right) => left - right);
 
   for (const progress of progressSamples) {
-    const vehicleState = sampleLayerState(sidecar, progress);
     for (const wheel of [front, back]) {
       const wheelState = sampleLayerState(wheel, progress);
+      assert.deepEqual([wheelState.x, wheelState.y], [0, 0], `${wheel.id} is not parent-local at ${progress}`);
       assert.deepEqual(
-        [wheelState.x, wheelState.y],
-        [vehicleState.x, vehicleState.y],
-        `${wheel.id} detached at ${progress}`,
+        [wheelState.scaleX, wheelState.scaleY],
+        [1, 1],
+        `${wheel.id} locally duplicates the sidecar scale at ${progress}`,
       );
     }
   }
 
-  assert.strictEqual(front.x, sidecar.x);
-  assert.strictEqual(front.y, sidecar.y);
-  assert.strictEqual(back.x, sidecar.x);
-  assert.strictEqual(back.y, sidecar.y);
+  assert.notStrictEqual(front.x, sidecar.x);
+  assert.notStrictEqual(front.y, sidecar.y);
+  assert.strictEqual(front.x, back.x);
+  assert.strictEqual(front.y, back.y);
   assert.ok(front.rotate && back.rotate);
   assert.notStrictEqual(front.rotate, back.rotate);
+});
+
+test("nested wheel centers inherit sidecar scale and rotation through progress 0.15", () => {
+  const sidecar = requiredTrack("sidecar");
+  const sidecarBox = { left: -43, top: 344.84, width: 537.5, height: 540.56 };
+  const wheelRadius = 28;
+  const wheelCenters = {
+    front: {
+      x: storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelFront.left + wheelRadius,
+      y: storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelFront.top + wheelRadius,
+    },
+    back: {
+      x: storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelBack.left + wheelRadius,
+      y: storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelBack.top + wheelRadius,
+    },
+  };
+  const fixtures = [
+    { progress: 0.065, front: [459.139606, 855.720289], back: [703.870075, 855.720289] },
+    { progress: 0.1, front: [176.959861, 709.451323], back: [442.478009, 704.816687] },
+    { progress: 0.13, front: [208.60576, 763.152973], back: [484.781246, 764.888257] },
+    { progress: 0.15, front: [252.597724, 866.9208], back: [533.734587, 871.828062] },
+  ] as const;
+
+  for (const fixture of fixtures) {
+    const state = sampleLayerState(sidecar, fixture.progress);
+    for (const wheel of ["front", "back"] as const) {
+      const actual = transformPointThroughLayer(wheelCenters[wheel], sidecarBox, state);
+      assert.ok(Math.abs(actual.x - fixture[wheel][0]) < 0.000001, `${wheel} x at ${fixture.progress}`);
+      assert.ok(Math.abs(actual.y - fixture[wheel][1]) < 0.000001, `${wheel} y at ${fixture.progress}`);
+    }
+  }
+
+  const atFinal = sampleLayerState(sidecar, 0.15);
+  const nestedFront = transformPointThroughLayer(wheelCenters.front, sidecarBox, atFinal);
+  const oldSiblingFront = {
+    x: sidecarBox.left + wheelCenters.front.x + atFinal.x,
+    y: sidecarBox.top + wheelCenters.front.y + atFinal.y,
+  };
+  assert.ok(Math.hypot(nestedFront.x - oldSiblingFront.x, nestedFront.y - oldSiblingFront.y) > 10.9);
 });
 
 test("layer state uses stable spatial defaults when a track omits overrides", () => {

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   STORY_ASSETS,
   STORY_LAYER_DEFINITIONS,
@@ -50,7 +50,7 @@ const STORY_LAYER_DEFINITION_BY_ID = new Map<string, StoryLayerDefinition>(
   STORY_LAYER_DEFINITIONS.map((definition) => [definition.id, definition]),
 );
 
-export function StoryLayer({ track }: { track: LayerTrack }) {
+export function StoryLayer({ track, children }: { track: LayerTrack; children?: ReactNode }) {
   const definition = STORY_LAYER_DEFINITION_BY_ID.get(track.id);
   if (!definition) throw new Error(`${track.id} has no story layer definition`);
 
@@ -74,6 +74,7 @@ export function StoryLayer({ track }: { track: LayerTrack }) {
       style={style as CSSProperties}
     >
       <StoryLayerContent definition={definition} />
+      {children}
     </div>
   );
 }

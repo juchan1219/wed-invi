@@ -3,10 +3,10 @@ export const STORY_CANVAS = { width: 430, height: 932 } as const;
 export const STORY_CANVAS_LAYOUT = {
   casualCouple: { bottom: "1%", left: "27%", width: 249.4 },
   chapterNavMinimumBottom: 17.6,
-  // Crop centers mapped through the sidecar layer's 537.5px-wide contain box.
+  // Parent-relative crop bases mapped through the sidecar's 537.5px-wide contain box.
   sidecar: {
-    wheelFront: { left: 80.171875, top: 650.10828125 },
-    wheelBack: { left: 340.5234375, top: 650.10828125 },
+    wheelFront: { left: 123.171875, top: 305.26828125 },
+    wheelBack: { left: 383.5234375, top: 305.26828125 },
   },
   titleGlyphSize: 68.8,
 } as const;

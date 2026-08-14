@@ -25,6 +25,7 @@ export type LayerKind = "background" | "scenery" | "character" | "prop" | "trans
 export type LayerTrack = {
   id: string;
   kind: LayerKind;
+  parentId?: string;
   x?: readonly NumberFrame[];
   y?: readonly NumberFrame[];
   scaleX?: readonly NumberFrame[];
@@ -87,6 +88,7 @@ const FULL_CLIP: Clip = [0, 0, 100, 0, 100, 100, 0, 100];
 type SourceLayer = {
   id: string;
   kind: LayerKind;
+  parentId?: string;
   frames: readonly SourceFrame[];
   xFrames?: readonly NumberFrame[];
   yFrames?: readonly NumberFrame[];
@@ -111,6 +113,7 @@ function numberFrames(
 function toLogicalTrack({
   id,
   kind,
+  parentId,
   frames,
   xFrames,
   yFrames,
@@ -126,6 +129,7 @@ function toLogicalTrack({
   return {
     id,
     kind,
+    parentId,
     x: xFrames ?? numberFrames(frames, "x", LOGICAL_WIDTH / 100),
     y: yFrames ?? numberFrames(frames, "y", LOGICAL_HEIGHT / 100),
     scaleX: scaleXFrames ?? numberFrames(frames, "size"),
@@ -185,6 +189,16 @@ const SIDECAR_Y_FRAMES = [
   { at: 0.165, value: 280 },
 ] as const satisfies readonly NumberFrame[];
 
+const PARENT_LOCAL_ZERO_FRAMES = [
+  { at: 0, value: 0 },
+  { at: 1, value: 0 },
+] as const satisfies readonly NumberFrame[];
+
+const PARENT_LOCAL_ONE_FRAMES = [
+  { at: 0, value: 1 },
+  { at: 1, value: 1 },
+] as const satisfies readonly NumberFrame[];
+
 const SOURCE_LAYERS: readonly SourceLayer[] = [
   {
     id: "bg-jeju",
@@ -217,8 +231,8 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
     xFrames: SIDECAR_X_FRAMES,
     yFrames: SIDECAR_Y_FRAMES,
   },
-  { id: "wheel-front", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: SIDECAR_X_FRAMES, yFrames: SIDECAR_Y_FRAMES },
-  { id: "wheel-back", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: SIDECAR_X_FRAMES, yFrames: SIDECAR_Y_FRAMES },
+  { id: "wheel-front", kind: "prop", parentId: "sidecar", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: PARENT_LOCAL_ZERO_FRAMES, yFrames: PARENT_LOCAL_ZERO_FRAMES, scaleXFrames: PARENT_LOCAL_ONE_FRAMES, scaleYFrames: PARENT_LOCAL_ONE_FRAMES },
+  { id: "wheel-back", kind: "prop", parentId: "sidecar", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)], xFrames: PARENT_LOCAL_ZERO_FRAMES, yFrames: PARENT_LOCAL_ZERO_FRAMES, scaleXFrames: PARENT_LOCAL_ONE_FRAMES, scaleYFrames: PARENT_LOCAL_ONE_FRAMES },
   { id: "name-labels", kind: "type", frames: [f(0, 0, 0, 3, 0.8), f(0.09, 0, 0, 3, 0.8), f(0.112, 1, 0, 0, 1.05, -2), f(0.14, 1, 0, -1, 1), f(0.155, 0, 0, -4, 1.1)] },
 
   {
@@ -319,6 +333,48 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
 
 export const LAYER_TRACKS: readonly LayerTrack[] = SOURCE_LAYERS.map(toLogicalTrack);
 
+export type StoryLayerNode = {
+  track: LayerTrack;
+  children: readonly StoryLayerNode[];
+};
+
+export function buildStoryLayerTree(tracks: readonly LayerTrack[]): readonly StoryLayerNode[] {
+  const tracksById = new Map<string, LayerTrack>();
+  const childrenByParentId = new Map<string, LayerTrack[]>();
+
+  for (const track of tracks) {
+    if (tracksById.has(track.id)) throw new Error(`duplicate layer id: ${track.id}`);
+    tracksById.set(track.id, track);
+  }
+
+  for (const track of tracks) {
+    if (!track.parentId) continue;
+    if (track.parentId === track.id) throw new Error(`${track.id} cannot parent itself`);
+    if (!tracksById.has(track.parentId)) throw new Error(`${track.id} has unknown parent ${track.parentId}`);
+    const siblings = childrenByParentId.get(track.parentId) ?? [];
+    siblings.push(track);
+    childrenByParentId.set(track.parentId, siblings);
+  }
+
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const buildNode = (track: LayerTrack): StoryLayerNode => {
+    if (visiting.has(track.id)) throw new Error(`layer parent cycle includes ${track.id}`);
+    if (visited.has(track.id)) throw new Error(`${track.id} has multiple DOM owners`);
+    visiting.add(track.id);
+    const children = (childrenByParentId.get(track.id) ?? []).map(buildNode);
+    visiting.delete(track.id);
+    visited.add(track.id);
+    return { track, children };
+  };
+
+  const roots = tracks.filter(({ parentId }) => !parentId).map(buildNode);
+  for (const track of tracks) {
+    if (!visited.has(track.id)) buildNode(track);
+  }
+  return roots;
+}
+
 export const STORY_RENDERABLE_LAYER_IDS = STORY_LAYER_DEFINITIONS.map(({ id }) => id);
 const STORY_RENDERABLE_LAYER_ID_SET = new Set<string>(STORY_RENDERABLE_LAYER_IDS);
 
@@ -397,6 +453,8 @@ export function assertStoryTimeline() {
   for (const layerId of renderableLayerIds) {
     if (!trackIds.has(layerId)) throw new Error(`${layerId} has no timeline track`);
   }
+
+  buildStoryLayerTree(LAYER_TRACKS);
 
   for (const shot of SHOTS) {
     if (!chapterIds.has(shot.chapterId)) throw new Error(`${shot.id} has an unknown chapter`);

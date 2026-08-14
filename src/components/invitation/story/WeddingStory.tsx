@@ -4,11 +4,27 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
 import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
-import { CHAPTERS, LAYER_TRACKS, SHOTS, assertStoryTimeline } from "./storyTimeline";
+import {
+  CHAPTERS,
+  LAYER_TRACKS,
+  SHOTS,
+  assertStoryTimeline,
+  buildStoryLayerTree,
+  type StoryLayerNode,
+} from "./storyTimeline";
 import { useStoryTimeline } from "./useStoryTimeline";
 import styles from "./WeddingStory.module.css";
 
 assertStoryTimeline();
+const STORY_LAYER_TREE = buildStoryLayerTree(LAYER_TRACKS);
+
+function StoryLayerTreeNode({ node }: { node: StoryLayerNode }) {
+  return (
+    <StoryLayer track={node.track}>
+      {node.children.map((child) => <StoryLayerTreeNode key={child.track.id} node={child} />)}
+    </StoryLayer>
+  );
+}
 
 const storyCanvasLayoutStyle = {
   "--story-casual-couple-bottom": STORY_CANVAS_LAYOUT.casualCouple.bottom,
@@ -68,7 +84,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
         >
           <div className={styles.canvasPlane}>
             <div className={styles.layers} aria-hidden="true">
-              {LAYER_TRACKS.map((track) => <StoryLayer key={track.id} track={track} />)}
+              {STORY_LAYER_TREE.map((node) => <StoryLayerTreeNode key={node.track.id} node={node} />)}
             </div>
 
             <div className={styles.storyCopy} aria-hidden="true">
