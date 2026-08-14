@@ -329,7 +329,7 @@
 
 .story,
 .stageShell,
-.canvasPlane { background: #f7f3e8; color: #151515; }
+.canvasPlane { background: var(--color-paper); color: #151515; }
 
 .canvasPlane::after {
   opacity: 0.075;

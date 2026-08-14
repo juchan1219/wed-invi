@@ -164,7 +164,7 @@ export const SHOTS: readonly StoryShot[] = [
   { id: "laugh-together", chapterId: "laughter", start: 0.455, end: 0.52, copyStart: 0.46, copyEnd: 0.515, copy: "평생 웃겨주고 웃어주는 짝꿍이 되기로 했습니다.", layerIds: ["panel-left", "panel-right", "laugh-burst", "joke-yechan", "jueun-expression"] },
   { id: "postcards-open", chapterId: "journey", start: 0.52, end: 0.58, copyStart: 0.525, copyEnd: 0.575, eyebrow: "함부르크 · 도쿄 · 그리고 서울", copy: "함부르크의 노을 아래", layerIds: ["bg-journey", "proposal-triptych", "travel-route"] },
   { id: "route-connects", chapterId: "journey", start: 0.58, end: 0.64, copyStart: 0.585, copyEnd: 0.635, copy: "작은 상자 속 질문에 주은은 웃음으로 답했고", layerIds: ["proposal-triptych", "travel-route", "ring-glint"] },
-  { id: "jeju-expands", chapterId: "journey", start: 0.64, end: 0.7, copyStart: 0.645, copyEnd: 0.695, copy: "도쿄의 여름을 지나, 우리의 다음 장면으로", layerIds: ["proposal-triptych", "ring-glint", "opening-island", "opening-field"] },
+  { id: "jeju-expands", chapterId: "journey", start: 0.64, end: 0.7, copyStart: 0.645, copyEnd: 0.695, copy: "도쿄의 여름을 지나, 우리의 다음 장면으로", layerIds: ["proposal-triptych", "ring-glint", "opening-island"] },
   { id: "venue-approach", chapterId: "destination", start: 0.7, end: 0.78, copyStart: 0.706, copyEnd: 0.774, copy: `${formatCeremonyDateShort().replaceAll(" ", "")} ${formatCeremonyTime()},`, layerIds: ["bg-venue", "venue-doors", "casual-couple"] },
   { id: "outfit-matchcut", chapterId: "destination", start: 0.78, end: 0.86, copyStart: 0.786, copyEnd: 0.854, copy: `${wedding.venue.name}에서요!`, layerIds: ["venue-doors", "casual-couple", "matchcut-strip", "wedding-couple"] },
   { id: "everyone-arrives", chapterId: "wedding", start: 0.86, end: 0.93, copyStart: 0.866, copyEnd: 0.924, eyebrow: "예찬 ♥ 주은", copy: "소중한 분들과 함께", layerIds: ["bg-finale", "wedding-couple", "crowd-left", "crowd-right", "confetti-back", "confetti", "confetti-front"] },
@@ -236,7 +236,7 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
     id: "bg-finale",
     kind: "background",
     techniques: ["polygonReveal", "matchCut"],
-    frames: [f(0, 0), f(0.765, 0), f(0.7725, 1), f(1, 1)],
+    frames: [f(0, 0), f(0.84, 0), f(0.85, 1), f(1, 1)],
     clipFrames: [
       { at: 0, value: FULL_CLIP },
       { at: 0.985, value: FULL_CLIP, ease: "easeInOut" },
@@ -246,7 +246,7 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
 
   { id: "opening-clouds", kind: "scenery", frames: [f(0, 0, -8, -6, 1.08), f(0.015, 1, -5, 0, 1.05), f(0.1, 1, 2, 1, 1.05), f(0.15, 0, 8, -4, 1.08), f(0.64, 0), f(0.66, 1, -4, 0, 1.08), f(0.7, 0, 8, -2, 1.12)] },
   { id: "opening-island", kind: "scenery", frames: [f(0, 0, 0, 12, 0.92), f(0.02, 1, 0, 0, 1), f(0.12, 1, -2, -1, 1.04), f(0.15, 0, -4, -4, 1.08), f(0.64, 0), f(0.66, 1, 0, 5, 1.2), f(0.7, 0, -5, -4, 1.5)] },
-  { id: "opening-field", kind: "scenery", frames: [f(0, 0, 0, 18, 1.08), f(0.025, 1, 0, 0, 1.04), f(0.1, 1, -5, 0, 1.12), f(0.15, 0, -10, 8, 1.2), f(0.64, 0), f(0.66, 1, 0, 10, 1.16), f(0.7, 0, -12, 4, 1.35)] },
+  { id: "opening-field", kind: "scenery", frames: [f(0, 0, 0, 18, 1.08), f(0.025, 1, 0, 0, 1.04), f(0.1, 1, -5, 0, 1.12), f(0.15, 0, -10, 8, 1.2)] },
   { id: "title-shards", kind: "type", frames: [f(0, 0, 0, -18, 0.72, -6), f(0.016, 1, 0, 0, 1.04, 1), f(0.036, 1, 0, 0, 1, -1), f(0.048, 1), f(0.058, 0, 5, -20, 1.18, 8)] },
   {
     id: "sidecar",
@@ -344,9 +344,9 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
     frames: [f(0, 0), f(0.51, 0), f(0.5125, 1), f(0.72, 1, 0, 0, 1, 0, "hold"), f(0.720001, 0)],
     xFrames: [
       { at: 0, value: 0 },
-      { at: 0.55, value: 0 },
+      { at: 0.55, value: 0, ease: "easeInOut" },
       { at: 0.58, value: -430 },
-      { at: 0.61, value: -430 },
+      { at: 0.61, value: -430, ease: "easeInOut" },
       { at: 0.64, value: -860 },
       { at: 1, value: -860 },
     ],
@@ -388,9 +388,9 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
   {
     id: "casual-couple",
     kind: "character",
-    frames: [f(0, 0), f(0.7, 0), f(0.71, 1), f(0.8225, 1), f(0.825, 0)],
+    frames: [f(0, 0), f(0.7, 0), f(0.71, 1), f(0.8225, 1, 0, 0, 1, 0, "hold"), f(0.8225001, 0)],
     xFrames: PARENT_LOCAL_ZERO_FRAMES,
-    yFrames: [{ at: 0, value: 610 }, { at: 1, value: 610 }],
+    yFrames: [{ at: 0, value: 660 }, { at: 0.71, value: 660, ease: "easeInOut" }, { at: 0.8175, value: 610 }, { at: 1, value: 610 }],
     scaleXFrames: PARENT_LOCAL_ONE_FRAMES,
     scaleYFrames: PARENT_LOCAL_ONE_FRAMES,
   },
@@ -398,7 +398,7 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
   {
     id: "wedding-couple",
     kind: "character",
-    frames: [f(0, 0), f(0.81, 0), f(0.8175, 0.3), f(0.825, 1), f(0.97, 1), f(0.985, 0)],
+    frames: [f(0, 0), f(0.81, 0, 0, 0, 1, 0, "hold"), f(0.8175, 0.3), f(0.825, 1), f(0.97, 1), f(0.985, 0)],
     xFrames: PARENT_LOCAL_ZERO_FRAMES,
     yFrames: [{ at: 0, value: 610 }, { at: 0.86, value: 610 }, { at: 0.93, value: 470 }, { at: 1, value: 470 }],
     scaleXFrames: PARENT_LOCAL_ONE_FRAMES,

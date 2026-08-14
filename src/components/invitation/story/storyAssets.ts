@@ -61,6 +61,10 @@ export type StoryLayerDefinition = {
   crop?: StoryImageCrop;
   parts?: readonly StoryLayerPart[];
   text?: { kind: "title" | "caption"; value: string };
+  composite?: {
+    stack: number;
+    coverage: "opaque-full" | "clipped" | "transparent";
+  };
 };
 
 function storySprite(
@@ -241,11 +245,11 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "bg-office", assetId: "officeBackground", className: "background" },
   { id: "bg-laugh", assetId: "officeBackground", className: "background" },
   { id: "bg-journey", assetId: "paperTurn", className: "background" },
-  { id: "bg-venue", assetId: "venueExterior", className: "background" },
-  { id: "bg-finale", assetId: "venueInterior", className: "background" },
+  { id: "bg-venue", assetId: "venueExterior", className: "background", composite: { stack: 1, coverage: "opaque-full" } },
+  { id: "bg-finale", assetId: "venueInterior", className: "background", composite: { stack: 0, coverage: "opaque-full" } },
   { id: "opening-clouds", assetId: "openingBackground", className: "midground" },
   { id: "opening-island", assetId: "openingBackground", className: "midground" },
-  { id: "opening-field", assetId: "sidecarRoad", className: "foreground" },
+  { id: "opening-field", assetId: "sidecarRoad", className: "foreground", composite: { stack: 18, coverage: "opaque-full" } },
   { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은\n의 결혼 이야기" } },
   {
     id: "sidecar",
@@ -282,7 +286,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "jueun-expression", assetId: "casualJueunLaughing", className: "character" },
   { id: "speech-bubble", className: "foreground", text: { kind: "caption", value: "오늘 퇴근하고\n맛있는 거 어때요?" } },
   { id: "laugh-burst", assetId: "laughBurst", className: "foreground" },
-  { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground" },
+  { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground", composite: { stack: 11, coverage: "opaque-full" } },
   { id: "travel-route", assetId: "proposalTriptych", className: "foreground" },
   {
     id: "ring-glint",
@@ -290,7 +294,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
     className: "foreground",
     crop: { x: 464, y: 340, width: 248, height: 300, display: { width: 248, height: 300 } },
   },
-  { id: "venue-doors", assetId: "venueInterior", className: "midground" },
+  { id: "venue-doors", assetId: "venueInterior", className: "midground", composite: { stack: 2, coverage: "clipped" } },
   {
     id: "casual-couple",
     className: "character",

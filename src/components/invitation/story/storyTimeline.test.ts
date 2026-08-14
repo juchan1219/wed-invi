@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -31,6 +32,20 @@ function requiredTrack(id: string) {
 function spatialState(state: LayerState) {
   const { opacity: _opacity, ...spatial } = state;
   return spatial;
+}
+
+type StoryCompositeContract = {
+  stack: number;
+  coverage: "opaque-full" | "clipped" | "transparent";
+};
+
+function requiredComposite(id: string) {
+  const definition = STORY_LAYER_DEFINITIONS.find((candidate) => candidate.id === id) as
+    | (typeof STORY_LAYER_DEFINITIONS[number] & { composite?: StoryCompositeContract })
+    | undefined;
+  assert.ok(definition, `missing layer definition: ${id}`);
+  assert.ok(definition.composite, `missing compositing contract: ${id}`);
+  return { definition, composite: definition.composite };
 }
 
 type StoryLayerNode = {
@@ -561,8 +576,26 @@ test("shots 10 through 12 pan one opaque 1290px proposal strip without panel cro
     [0.52, 0.58, 0.64].map((progress) => sampleLayerState(triptych, progress).x),
     [0, -430, -860],
   );
+  assert.ok(Math.abs(sampleLayerState(triptych, 0.5575).x - -53.75) < 1e-9, "first proposal pan must easeInOut");
+  assert.ok(Math.abs(sampleLayerState(triptych, 0.6175).x - -483.75) < 1e-9, "second proposal pan must easeInOut");
   for (let step = 520; step <= 700; step += 1) {
     assert.ok(sampleLayerState(triptych, step / 1000).opacity >= 0.98, `triptych faded at ${step / 1000}`);
+  }
+});
+
+test("opaque opening scenery cannot cover the proposal strip during the tower zoom", () => {
+  const openingField = requiredTrack("opening-field");
+  const triptych = requiredTrack("proposal-triptych");
+  const openingComposite = requiredComposite("opening-field").composite;
+  const proposalComposite = requiredComposite("proposal-triptych").composite;
+
+  assert.equal(openingComposite.coverage, "opaque-full");
+  assert.equal(proposalComposite.coverage, "opaque-full");
+  assert.ok(openingComposite.stack > proposalComposite.stack, "test fixture must model the actual foreground order");
+  assert.ok(!SHOTS[11]?.layerIds.includes("opening-field"), "Tokyo shot must not claim opaque opening scenery");
+  for (const progress of [0.64, 0.65, 0.66, 0.68, 0.7]) {
+    assert.equal(sampleLayerState(openingField, progress).opacity, 0, `opening field covers proposal at ${progress}`);
+    assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `proposal missing at ${progress}`);
   }
 });
 
@@ -632,6 +665,29 @@ test("venue doors reveal the interior and casual clothes match cut at identical 
   assert.notDeepEqual(sampleLayerState(interior, 0.78).clip, FULL_CLIP);
   assert.deepEqual(sampleLayerState(interior, 0.84).clip, FULL_CLIP);
 
+  const finale = requiredTrack("bg-finale");
+  const finaleComposite = requiredComposite("bg-finale").composite;
+  const exteriorComposite = requiredComposite("bg-venue").composite;
+  const doorComposite = requiredComposite("venue-doors").composite;
+  assert.deepEqual(
+    [finaleComposite.stack, exteriorComposite.stack, doorComposite.stack],
+    [0, 1, 2],
+    "interior underlay, exterior hold, and clipped doorway need explicit stacking",
+  );
+  assert.deepEqual(
+    [finaleComposite.coverage, exteriorComposite.coverage, doorComposite.coverage],
+    ["opaque-full", "opaque-full", "clipped"],
+  );
+  for (const progress of [0.7725, 0.775, 0.779]) {
+    assert.equal(sampleLayerState(finale, progress).opacity, 0, `full interior bypasses door clip at ${progress}`);
+    assert.equal(sampleLayerState(exterior, progress).opacity, 1, `exterior does not hold at ${progress}`);
+    assert.notDeepEqual(sampleLayerState(interior, progress).clip, FULL_CLIP);
+  }
+
+  assert.notEqual(sampleLayerState(casual, 0.72).y, sampleLayerState(casual, 0.8175).y, "casual couple never walks");
+  assert.equal(sampleLayerState(weddingCouple, 0.817499).opacity, 0);
+  assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
+
   for (const progress of [0.8175, 0.82, 0.8225]) {
     const before = sampleLayerState(casual, progress);
     const after = sampleLayerState(weddingCouple, progress);
@@ -639,6 +695,22 @@ test("venue doors reveal the interior and casual clothes match cut at identical 
     assert.deepEqual([before.x, before.y], [after.x, after.y]);
     assert.ok(Math.abs(before.scaleY - after.scaleY) <= 0.005, `body height drift at ${progress}`);
   }
+  assert.equal(sampleLayerState(casual, 0.822501).opacity, 0);
+  assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
+});
+
+test("the casual walk reaches one exact half-percent wardrobe overlap", () => {
+  const casual = requiredTrack("casual-couple");
+  const weddingCouple = requiredTrack("wedding-couple");
+  assert.notEqual(sampleLayerState(casual, 0.72).y, sampleLayerState(casual, 0.8175).y);
+  assert.equal(sampleLayerState(weddingCouple, 0.817499).opacity, 0);
+  assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
+  assert.ok(sampleLayerState(casual, 0.8175).opacity > 0);
+  assert.ok(sampleLayerState(weddingCouple, 0.8175).opacity > 0);
+  assert.ok(sampleLayerState(casual, 0.8225).opacity > 0);
+  assert.ok(sampleLayerState(weddingCouple, 0.8225).opacity > 0);
+  assert.equal(sampleLayerState(casual, 0.822501).opacity, 0);
+  assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
 });
 
 test("the finale uses differential crowd parallax, a 610 to 470 couple walk, and veil sweep", () => {
@@ -677,6 +749,20 @@ test("the finale uses differential crowd parallax, a 610 to 470 couple walk, and
     [50, 50, 50, 50, 50, 50, 50, 50],
     "the venue must spatially close away so the cream canvas remains behind the veil",
   );
+});
+
+test("the final exposed canvas resolves through the last CSS cascade rule to invitation paper", () => {
+  const storyCss = readFileSync(new URL("./WeddingStory.module.css", import.meta.url), "utf8");
+  const globalCss = readFileSync(new URL("../../../app/globals.css", import.meta.url), "utf8");
+  const paperToken = globalCss.match(/--color-paper:\s*(#[0-9a-fA-F]{6})\s*;/)?.[1];
+  assert.equal(paperToken, "#fdfbf7");
+
+  const canvasBackgrounds = [...storyCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selector]) => selector.includes(".canvasPlane") && !selector.includes("::"))
+    .flatMap(([, , declarations]) => [...declarations.matchAll(/(?:^|;)\s*background:\s*([^;]+);/g)])
+    .map((match) => match[1].trim());
+  assert.ok(canvasBackgrounds.length > 0);
+  assert.equal(canvasBackgrounds.at(-1), "var(--color-paper)");
 });
 
 test("shots 10 through 16 keep a spatial connector at every boundary", () => {

@@ -56,6 +56,7 @@ export function StoryLayer({ track, children }: { track: LayerTrack; children?: 
 
   const state = sampleLayerState(track, 0);
   const style = {
+    zIndex: definition.composite?.stack,
     opacity: state.opacity,
     visibility: state.opacity < 0.002 ? "hidden" : "visible",
     transformOrigin: `${state.originX}% ${state.originY}%`,
@@ -70,6 +71,7 @@ export function StoryLayer({ track, children }: { track: LayerTrack; children?: 
       className={`${styles.layer} ${layerClassName} ${roleClassName}`}
       data-story-layer={track.id}
       data-kind={track.kind}
+      data-coverage={definition.composite?.coverage}
       aria-hidden="true"
       style={style as CSSProperties}
     >
