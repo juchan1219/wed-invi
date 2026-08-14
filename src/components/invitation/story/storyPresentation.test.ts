@@ -28,6 +28,8 @@ function installDomEnvironment(reducedMotion: boolean) {
     resizeObservers: 0,
     scrollListeners: 0,
   };
+  const animationFrameCallbacks = new Map<number, FrameRequestCallback>();
+  let animationFrameId = 0;
 
   Object.defineProperties(globalThis, {
     window: { configurable: true, writable: true, value: dom.window },
@@ -69,14 +71,16 @@ function installDomEnvironment(reducedMotion: boolean) {
     toJSON() {},
   });
 
-  const requestFrame = (() => {
+  const requestFrame = ((callback: FrameRequestCallback) => {
     counters.animationFrames += 1;
-    return counters.animationFrames;
+    animationFrameId += 1;
+    animationFrameCallbacks.set(animationFrameId, callback);
+    return animationFrameId;
   }) as typeof requestAnimationFrame;
   globalThis.requestAnimationFrame = requestFrame;
-  globalThis.cancelAnimationFrame = () => {};
+  globalThis.cancelAnimationFrame = (id) => { animationFrameCallbacks.delete(id); };
   dom.window.requestAnimationFrame = requestFrame;
-  dom.window.cancelAnimationFrame = () => {};
+  dom.window.cancelAnimationFrame = globalThis.cancelAnimationFrame;
 
   class FakeIntersectionObserver implements IntersectionObserver {
     readonly root = null;
@@ -103,7 +107,15 @@ function installDomEnvironment(reducedMotion: boolean) {
     return addEventListener(type, ...args);
   }) as typeof dom.window.addEventListener;
 
-  return { counters, dom, container: dom.window.document.querySelector("#root")! };
+  const runAnimationFrame = (time = 16) => {
+    const next = animationFrameCallbacks.entries().next().value as [number, FrameRequestCallback] | undefined;
+    if (!next) return false;
+    animationFrameCallbacks.delete(next[0]);
+    next[1](time);
+    return true;
+  };
+
+  return { counters, dom, container: dom.window.document.querySelector("#root")!, runAnimationFrame };
 }
 
 test("fallback panel contract selects six final registry illustrations and chapter copy in order", () => {
@@ -252,6 +264,7 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
   assert.equal(stage?.getAttribute("aria-hidden"), "true");
   assert.equal(dom.window.getComputedStyle(stage!).display, "none");
   assert.equal(dom.window.getComputedStyle(fallback!).display, "grid");
+  assert.equal(dom.window.getComputedStyle(story).overflowAnchor, "none");
   assert.equal(fallback?.querySelectorAll(":scope > article").length, 6);
   assert.equal(story.querySelector("ol[aria-label='결혼 이야기 전체 대본']")?.children.length, 16);
   dom.window.close();
@@ -261,6 +274,7 @@ test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", a
   installCssModuleHook();
   const { WeddingStory } = await import("./WeddingStory");
   const environment = installDomEnvironment(true);
+  environment.dom.window.document.documentElement.style.overflowAnchor = "auto";
   let root: Root | undefined;
 
   await act(async () => {
@@ -280,6 +294,7 @@ test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", a
   });
 
   await act(async () => root?.unmount());
+  assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "auto");
   environment.dom.window.close();
 });
 
@@ -297,9 +312,15 @@ test("WeddingStory allowed-motion mount activates containment and timeline obser
   const story = environment.container.querySelector("section");
   assert.equal(story?.getAttribute("data-motion"), "full");
   assert.equal(story?.querySelector(".stageShell")?.getAttribute("aria-hidden"), "false");
+  assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "none");
   assert.equal(environment.counters.intersectionObservers, 1);
   assert.equal(environment.counters.resizeObservers, 1);
   assert.equal(environment.counters.scrollListeners, 1);
+
+  await act(async () => { environment.runAnimationFrame(); });
+  assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "none");
+  await act(async () => { environment.runAnimationFrame(); });
+  assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "");
 
   await act(async () => root?.unmount());
   environment.dom.window.close();

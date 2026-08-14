@@ -4,6 +4,7 @@
   width: 100vw;
   height: 1850svh;
   margin-left: -50vw;
+  overflow-anchor: none;
   background: #f5eedc;
 }
 

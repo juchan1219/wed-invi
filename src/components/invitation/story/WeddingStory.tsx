@@ -50,10 +50,36 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
 
   useLayoutEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setMotionMode(media.matches ? "reduce" : "full");
+    const documentStyle = document.documentElement.style;
+    let currentMode: StoryMotionMode = "pending";
+    let anchorFrame = 0;
+    let previousOverflowAnchor = documentStyle.overflowAnchor;
+
+    const suspendScrollAnchoring = () => {
+      if (!anchorFrame) previousOverflowAnchor = documentStyle.overflowAnchor;
+      else window.cancelAnimationFrame(anchorFrame);
+      documentStyle.overflowAnchor = "none";
+      anchorFrame = window.requestAnimationFrame(() => {
+        anchorFrame = window.requestAnimationFrame(() => {
+          documentStyle.overflowAnchor = previousOverflowAnchor;
+          anchorFrame = 0;
+        });
+      });
+    };
+    const sync = () => {
+      const nextMode: StoryMotionMode = media.matches ? "reduce" : "full";
+      if (nextMode === currentMode) return;
+      if (nextMode === "full" || currentMode === "full") suspendScrollAnchoring();
+      currentMode = nextMode;
+      setMotionMode(nextMode);
+    };
     sync();
     media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
+    return () => {
+      media.removeEventListener("change", sync);
+      if (anchorFrame) window.cancelAnimationFrame(anchorFrame);
+      documentStyle.overflowAnchor = previousOverflowAnchor;
+    };
   }, []);
 
   useStoryTimeline({ root: rootRef, stage: stageRef, enabled: presentation.runTimeline });
