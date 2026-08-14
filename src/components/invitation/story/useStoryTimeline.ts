@@ -23,7 +23,6 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     const copyElements = Array.from(stageElement.querySelectorAll<HTMLElement>("[data-story-copy]"));
     const progressElement = stageElement.querySelector<HTMLElement>("[role='progressbar']");
     const chapterName = stageElement.querySelector<HTMLElement>("[data-chapter-name]");
-    const mobileQuery = window.matchMedia("(max-width: 700px)");
 
     let target = 0;
     let playhead = 0;
@@ -42,13 +41,12 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     };
 
     const paint = (progress: number) => {
-      const viewport = mobileQuery.matches ? "mobile" : "desktop";
       stageElement.style.setProperty("--story-progress", progress.toFixed(5));
 
       for (const track of LAYER_TRACKS) {
         const element = layerElements.get(track.id);
         if (!element) continue;
-        const state = sampleLayerState(track, progress, viewport);
+        const state = sampleLayerState(track, progress);
         const active = state.opacity >= 0.002;
         const wasActive = element.dataset.timelineActive === "true";
         if (!active) {
@@ -66,8 +64,9 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
           element.dataset.timelineActive = "true";
         }
         element.style.opacity = state.opacity.toFixed(4);
-        element.style.transform = `translate3d(${state.x.toFixed(3)}vw, ${state.y.toFixed(3)}svh, 0) rotate(${state.rotate.toFixed(3)}deg) scale(${state.scale.toFixed(4)})`;
-        if (state.clip) element.style.clipPath = clipToPolygon(state.clip);
+        element.style.transformOrigin = `${state.originX.toFixed(3)}% ${state.originY.toFixed(3)}%`;
+        element.style.transform = `translate3d(${state.x.toFixed(3)}px, ${state.y.toFixed(3)}px, 0) rotate(${state.rotate.toFixed(3)}deg) scale(${state.scaleX.toFixed(4)}, ${state.scaleY.toFixed(4)})`;
+        element.style.clipPath = clipToPolygon(state.clip);
       }
 
       for (const element of copyElements) {
@@ -155,7 +154,6 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     window.addEventListener("resize", syncImmediately);
     window.addEventListener("orientationchange", syncImmediately);
     window.addEventListener("pageshow", syncImmediately);
-    mobileQuery.addEventListener("change", syncImmediately);
 
     return () => {
       observer.disconnect();
@@ -164,7 +162,6 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
       window.removeEventListener("resize", syncImmediately);
       window.removeEventListener("orientationchange", syncImmediately);
       window.removeEventListener("pageshow", syncImmediately);
-      mobileQuery.removeEventListener("change", syncImmediately);
     };
   }, [enabled, root, stage]);
 }

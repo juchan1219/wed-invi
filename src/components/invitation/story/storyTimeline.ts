@@ -9,11 +9,11 @@ import {
   type NumberFrame,
 } from "./timelineMath";
 
-export type StoryFrame = {
+type SourceFrame = {
   at: number;
   x: number;
   y: number;
-  scale: number;
+  size: number;
   rotate: number;
   opacity: number;
   ease?: EaseName;
@@ -24,22 +24,30 @@ export type LayerKind = "background" | "scenery" | "character" | "prop" | "trans
 export type LayerTrack = {
   id: string;
   kind: LayerKind;
-  frames: readonly StoryFrame[];
-  mobile?: readonly StoryFrame[];
-  desktop?: readonly StoryFrame[];
-  clipFrames?: readonly ClipFrame[];
+  x?: readonly NumberFrame[];
+  y?: readonly NumberFrame[];
+  scaleX?: readonly NumberFrame[];
+  scaleY?: readonly NumberFrame[];
+  rotate?: readonly NumberFrame[];
+  opacity?: readonly NumberFrame[];
+  originX?: readonly NumberFrame[];
+  originY?: readonly NumberFrame[];
+  clip?: readonly ClipFrame[];
   techniques?: readonly StoryTransition[];
 };
 
 export type StoryTransition = "paperTear" | "polygonReveal" | "cameraZoom" | "panelExpansion" | "matchCut";
 
-export type StoryLayerState = {
+export type LayerState = {
   x: number;
   y: number;
-  scale: number;
+  scaleX: number;
+  scaleY: number;
   rotate: number;
   opacity: number;
-  clip?: Clip;
+  originX: number;
+  originY: number;
+  clip: Clip;
 };
 
 export type StoryChapter = {
@@ -66,10 +74,45 @@ const f = (
   opacity: number,
   x = 0,
   y = 0,
-  scale = 1,
+  size = 1,
   rotate = 0,
   ease: EaseName = "easeInOut",
-): StoryFrame => ({ at, x, y, scale, rotate, opacity, ease });
+): SourceFrame => ({ at, x, y, size, rotate, opacity, ease });
+
+const LOGICAL_WIDTH = 430;
+const LOGICAL_HEIGHT = 932;
+const FULL_CLIP: Clip = [0, 0, 100, 0, 100, 100, 0, 100];
+
+type SourceLayer = {
+  id: string;
+  kind: LayerKind;
+  frames: readonly SourceFrame[];
+  clipFrames?: readonly ClipFrame[];
+  techniques?: readonly StoryTransition[];
+};
+
+function numberFrames(
+  frames: readonly SourceFrame[],
+  field: keyof Pick<SourceFrame, "x" | "y" | "size" | "rotate" | "opacity">,
+  factor = 1,
+): readonly NumberFrame[] {
+  return frames.map(({ at, ease, [field]: value }) => ({ at, value: value * factor, ease }));
+}
+
+function toLogicalTrack({ id, kind, frames, clipFrames, techniques }: SourceLayer): LayerTrack {
+  return {
+    id,
+    kind,
+    x: numberFrames(frames, "x", LOGICAL_WIDTH / 100),
+    y: numberFrames(frames, "y", LOGICAL_HEIGHT / 100),
+    scaleX: numberFrames(frames, "size"),
+    scaleY: numberFrames(frames, "size"),
+    rotate: numberFrames(frames, "rotate"),
+    opacity: numberFrames(frames, "opacity"),
+    clip: clipFrames,
+    techniques,
+  };
+}
 
 export const CHAPTERS: readonly StoryChapter[] = [
   { id: "beginning", title: "같은 방향을 바라보기 시작한 날", start: 0, end: 0.15 },
@@ -99,7 +142,7 @@ export const SHOTS: readonly StoryShot[] = [
   { id: "invitation-rises", chapterId: "wedding", start: 0.93, end: 1, copyStart: 0.936, copyEnd: 0.987, copy: "우리 결혼합니다!!", layerIds: ["final-title", "confetti-back", "confetti", "confetti-front", "invitation-paper"] },
 ] as const;
 
-export const LAYER_TRACKS: readonly LayerTrack[] = [
+const SOURCE_LAYERS: readonly SourceLayer[] = [
   { id: "bg-jeju", kind: "background", frames: [f(0, 1, 0, 0, 1.02), f(0.12, 1, 0, 0, 1.08), f(0.15, 1, 0, -2, 1.12), f(0.17, 0, 0, -4, 1.16)] },
   { id: "bg-office", kind: "background", frames: [f(0, 0), f(0.145, 0), f(0.17, 1), f(0.5, 1), f(0.53, 0)] },
   { id: "bg-laugh", kind: "background", frames: [f(0, 0), f(0.31, 0), f(0.335, 1), f(0.5, 1), f(0.53, 0)] },
@@ -111,7 +154,7 @@ export const LAYER_TRACKS: readonly LayerTrack[] = [
   { id: "opening-island", kind: "scenery", frames: [f(0, 0, 0, 12, 0.92), f(0.02, 1, 0, 0, 1), f(0.12, 1, -2, -1, 1.04), f(0.15, 0, -4, -4, 1.08), f(0.64, 0), f(0.66, 1, 0, 5, 1.2), f(0.7, 0, -5, -4, 1.5)] },
   { id: "opening-field", kind: "scenery", frames: [f(0, 0, 0, 18, 1.08), f(0.025, 1, 0, 0, 1.04), f(0.1, 1, -5, 0, 1.12), f(0.15, 0, -10, 8, 1.2), f(0.64, 0), f(0.66, 1, 0, 10, 1.16), f(0.7, 0, -12, 4, 1.35)] },
   { id: "title-shards", kind: "type", frames: [f(0, 0, 0, -18, 0.72, -6), f(0.016, 1, 0, 0, 1.04, 1), f(0.036, 1, 0, 0, 1, -1), f(0.048, 1), f(0.058, 0, 5, -20, 1.18, 8)] },
-  { id: "sidecar", kind: "character", frames: [f(0, 0, -2, 28, 0.78), f(0.045, 0, -2, 26, 0.8), f(0.065, 1, 0, 4, 1), f(0.105, 1, 1, 0, 1.08, -1), f(0.145, 1, 0, -2, 1.14, 1), f(0.165, 0, 0, -10, 1.24)], mobile: [f(0, 0, -4, 32, 0.72), f(0.045, 0, -4, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.105, 1, 0, 3, 1.02, -1), f(0.145, 1, 0, 0, 1.08, 1), f(0.165, 0, 0, -8, 1.16)], desktop: [f(0, 0, 8, 30, 0.72), f(0.045, 0, 8, 28, 0.76), f(0.065, 1, 6, 6, 0.92), f(0.105, 1, 4, 0, 1.02, -1), f(0.145, 1, 2, -3, 1.08, 1), f(0.165, 0, 0, -12, 1.18)] },
+  { id: "sidecar", kind: "character", frames: [f(0, 0, -4, 32, 0.72), f(0.045, 0, -4, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.105, 1, 0, 3, 1.02, -1), f(0.145, 1, 0, 0, 1.08, 1), f(0.165, 0, 0, -8, 1.16)] },
   { id: "wheel-front", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
   { id: "wheel-back", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
   { id: "name-labels", kind: "type", frames: [f(0, 0, 0, 3, 0.8), f(0.09, 0, 0, 3, 0.8), f(0.112, 1, 0, 0, 1.05, -2), f(0.14, 1, 0, -1, 1), f(0.155, 0, 0, -4, 1.1)] },
@@ -159,41 +202,36 @@ export const LAYER_TRACKS: readonly LayerTrack[] = [
   { id: "invitation-paper", kind: "transition", frames: [f(0, 0, 0, 115, 1.05), f(0.955, 0, 0, 115, 1.05), f(0.982, 1, 0, 40, 1.02), f(1, 1, 0, 0, 1)] },
 ] as const;
 
+export const LAYER_TRACKS: readonly LayerTrack[] = SOURCE_LAYERS.map(toLogicalTrack);
+
 export const STORY_TRANSITIONS = [...new Set(
   LAYER_TRACKS.flatMap(({ techniques = [] }) => techniques),
 )] as readonly StoryTransition[];
 
-type CompiledTrack = Record<"x" | "y" | "scale" | "rotate" | "opacity", readonly NumberFrame[]>;
-const compiledTracks = new WeakMap<readonly StoryFrame[], CompiledTrack>();
+export { FULL_CLIP };
 
-function compile(frames: readonly StoryFrame[]) {
-  const cached = compiledTracks.get(frames);
-  if (cached) return cached;
-  const compiled = {
-    x: frames.map(({ at, x: value, ease }) => ({ at, value, ease })),
-    y: frames.map(({ at, y: value, ease }) => ({ at, value, ease })),
-    scale: frames.map(({ at, scale: value, ease }) => ({ at, value, ease })),
-    rotate: frames.map(({ at, rotate: value, ease }) => ({ at, value, ease })),
-    opacity: frames.map(({ at, opacity: value, ease }) => ({ at, value, ease })),
-  } satisfies CompiledTrack;
-  compiledTracks.set(frames, compiled);
-  return compiled;
+function sampleOptionalNumberTrack(
+  frames: readonly NumberFrame[] | undefined,
+  progress: number,
+  fallback: number,
+) {
+  return frames ? sampleNumberTrack(frames, progress) : fallback;
 }
 
 export function sampleLayerState(
   track: LayerTrack,
   progress: number,
-  viewport: "mobile" | "desktop",
-): StoryLayerState {
-  const frames = track[viewport] ?? track.frames;
-  const compiled = compile(frames);
+): LayerState {
   return {
-    x: sampleNumberTrack(compiled.x, progress),
-    y: sampleNumberTrack(compiled.y, progress),
-    scale: sampleNumberTrack(compiled.scale, progress),
-    rotate: sampleNumberTrack(compiled.rotate, progress),
-    opacity: sampleNumberTrack(compiled.opacity, progress),
-    clip: track.clipFrames ? sampleClipTrack(track.clipFrames, progress) : undefined,
+    x: sampleOptionalNumberTrack(track.x, progress, 0),
+    y: sampleOptionalNumberTrack(track.y, progress, 0),
+    scaleX: sampleOptionalNumberTrack(track.scaleX, progress, 1),
+    scaleY: sampleOptionalNumberTrack(track.scaleY, progress, 1),
+    rotate: sampleOptionalNumberTrack(track.rotate, progress, 0),
+    opacity: sampleOptionalNumberTrack(track.opacity, progress, 1),
+    originX: sampleOptionalNumberTrack(track.originX, progress, 50),
+    originY: sampleOptionalNumberTrack(track.originY, progress, 50),
+    clip: track.clip ? sampleClipTrack(track.clip, progress) : FULL_CLIP,
   };
 }
 
@@ -205,7 +243,16 @@ export function assertStoryTimeline() {
   for (const track of LAYER_TRACKS) {
     if (ids.has(track.id)) throw new Error(`duplicate layer id: ${track.id}`);
     ids.add(track.id);
-    for (const frames of [track.frames, track.mobile, track.desktop]) {
+    for (const frames of [
+      track.x,
+      track.y,
+      track.scaleX,
+      track.scaleY,
+      track.rotate,
+      track.opacity,
+      track.originX,
+      track.originY,
+    ]) {
       if (!frames) continue;
       for (let index = 0; index < frames.length; index += 1) {
         const frame = frames[index]!;
@@ -213,11 +260,11 @@ export function assertStoryTimeline() {
         if (index > 0 && frames[index - 1]!.at > frame.at) throw new Error(`${track.id} frames are unordered`);
       }
     }
-    if (track.clipFrames) {
-      for (let index = 0; index < track.clipFrames.length; index += 1) {
-        const frame = track.clipFrames[index]!;
+    if (track.clip) {
+      for (let index = 0; index < track.clip.length; index += 1) {
+        const frame = track.clip[index]!;
         if (frame.at < 0 || frame.at > 1) throw new Error(`${track.id} clip frame is outside 0..1`);
-        if (index > 0 && track.clipFrames[index - 1]!.at > frame.at) throw new Error(`${track.id} clip frames are unordered`);
+        if (index > 0 && track.clip[index - 1]!.at > frame.at) throw new Error(`${track.id} clip frames are unordered`);
         if (frame.value.some((value) => value < 0 || value > 100)) throw new Error(`${track.id} clip point is outside 0..100`);
       }
     }
@@ -235,7 +282,7 @@ export function assertStoryTimeline() {
   const backgrounds = LAYER_TRACKS.filter(({ kind }) => kind === "background");
   for (let step = 0; step <= 100; step += 1) {
     const progress = step / 100;
-    const opacity = backgrounds.reduce((sum, track) => sum + sampleLayerState(track, progress, "mobile").opacity, 0);
+    const opacity = backgrounds.reduce((sum, track) => sum + sampleLayerState(track, progress).opacity, 0);
     if (opacity < 0.99) throw new Error(`background gap at ${progress}`);
   }
 }

@@ -3,12 +3,56 @@ import test from "node:test";
 
 import {
   CHAPTERS,
+  FULL_CLIP,
   LAYER_TRACKS,
   SHOTS,
   STORY_TRANSITIONS,
   assertStoryTimeline,
   sampleLayerState,
+  type LayerTrack,
 } from "./storyTimeline";
+
+test("layer state uses stable spatial defaults when a track omits overrides", () => {
+  const trackWithoutOverrides = {
+    id: "defaults",
+    kind: "prop",
+  } as LayerTrack;
+
+  assert.deepEqual(sampleLayerState(trackWithoutOverrides, 0.5), {
+    x: 0,
+    y: 0,
+    scaleX: 1,
+    scaleY: 1,
+    rotate: 0,
+    opacity: 1,
+    originX: 50,
+    originY: 50,
+    clip: FULL_CLIP,
+  });
+});
+
+test("layer state interpolates scale and transform origin axes independently", () => {
+  const track = {
+    id: "independent-spatial-axes",
+    kind: "prop",
+    scaleX: [{ at: 0, value: 1 }, { at: 1, value: 2 }],
+    scaleY: [{ at: 0, value: 1 }, { at: 1, value: 0.5 }],
+    originX: [{ at: 0, value: 0 }, { at: 1, value: 40 }],
+    originY: [{ at: 0, value: 100 }, { at: 1, value: 60 }],
+  } as LayerTrack;
+
+  assert.deepEqual(sampleLayerState(track, 0.5), {
+    x: 0,
+    y: 0,
+    scaleX: 1.5,
+    scaleY: 0.75,
+    rotate: 0,
+    opacity: 1,
+    originX: 20,
+    originY: 80,
+    clip: FULL_CLIP,
+  });
+});
 
 test("the rebuild has six continuous chapters and sixteen ordered shots", () => {
   assert.equal(CHAPTERS.length, 6);
@@ -37,15 +81,14 @@ test("copy intervals never overlap and every shot owns visible story layers", ()
 test("the timeline contains independently animated depth, character, and transition layers", () => {
   assert.ok(LAYER_TRACKS.length >= 24);
   assert.ok(
-    LAYER_TRACKS.reduce((sum, track) => sum + track.frames.length, 0) >= 100,
+    LAYER_TRACKS.reduce((sum, track) => sum + (track.x?.length ?? 0), 0) >= 100,
     "the timeline needs at least 100 intentional keyframes",
   );
   assert.deepEqual(
     [...new Set(LAYER_TRACKS.map(({ id }) => id))],
     LAYER_TRACKS.map(({ id }) => id),
   );
-  assert.ok(LAYER_TRACKS.some(({ mobile }) => mobile && mobile.length > 0));
-  assert.ok(LAYER_TRACKS.some(({ desktop }) => desktop && desktop.length > 0));
+  assert.ok(LAYER_TRACKS.every((track) => track.scaleX && track.scaleY));
 });
 
 test("an opaque background covers every sampled point of the scroll", () => {
@@ -53,7 +96,7 @@ test("an opaque background covers every sampled point of the scroll", () => {
   for (let step = 0; step <= 100; step += 1) {
     const progress = step / 100;
     const opacity = backgrounds.reduce(
-      (sum, track) => sum + sampleLayerState(track, progress, "mobile").opacity,
+      (sum, track) => sum + sampleLayerState(track, progress).opacity,
       0,
     );
     assert.ok(opacity >= 0.99, `background gap at ${progress}`);
@@ -74,13 +117,13 @@ test("all five non-crossfade transition techniques are represented", () => {
 
 test("polygon reveal is sampled from a real production layer", () => {
   const reveal = LAYER_TRACKS.find(({ id }) => id === "tower-card");
-  assert.ok(reveal?.clipFrames);
+  assert.ok(reveal?.clip);
   assert.notDeepEqual(
-    sampleLayerState(reveal, 0.165, "mobile").clip,
+    sampleLayerState(reveal, 0.165).clip,
     [0, 0, 100, 0, 100, 100, 0, 100],
   );
   assert.deepEqual(
-    sampleLayerState(reveal, 0.21, "mobile").clip,
+    sampleLayerState(reveal, 0.21).clip,
     [0, 0, 100, 0, 100, 100, 0, 100],
   );
 });

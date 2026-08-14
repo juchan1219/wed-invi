@@ -17,12 +17,13 @@ const SPRITES: Partial<Record<string, string>> = {
 };
 
 export function StoryLayer({ track }: { track: LayerTrack }) {
-  const state = sampleLayerState(track, 0, "desktop");
+  const state = sampleLayerState(track, 0);
   const style = {
     opacity: state.opacity,
     visibility: state.opacity < 0.002 ? "hidden" : "visible",
-    transform: `translate3d(${state.x}vw, ${state.y}svh, 0) rotate(${state.rotate}deg) scale(${state.scale})`,
-    clipPath: state.clip ? clipToPolygon(state.clip) : undefined,
+    transformOrigin: `${state.originX}% ${state.originY}%`,
+    transform: `translate3d(${state.x}px, ${state.y}px, 0) rotate(${state.rotate}deg) scale(${state.scaleX}, ${state.scaleY})`,
+    clipPath: clipToPolygon(state.clip),
   } satisfies CSSProperties;
   const background = BACKGROUNDS[track.id];
   const spritePosition = SPRITES[track.id];
