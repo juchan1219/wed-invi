@@ -137,7 +137,7 @@
 .titleNames { display: flex; align-items: baseline; }
 .titleNames i {
   display: inline-block;
-  font-size: 51.2px;
+  font-size: var(--story-title-glyph-size);
   font-style: normal;
   font-weight: 1000;
   transform: translateY(calc((0.02 - var(--story-progress)) * var(--letter-drop))) rotate(var(--letter-rotate));
@@ -365,8 +365,8 @@
 
 .layer_casual_couple {
   z-index: 12;
-  inset: auto auto 0 50%;
-  width: 249.4px;
+  inset: auto auto var(--story-casual-couple-bottom) var(--story-casual-couple-left);
+  width: var(--story-casual-couple-width);
   aspect-ratio: 3 / 4;
   transform-origin: bottom center;
 }
@@ -500,7 +500,7 @@
 .chapterNav {
   position: absolute;
   z-index: 45;
-  bottom: 17.6px;
+  bottom: max(var(--story-chapter-nav-min-bottom), env(safe-area-inset-bottom));
   left: 16px;
   color: #fff6db;
   text-shadow: 1px 1px 0 #17384c;

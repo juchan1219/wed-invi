@@ -40,6 +40,14 @@ test("title layer inline distances are fixed logical pixels", () => {
   );
 });
 
+test("canonical mobile canvas keeps the couple, title, and safe-area layout", () => {
+  assert.deepEqual(storyAssets.STORY_CANVAS_LAYOUT, {
+    casualCouple: { bottom: "1%", left: "27%", width: 249.4 },
+    chapterNavMinimumBottom: 17.6,
+    titleGlyphSize: 68.8,
+  });
+});
+
 test("layer state uses stable spatial defaults when a track omits overrides", () => {
   const trackWithoutOverrides = {
     id: "defaults",

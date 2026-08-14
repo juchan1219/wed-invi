@@ -1,5 +1,11 @@
 export const STORY_CANVAS = { width: 430, height: 932 } as const;
 
+export const STORY_CANVAS_LAYOUT = {
+  casualCouple: { bottom: "1%", left: "27%", width: 249.4 },
+  chapterNavMinimumBottom: 17.6,
+  titleGlyphSize: 68.8,
+} as const;
+
 const STORY_TITLE_LETTER_DROPS_PX = [633.76, 810.84, 987.92, 1165, 1342.08] as const;
 
 export function titleLetterDropStyle(index: number) {

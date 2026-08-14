@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
-import { STORY_CANVAS } from "./storyAssets";
+import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
 import { CHAPTERS, LAYER_TRACKS, SHOTS, assertStoryTimeline } from "./storyTimeline";
 import { useStoryTimeline } from "./useStoryTimeline";
 import styles from "./WeddingStory.module.css";
 
 assertStoryTimeline();
+
+const storyCanvasLayoutStyle = {
+  "--story-casual-couple-bottom": STORY_CANVAS_LAYOUT.casualCouple.bottom,
+  "--story-casual-couple-left": STORY_CANVAS_LAYOUT.casualCouple.left,
+  "--story-casual-couple-width": `${STORY_CANVAS_LAYOUT.casualCouple.width}px`,
+  "--story-chapter-nav-min-bottom": `${STORY_CANVAS_LAYOUT.chapterNavMinimumBottom}px`,
+  "--story-title-glyph-size": `${STORY_CANVAS_LAYOUT.titleGlyphSize}px`,
+} as CSSProperties;
 
 export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   const rootRef = useRef<HTMLElement>(null);
@@ -49,6 +57,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
         <div
           ref={stageRef}
           className={styles.stage}
+          style={storyCanvasLayoutStyle}
           data-story-canvas
           data-shot="island-opens"
           data-chapter="beginning"
