@@ -103,6 +103,17 @@ export function dampedProgress(
   return current + (target - current) * amount;
 }
 
+export function advanceDampedPlayhead(
+  current: number,
+  target: number,
+  deltaSeconds: number,
+  response = 10,
+  settleThreshold = 0.00008,
+) {
+  const next = dampedProgress(current, target, deltaSeconds, response);
+  return Math.abs(next - target) < settleThreshold ? target : next;
+}
+
 export function shouldSnapPlayhead(
   current: number,
   target: number,

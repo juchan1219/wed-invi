@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  advanceDampedPlayhead,
   clipToPolygon,
   dampedProgress,
   easeProgress,
@@ -91,6 +92,23 @@ test("dampedProgress is frame-time based and converges symmetrically", () => {
   assert.ok(Math.abs(forward - 0.6321205588) < 1e-9);
   assert.ok(Math.abs(backward - 0.3678794412) < 1e-9);
   assert.equal(dampedProgress(0.4, 1, 0, 10), 0.4);
+});
+
+test("a terminal damped frame settles on the exact target from either direction", () => {
+  const target = 0.21;
+  const threshold = 0.00008;
+  const forwardCurrent = 0.20985;
+  const reverseCurrent = 0.21015;
+  assert.ok(Math.abs(forwardCurrent - target) > threshold);
+  assert.ok(Math.abs(reverseCurrent - target) > threshold);
+  assert.ok(Math.abs(dampedProgress(forwardCurrent, target, 0.05, 13) - target) < threshold);
+  assert.ok(Math.abs(dampedProgress(reverseCurrent, target, 0.05, 13) - target) < threshold);
+
+  assert.equal(advanceDampedPlayhead(forwardCurrent, target, 0.05, 13, threshold), target);
+  assert.equal(advanceDampedPlayhead(reverseCurrent, target, 0.05, 13, threshold), target);
+
+  const stillDamping = advanceDampedPlayhead(0.209, target, 0.05, 13, threshold);
+  assert.ok(stillDamping > 0.209 && stillDamping < target);
 });
 
 test("shouldSnapPlayhead catches equally large forward and backward jumps", () => {

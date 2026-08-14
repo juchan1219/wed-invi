@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
-import { dampedProgress, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
+import { advanceDampedPlayhead, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
 import {
   CHAPTERS,
   LAYER_TRACKS,
@@ -124,9 +124,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
       frame = 0;
       const deltaSeconds = Math.min(0.05, Math.max(0, (time - lastTime) / 1000));
       lastTime = time;
-      playhead = Math.abs(playhead - target) < 0.00008
-        ? target
-        : dampedProgress(playhead, target, deltaSeconds, 13);
+      playhead = advanceDampedPlayhead(playhead, target, deltaSeconds, 13);
       paint(playhead);
       if (visible && Math.abs(playhead - target) >= 0.00008) frame = requestAnimationFrame(tick);
     };
