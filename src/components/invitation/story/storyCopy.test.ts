@@ -10,6 +10,12 @@ test("the story has exactly eleven concise beats", () => {
   }
 });
 
+test("every beat uses the approved round-eye cartoon v2 artwork", () => {
+  for (const beat of STORY_BEATS) {
+    assert.match(beat.image, /-v2\.webp$/, `${beat.id} still uses legacy artwork`);
+  }
+});
+
 test("the destination beat contains the confirmed ceremony details", () => {
   const destination = STORY_BEATS.find((beat) => beat.id === "destination");
   assert.ok(destination);
