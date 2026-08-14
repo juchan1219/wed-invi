@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
-import { clipToPolygon, dampedProgress, shouldSnapPlayhead } from "./timelineMath";
+import { dampedProgress, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
 import { CHAPTERS, LAYER_TRACKS, SHOTS, sampleLayerState } from "./storyTimeline";
 
 type StoryTimelineOptions = {
@@ -66,7 +66,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
         element.style.opacity = state.opacity.toFixed(4);
         element.style.transformOrigin = `${state.originX.toFixed(3)}% ${state.originY.toFixed(3)}%`;
         element.style.transform = `translate3d(${state.x.toFixed(3)}px, ${state.y.toFixed(3)}px, 0) rotate(${state.rotate.toFixed(3)}deg) scale(${state.scaleX.toFixed(4)}, ${state.scaleY.toFixed(4)})`;
-        element.style.clipPath = clipToPolygon(state.clip);
+        element.style.clipPath = inlineClipPathForTrack(track, state) ?? "";
       }
 
       for (const element of copyElements) {

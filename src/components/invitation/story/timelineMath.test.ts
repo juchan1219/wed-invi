@@ -5,11 +5,13 @@ import {
   clipToPolygon,
   dampedProgress,
   easeProgress,
+  inlineClipPathForTrack,
   sampleClipTrack,
   sampleNumberTrack,
   shouldSnapPlayhead,
   type Clip,
 } from "./timelineMath";
+import type { LayerState, LayerTrack } from "./storyTimeline";
 
 test("easeProgress applies the named easing without leaving the 0..1 range", () => {
   assert.equal(easeProgress(-1, "linear"), 0);
@@ -64,6 +66,23 @@ test("clipToPolygon produces a valid four-corner CSS polygon", () => {
     clipToPolygon([0, 0, 100, 0, 100, 100, 0, 100]),
     "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
   );
+});
+
+test("inline clip paths belong only to tracks that author a clip and otherwise clear", () => {
+  const state = {
+    clip: [0, 0, 100, 0, 100, 100, 0, 100],
+  } as Pick<LayerState, "clip">;
+  const trackWithClip = {
+    clip: [{ at: 0, value: [0, 0, 100, 0, 100, 100, 0, 100] }],
+  } as Pick<LayerTrack, "clip">;
+  const trackWithoutClip = {} as Pick<LayerTrack, "clip">;
+
+  assert.equal(
+    inlineClipPathForTrack(trackWithClip, state),
+    "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+  );
+  assert.equal(inlineClipPathForTrack(trackWithoutClip, state), undefined);
+  assert.equal(inlineClipPathForTrack(trackWithoutClip, state) ?? "", "");
 });
 
 test("dampedProgress is frame-time based and converges symmetrically", () => {

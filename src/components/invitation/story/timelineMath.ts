@@ -1,4 +1,5 @@
 import { clamp01 } from "./scrollMath";
+import type { LayerState, LayerTrack } from "./storyTimeline";
 
 export type EaseName = "linear" | "easeIn" | "easeOut" | "easeInOut" | "hold";
 
@@ -82,6 +83,13 @@ export function sampleClipTrack(frames: readonly ClipFrame[], progress: number):
 
 export function clipToPolygon(clip: Clip) {
   return `polygon(${clip[0]}% ${clip[1]}%, ${clip[2]}% ${clip[3]}%, ${clip[4]}% ${clip[5]}%, ${clip[6]}% ${clip[7]}%)`;
+}
+
+export function inlineClipPathForTrack(
+  track: Pick<LayerTrack, "clip">,
+  state: Pick<LayerState, "clip">,
+) {
+  return track.clip ? clipToPolygon(state.clip) : undefined;
 }
 
 export function dampedProgress(

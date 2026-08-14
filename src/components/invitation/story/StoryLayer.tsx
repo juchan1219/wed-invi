@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
-import { clipToPolygon } from "./timelineMath";
+import { inlineClipPathForTrack } from "./timelineMath";
 import { sampleLayerState, type LayerTrack } from "./storyTimeline";
 import styles from "./WeddingStory.module.css";
 
@@ -23,7 +23,7 @@ export function StoryLayer({ track }: { track: LayerTrack }) {
     visibility: state.opacity < 0.002 ? "hidden" : "visible",
     transformOrigin: `${state.originX}% ${state.originY}%`,
     transform: `translate3d(${state.x}px, ${state.y}px, 0) rotate(${state.rotate}deg) scale(${state.scaleX}, ${state.scaleY})`,
-    clipPath: clipToPolygon(state.clip),
+    clipPath: inlineClipPathForTrack(track, state),
   } satisfies CSSProperties;
   const background = BACKGROUNDS[track.id];
   const spritePosition = SPRITES[track.id];
