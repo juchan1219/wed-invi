@@ -92,8 +92,15 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   프로포즈 3단 장면은 좌/중/우 크롭을 사용한다.
   꽃가루는 서로 다른 속도와 크기의 전·중·후경으로 나누고, 타이틀 글자와 웃음 표정도 장면별 독립 상태로 구성했다. 함부르크 프로포즈, 반지, 도쿄타워 사진은 원본을
   공개 경로에 복사하지 않고 동일 화풍의 355KB WebP 장면을 만드는 참고로만 썼다. reduced-motion에서는
-  sticky를 제거하고 읽기 순서가 있는 6장 카드로 바뀐다. JavaScript 실행 전에도 이 대체 화면과 건너뛰기
-  링크가 DOM에 존재하며, 스크린리더에는 애니메이션 카드 대신 16숏 전체 대본을 한 번만 제공한다.
+  sticky를 제거하고 최종 레지스트리의 오프닝·오피스·웃음·프로포즈·예식장·피날레 원화 6장을 읽기 순서대로
+  보여준다. 서버 HTML과 첫 client render는 모두 `data-motion="pending"`인 같은 비스티키 fallback이므로 hydration
+  불일치나 빈 첫 프레임이 없고, layout effect가 모션 허용을 확인한 뒤에만 430×932 sticky stage·`ResizeObserver`·
+  rAF timeline을 활성화한다. reduced motion이면 `height:auto`와 fallback을 계속 유지해 tall scroll/rAF를 만들지 않는다.
+  JavaScript 실행 전에도 대체 화면과 건너뛰기 링크가 DOM에 존재하며, 스크린리더에는 16숏 전체 대본을 제공한다.
+  모든 애니메이션 래스터는 `alt=""`, `aria-hidden="true"`, `tabIndex={-1}`인 장식물이고, skip link가 청첩장 본문의
+  첫 interactive control보다 앞선다. 진행률의 `aria-valuenow`·`aria-valuetext`·live text는 매 프레임이 아니라
+  숏 id가 바뀌는 16개 경계에서만 갱신된다. Next.js 16의 `preload`/`loading` 동시 사용 금지에 맞춰 오프닝 배경과
+  첫 sidecar 캐릭터 합성만 preload하고 다른 애니메이션·fallback 이미지는 native lazy loading한다.
 
   `codex/doodle-wedding-story` 변형의 rough checkpoint는 같은 타임라인을 유지하면서 사진풍 배경과
   사람형 캐릭터를 흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체했다. 당시 제주·오피스·웃음·예식장·
@@ -156,7 +163,9 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   순수 기하 검증은 progress 0.065·0.1·0.13·0.15를 고정하며, 0.15의 이전 sibling 모델 오차 10.9px 이상을 포착한다.
   shots 10–16도 각 경계의 visible spatial connector, triptych no-fade, 2% tower/venue overlap, 0.5% wardrobe overlap,
   정방향·역방향·`0.521↔0.999` 직접 점프 destination 동등성을 고정한다. proposal pan의 두 quarter-point는
-  명시적 `easeInOut` 보간값을 검증한다. `npm run test:story` 62개,
+  명시적 `easeInOut` 보간값을 검증한다. fallback registry/order, loading policy, pending/reduced presentation,
+  shot-boundary announcement throttling, 실제 Next Image 장식/비포커스 SSR markup도 회귀 테스트로 고정한다.
+  `npm run test:story` 69개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,

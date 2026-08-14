@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
 import { dampedProgress, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
-import { CHAPTERS, LAYER_TRACKS, SHOTS, sampleLayerState } from "./storyTimeline";
+import {
+  CHAPTERS,
+  LAYER_TRACKS,
+  SHOTS,
+  nextStoryProgressAnnouncement,
+  sampleLayerState,
+} from "./storyTimeline";
 
 type StoryTimelineOptions = {
   root: React.RefObject<HTMLElement | null>;
@@ -22,6 +28,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     );
     const copyElements = Array.from(stageElement.querySelectorAll<HTMLElement>("[data-story-copy]"));
     const progressElement = stageElement.querySelector<HTMLElement>("[role='progressbar']");
+    const announcementElement = stageElement.querySelector<HTMLElement>("[data-story-announcement]");
     const chapterName = stageElement.querySelector<HTMLElement>("[data-chapter-name]");
 
     let target = 0;
@@ -31,7 +38,6 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     let visible = true;
     let lastShot = "";
     let lastChapter = "";
-    let lastAriaValue = -1;
 
     const measure = () => {
       const rect = rootElement.getBoundingClientRect();
@@ -99,19 +105,18 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
 
       const shot = SHOTS.find(({ start, end }) => progress >= start && (progress < end || end === 1));
       const chapter = CHAPTERS.find(({ start, end }) => progress >= start && (progress < end || end === 1));
-      if (shot && shot.id !== lastShot) {
-        stageElement.dataset.shot = shot.id;
-        lastShot = shot.id;
+      const announcement = nextStoryProgressAnnouncement(lastShot, progress);
+      if (shot && announcement) {
+        stageElement.dataset.shot = announcement.shotId;
+        progressElement?.setAttribute("aria-valuenow", String(announcement.value));
+        progressElement?.setAttribute("aria-valuetext", announcement.text);
+        announcementElement?.replaceChildren(announcement.text);
+        lastShot = announcement.shotId;
       }
       if (chapter && chapter.id !== lastChapter) {
         stageElement.dataset.chapter = chapter.id;
         chapterName?.replaceChildren(chapter.title);
         lastChapter = chapter.id;
-      }
-      const ariaValue = Math.round(progress * 100);
-      if (ariaValue !== lastAriaValue) {
-        progressElement?.setAttribute("aria-valuenow", String(ariaValue));
-        lastAriaValue = ariaValue;
       }
     };
 

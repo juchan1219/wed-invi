@@ -71,6 +71,17 @@ export type StoryShot = {
   layerIds: readonly string[];
 };
 
+export type StoryMotionMode = "pending" | "full" | "reduce";
+
+export function getStoryMotionPresentation(mode: StoryMotionMode) {
+  const full = mode === "full";
+  return {
+    showStage: full,
+    showFallback: !full,
+    runTimeline: full,
+  };
+}
+
 const f = (
   at: number,
   opacity: number,
@@ -170,6 +181,26 @@ export const SHOTS: readonly StoryShot[] = [
   { id: "everyone-arrives", chapterId: "wedding", start: 0.86, end: 0.93, copyStart: 0.866, copyEnd: 0.924, eyebrow: "예찬 ♥ 주은", copy: "소중한 분들과 함께", layerIds: ["bg-finale", "wedding-couple", "crowd-left", "crowd-right", "confetti-back", "confetti", "confetti-front"] },
   { id: "invitation-rises", chapterId: "wedding", start: 0.93, end: 1, copyStart: 0.936, copyEnd: 0.987, copy: "우리 결혼합니다!!", layerIds: ["final-title", "confetti-back", "confetti", "confetti-front", "invitation-paper"] },
 ] as const;
+
+export function getStoryProgressAnnouncement(progress: number) {
+  const normalized = Math.min(1, Math.max(0, progress));
+  const index = SHOTS.findIndex(({ start, end }) => (
+    normalized >= start && (normalized < end || end === 1)
+  ));
+  const shotIndex = index < 0 ? SHOTS.length - 1 : index;
+  const shot = SHOTS[shotIndex]!;
+  const value = shotIndex + 1;
+  return {
+    shotId: shot.id,
+    value,
+    text: `${value}/${SHOTS.length}. ${shot.copy}`,
+  };
+}
+
+export function nextStoryProgressAnnouncement(previousShotId: string, progress: number) {
+  const announcement = getStoryProgressAnnouncement(progress);
+  return announcement.shotId === previousShotId ? null : announcement;
+}
 
 const SIDECAR_X_FRAMES = [
   { at: 0, value: 520 },

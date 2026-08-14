@@ -240,6 +240,29 @@ export const STORY_ASSETS = {
   weddingJueunCheering: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 3, row: 1 }),
 } satisfies Record<string, StoryImageAsset | StorySpriteAsset>;
 
+export const STORY_FALLBACK_PANELS = [
+  { assetId: "openingBackground", chapterId: "beginning", shotId: "island-opens" },
+  { assetId: "officeBackground", chapterId: "coworkers", shotId: "paper-to-tower" },
+  { assetId: "laughPanel", chapterId: "laughter", shotId: "joke-panel" },
+  { assetId: "proposalTriptych", chapterId: "journey", shotId: "postcards-open" },
+  { assetId: "venueExterior", chapterId: "destination", shotId: "venue-approach" },
+  { assetId: "paperVeil", chapterId: "wedding", shotId: "invitation-rises" },
+] as const satisfies readonly {
+  assetId: keyof typeof STORY_ASSETS;
+  chapterId: string;
+  shotId: string;
+}[];
+
+const PRELOADED_STORY_LAYER_IDS = new Set(["bg-jeju", "sidecar"]);
+
+export function getStoryLayerLoading(layerId: string):
+  | { preload: true }
+  | { preload: false; loading: "lazy" } {
+  return PRELOADED_STORY_LAYER_IDS.has(layerId)
+    ? { preload: true }
+    : { preload: false, loading: "lazy" };
+}
+
 export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "bg-jeju", assetId: "openingBackground", className: "background" },
   { id: "bg-office", assetId: "officeBackground", className: "background" },

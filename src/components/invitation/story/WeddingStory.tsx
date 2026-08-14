@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
 import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
@@ -10,6 +10,9 @@ import {
   SHOTS,
   assertStoryTimeline,
   buildStoryLayerTree,
+  getStoryMotionPresentation,
+  getStoryProgressAnnouncement,
+  type StoryMotionMode,
   type StoryLayerNode,
 } from "./storyTimeline";
 import { useStoryTimeline } from "./useStoryTimeline";
@@ -39,25 +42,28 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   const rootRef = useRef<HTMLElement>(null);
   const stageShellRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [motionMode, setMotionMode] = useState<StoryMotionMode>("pending");
+  const presentation = getStoryMotionPresentation(motionMode);
+  const initialAnnouncement = getStoryProgressAnnouncement(0);
 
-  useCanvasContainment(stageShellRef);
+  useCanvasContainment(stageShellRef, presentation.showStage);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReducedMotion(media.matches);
+    const sync = () => setMotionMode(media.matches ? "reduce" : "full");
     sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
   }, []);
 
-  useStoryTimeline({ root: rootRef, stage: stageRef, enabled: !reducedMotion });
+  useStoryTimeline({ root: rootRef, stage: stageRef, enabled: presentation.runTimeline });
 
   return (
     <section
       ref={rootRef}
       className={styles.story}
       aria-label="예찬과 주은의 결혼 이야기"
+      data-motion={motionMode}
     >
       <a className={styles.skip} href={`#${contentTargetId}`}>이야기 건너뛰기</a>
 
@@ -70,7 +76,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
         ))}
       </ol>
 
-      <div ref={stageShellRef} className={styles.stageShell}>
+      <div ref={stageShellRef} className={styles.stageShell} aria-hidden={!presentation.showStage}>
         <div
           ref={stageRef}
           className={styles.stage}
@@ -118,10 +124,15 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
               className={styles.rail}
               role="progressbar"
               aria-label="결혼 이야기 진행률"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={0}
+              aria-valuemin={1}
+              aria-valuemax={SHOTS.length}
+              aria-valuenow={initialAnnouncement.value}
+              aria-valuetext={initialAnnouncement.text}
             ><span /></div>
+
+            <p className={styles.progressAnnouncement} data-story-announcement aria-live="polite">
+              {initialAnnouncement.text}
+            </p>
 
             <p className={styles.scrollHint} aria-hidden="true"><span>SCROLL TO BEGIN</span><i /></p>
           </div>
@@ -133,8 +144,9 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   );
 }
 
-function useCanvasContainment(shell: React.RefObject<HTMLDivElement | null>) {
+function useCanvasContainment(shell: React.RefObject<HTMLDivElement | null>, enabled: boolean) {
   useLayoutEffect(() => {
+    if (!enabled) return;
     const element = shell.current;
     if (!element) return;
 
@@ -153,5 +165,5 @@ function useCanvasContainment(shell: React.RefObject<HTMLDivElement | null>) {
     measure();
     observer.observe(element);
     return () => observer.disconnect();
-  }, [shell]);
+  }, [enabled, shell]);
 }

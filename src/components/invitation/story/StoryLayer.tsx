@@ -4,6 +4,7 @@ import {
   STORY_ASSETS,
   STORY_LAYER_DEFINITIONS,
   getStoryImageCrop,
+  getStoryLayerLoading,
   getStorySpriteCrop,
   type StoryImageCrop,
   type StoryImageAsset,
@@ -84,11 +85,11 @@ export function StoryLayer({ track, children }: { track: LayerTrack; children?: 
 function StoryLayerContent({ definition }: { definition: StoryLayerDefinition }) {
   if (definition.assetId) {
     const asset = STORY_ASSETS[definition.assetId];
-    return <AssetLayer asset={asset} crop={definition.crop} />;
+    return <AssetLayer asset={asset} crop={definition.crop} layerId={definition.id} />;
   }
 
   if (definition.parts) {
-    return <CompositionLayer parts={definition.parts} />;
+    return <CompositionLayer parts={definition.parts} layerId={definition.id} />;
   }
 
   if (definition.text) {
@@ -105,19 +106,23 @@ function StoryLayerContent({ definition }: { definition: StoryLayerDefinition })
 function AssetLayer({
   asset,
   crop,
+  layerId,
 }: {
   asset: StoryImageAsset | StorySpriteAsset;
   crop?: StoryImageCrop;
+  layerId: string;
 }) {
   if (asset.kind === "sprite") {
     if (crop) throw new Error("sprite assets cannot use an image crop");
-    return <SpriteLayer asset={asset} />;
+    return <SpriteLayer asset={asset} layerId={layerId} />;
   }
 
-  return crop ? <CroppedImageLayer asset={asset} crop={crop} /> : <ImageLayer asset={asset} />;
+  return crop
+    ? <CroppedImageLayer asset={asset} crop={crop} layerId={layerId} />
+    : <ImageLayer asset={asset} layerId={layerId} />;
 }
 
-function CompositionLayer({ parts }: { parts: readonly StoryLayerPart[] }) {
+function CompositionLayer({ parts, layerId }: { parts: readonly StoryLayerPart[]; layerId: string }) {
   return (
     <span className={styles.layerComposition} aria-hidden="true">
       {parts.map((part) => {
@@ -133,7 +138,7 @@ function CompositionLayer({ parts }: { parts: readonly StoryLayerPart[] }) {
             style={style as CSSProperties}
             aria-hidden="true"
           >
-            <AssetLayer asset={STORY_ASSETS[part.assetId]} />
+            <AssetLayer asset={STORY_ASSETS[part.assetId]} layerId={layerId} />
           </span>
         );
       })}
@@ -141,7 +146,7 @@ function CompositionLayer({ parts }: { parts: readonly StoryLayerPart[] }) {
   );
 }
 
-function ImageLayer({ asset }: { asset: StoryImageAsset }) {
+function ImageLayer({ asset, layerId }: { asset: StoryImageAsset; layerId: string }) {
   const focalPoint = asset.focalPoint ?? { x: 0.5, y: 0.5 };
   const style = {
     "--story-asset-width": `${asset.width}px`,
@@ -150,6 +155,7 @@ function ImageLayer({ asset }: { asset: StoryImageAsset }) {
     "--story-focal-x": `${focalPoint.x * 100}%`,
     "--story-focal-y": `${focalPoint.y * 100}%`,
   } satisfies ImageCSSProperties;
+  const loading = getStoryLayerLoading(layerId);
 
   return (
     <Image
@@ -157,16 +163,18 @@ function ImageLayer({ asset }: { asset: StoryImageAsset }) {
       alt=""
       width={asset.width}
       height={asset.height}
-      loading={asset.eager ? "eager" : "lazy"}
       sizes="430px"
       className={styles.layerImage}
       style={style as CSSProperties}
       aria-hidden="true"
+      tabIndex={-1}
+      draggable={false}
+      {...(loading.preload ? { preload: true } : { loading: loading.loading })}
     />
   );
 }
 
-function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
+function SpriteLayer({ asset, layerId }: { asset: StorySpriteAsset; layerId: string }) {
   const crop = getStorySpriteCrop(asset);
   const style = {
     "--story-sprite-viewport-width": `${crop.viewportWidth}px`,
@@ -176,6 +184,7 @@ function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
     "--story-sprite-translate-x": `${crop.translateX}px`,
     "--story-sprite-translate-y": `${crop.translateY}px`,
   } satisfies SpriteCSSProperties;
+  const loading = getStoryLayerLoading(layerId);
 
   return (
     <span className={styles.spriteCrop} style={style as CSSProperties} aria-hidden="true">
@@ -187,6 +196,9 @@ function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
         sizes={`${asset.width}px`}
         className={styles.spriteImage}
         aria-hidden="true"
+        tabIndex={-1}
+        draggable={false}
+        {...(loading.preload ? { preload: true } : { loading: loading.loading })}
       />
     </span>
   );
@@ -195,9 +207,11 @@ function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
 function CroppedImageLayer({
   asset,
   crop,
+  layerId,
 }: {
   asset: StoryImageAsset;
   crop: StoryImageCrop;
+  layerId: string;
 }) {
   const layout = getStoryImageCrop(asset, crop);
   const style = {
@@ -208,6 +222,7 @@ function CroppedImageLayer({
     "--story-image-translate-x": `${layout.translateX}px`,
     "--story-image-translate-y": `${layout.translateY}px`,
   } satisfies ImageCropCSSProperties;
+  const loading = getStoryLayerLoading(layerId);
 
   return (
     <span className={styles.imageCrop} style={style as CSSProperties} aria-hidden="true">
@@ -216,10 +231,12 @@ function CroppedImageLayer({
         alt=""
         width={asset.width}
         height={asset.height}
-        loading={asset.eager ? "eager" : "lazy"}
         sizes={`${layout.sourceWidth}px`}
         className={styles.imageCropSource}
         aria-hidden="true"
+        tabIndex={-1}
+        draggable={false}
+        {...(loading.preload ? { preload: true } : { loading: loading.loading })}
       />
     </span>
   );

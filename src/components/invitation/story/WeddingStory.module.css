@@ -274,6 +274,17 @@
   white-space: nowrap;
 }
 
+.progressAnnouncement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .chapterNav {
   position: absolute;
   z-index: 45;
@@ -342,9 +353,21 @@
 .scrollHint { color: #171717; text-shadow: none; }
 .chapterNav i { background: rgba(23, 23, 23, 0.2); }
 
-.fallbackDoodle { position: relative; min-height: 10rem; overflow: hidden; border-bottom: 0.25rem solid #171717; background: #f3d8d1 url("/story/doodle-v2/style-guide.webp") center 45% / cover; }
-.fallbackDoodle i { display: none; }
-.fallbackDoodle span { position: absolute; top: 1rem; left: 1rem; font-size: 3rem; font-weight: 1000; }
+.fallbackCard { overflow: hidden; border: 1px solid #d7bf91; border-radius: 0.4rem; background: #fffaf0; box-shadow: 0.55rem 0.65rem 0 #17384c; }
+.fallbackImage { display: block; width: 100%; height: auto; aspect-ratio: 430 / 620; object-fit: cover; }
+.fallbackCopy { padding: 1.15rem 1.3rem 1.45rem; }
+.fallbackCard small { color: #d9543d; font-weight: 1000; letter-spacing: 0.18em; }
+.fallbackCard h2 { margin-top: 0.25rem; font-family: var(--font-serif); font-size: 1.35rem; }
+.fallbackCard p { margin-top: 0.4rem; font-weight: 800; line-height: 1.55; }
+
+.story[data-motion="pending"],
+.story[data-motion="reduce"] { left: auto; width: 100%; height: auto; margin-left: 0; padding: 1rem; background: #f7ead0; }
+.story[data-motion="pending"] .stageShell,
+.story[data-motion="reduce"] .stageShell { display: none; }
+.story[data-motion="pending"] .skip,
+.story[data-motion="reduce"] .skip { height: auto; margin: 0 0 1rem auto; transform: none; }
+.story[data-motion="pending"] .motionFallback,
+.story[data-motion="reduce"] .motionFallback { display: grid; gap: 1rem; max-width: 430px; margin: 0 auto; }
 
 @media (max-width: 700px) {
   .skip { font-size: 0.62rem; transform: translate(-0.8rem, max(0.8rem, env(safe-area-inset-top))); }
@@ -353,13 +376,6 @@
 @media (prefers-reduced-motion: reduce) {
   .story { left: auto; width: 100%; height: auto; margin-left: 0; padding: 1rem; background: #f7ead0; }
   .stageShell { display: none; }
-  .transcript { display: none; }
   .skip { height: auto; margin: 0 0 1rem auto; transform: none; }
-  .motionFallback { display: grid; gap: 1rem; max-width: 54rem; margin: 0 auto; }
-  .fallbackCard { overflow: hidden; border: 1px solid #d7bf91; border-radius: 0.4rem; background: #fffaf0; box-shadow: 0.55rem 0.65rem 0 #17384c; }
-  .fallbackCard img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
-  .fallbackCard > div { padding: 1.15rem 1.3rem 1.45rem; }
-  .fallbackCard small { color: #d9543d; font-weight: 1000; letter-spacing: 0.18em; }
-  .fallbackCard h2 { margin-top: 0.25rem; font-family: var(--font-serif); font-size: 1.35rem; }
-  .fallbackCard p { margin-top: 0.4rem; font-weight: 800; line-height: 1.55; }
+  .motionFallback { display: grid; gap: 1rem; max-width: 430px; margin: 0 auto; }
 }
