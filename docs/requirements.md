@@ -95,26 +95,29 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   sticky를 제거하고 읽기 순서가 있는 6장 카드로 바뀐다. JavaScript 실행 전에도 이 대체 화면과 건너뛰기
   링크가 DOM에 존재하며, 스크린리더에는 애니메이션 카드 대신 16숏 전체 대본을 한 번만 제공한다.
 
-  `codex/doodle-wedding-story` 변형은 같은 타임라인을 유지하면서 사진풍 배경과 사람형 캐릭터를
-  흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체한다. 제주·오피스·웃음·예식장·피날레 배경은
-  소수의 평면색과 삐뚤한 CSS 선화로 만들고, 프로포즈 3컷은 실제 사진의 사건만 보존한 낙서 WebP로 사용한다.
-  reduced-motion 카드도 사진 대신 단순한 두 캐릭터 선화로 통일한다. 이 변형은 현재
-  rough prototype 체크포인트다. 1280×720와 390×844·430×932에서 오프닝·오피스·프로포즈 위치를
+  `codex/doodle-wedding-story` 변형의 rough checkpoint는 같은 타임라인을 유지하면서 사진풍 배경과
+  사람형 캐릭터를 흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체했다. 당시 제주·오피스·웃음·예식장·
+  피날레 배경은 소수의 평면색과 삐뚤한 CSS 선화였고, 이후 아래의 최종 래스터 자산과 generic renderer로
+  교체했다. 1280×720와 390×844·430×932에서 rough 오프닝·오피스·프로포즈 위치를
   실제 DOM viewport 및 PNG 크기로 확인했다. 다만 네트워크 제한으로 `npm run build`는 완료하지 못했으므로,
   production build 근거는 최종 아트로 승격하기 전의 남은 검증 항목이다.
 
   최종 아트 승격용 shots 1–6 자산은 2배수 430×932 배경 5개와 실제 alpha 전경 2개로 제작했다.
   오프닝·사이드카 도로·종이 전환·타워 카드·사무실 배경은 불투명 WebP, 사무실 desk는 alpha WebP,
   sidecar는 alpha PNG로 등록했으며 각 레지스트리 크기는 실제 파일 메타데이터와 테스트로 고정한다.
-  타임라인·렌더러에서 이 자산들을 소비하는 전환과 전체 viewport 검수는 최종 아트 통합 단계에 남아 있다.
+  41개 타임라인 레이어와 같은 순서의 선언형 renderer definition이 이 자산들을 소비하고, 이미지 크기·fit·
+  focal point는 typed inline CSS custom property로 전달한다. sprite는 레지스트리 cell 크기만큼 overflow-hidden한 뒤
+  정확한 row/column pixel offset으로 atlas를 이동한다. 세부 전환 안무와 전체 viewport 검수는 후속 단계에 남아 있다.
 
   shots 7–16용 최종 자산은 430×932 좌·우 웃음 패널, 실제 alpha 웃음 burst, 세 개의 정확한
   430×932 크롭으로 구성된 1290×932 프로포즈 삼연작, 430×932 예식장 외부·내부, 실제 alpha
   좌·우 하객 전경과 veil/paper sweep으로 제작했다. 삼연작은 함부르크 프로포즈·실내 반지 공개·
   도쿄타워 웨딩 스냅의 사건과 콩 캐릭터 얼굴을 유지한다. 투명 전경은 새 neon-magenta source만
   chroma-key하고 nearest-opaque edge 색으로 오염을 제거했으며, 실제 크기·alpha coverage·배경 sample·
-  bounds를 자산 테스트로 고정했다. 이 자산을 타임라인·렌더러에서 실제로 소비하는 전환과
-  390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에 남아 있다.
+  bounds를 자산 테스트로 고정했다. 이 자산의 renderer 연결은 완료했으며 세부 전환 안무와
+  390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에 남아 있다. 렌더러 자체는 모든 장면을
+  `next/image` 기반 장식 이미지, 정확한 sprite crop, 스크린리더 중복을 피하는 HTML text로만 구성하며 기존
+  CSS 사람·건물·사이드카·군중·예식장 placeholder 분기를 제거했다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률

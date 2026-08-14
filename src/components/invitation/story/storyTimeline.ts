@@ -1,5 +1,6 @@
 import { wedding } from "@/config/wedding";
 import { formatCeremonyDateShort, formatCeremonyTime } from "@/lib/date";
+import { STORY_LAYER_DEFINITIONS } from "./storyAssets";
 import {
   sampleClipTrack,
   sampleNumberTrack,
@@ -204,19 +205,11 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
 
 export const LAYER_TRACKS: readonly LayerTrack[] = SOURCE_LAYERS.map(toLogicalTrack);
 
-// This explicit DOM contract keeps timeline-only additions from becoming invisible layers.
-export const STORY_RENDERABLE_LAYER_IDS = [
-  "bg-jeju", "bg-office", "bg-laugh", "bg-journey", "bg-venue", "bg-finale",
-  "opening-clouds", "opening-island", "opening-field", "title-shards", "sidecar", "wheel-front", "wheel-back", "name-labels",
-  "paper-tear", "tower-card", "tower-wall-left", "tower-wall-right", "office-yechan", "office-jueun", "office-props",
-  "panel-left", "panel-right", "joke-yechan", "jueun-expression", "speech-bubble", "laugh-burst",
-  "proposal-triptych", "travel-route", "ring-glint",
-  "venue-doors", "casual-couple", "matchcut-strip", "wedding-couple",
-  "crowd-left", "crowd-right", "confetti-back", "confetti", "confetti-front", "final-title", "invitation-paper",
-] as const;
+export const STORY_RENDERABLE_LAYER_IDS = STORY_LAYER_DEFINITIONS.map(({ id }) => id);
+const STORY_RENDERABLE_LAYER_ID_SET = new Set<string>(STORY_RENDERABLE_LAYER_IDS);
 
 export function isStoryLayerRenderable(id: string) {
-  return (STORY_RENDERABLE_LAYER_IDS as readonly string[]).includes(id);
+  return STORY_RENDERABLE_LAYER_ID_SET.has(id);
 }
 
 export const STORY_TRANSITIONS = [...new Set(

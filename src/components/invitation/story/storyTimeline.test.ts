@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { STORY_CANVAS } from "./storyAssets";
+import {
+  STORY_ASSETS,
+  STORY_CANVAS,
+  STORY_LAYER_DEFINITIONS,
+  getStorySpriteCrop,
+} from "./storyAssets";
 import * as storyAssets from "./storyAssets";
 import * as storyTimeline from "./storyTimeline";
 import {
@@ -21,12 +26,40 @@ test("the contained story canvas keeps the 430 by 932 logical layer contract", (
   assert.equal(typeof storyTimeline.isStoryLayerRenderable, "function");
   assert.deepEqual(
     LAYER_TRACKS.map(({ id }) => id),
-    storyTimeline.STORY_RENDERABLE_LAYER_IDS,
+    STORY_LAYER_DEFINITIONS.map(({ id }) => id),
   );
   assert.ok(
     LAYER_TRACKS.every(({ id }) => storyTimeline.isStoryLayerRenderable(id)),
     "every timeline layer needs a DOM renderer inside the fixed canvas",
   );
+});
+
+test("every raster layer resolves to a registered asset", () => {
+  for (const layer of STORY_LAYER_DEFINITIONS) {
+    if (layer.assetId) assert.ok(STORY_ASSETS[layer.assetId], layer.id);
+  }
+});
+
+test("every timeline layer has exactly one non-null renderer definition", () => {
+  assert.deepEqual(
+    STORY_LAYER_DEFINITIONS.map(({ id }) => id),
+    LAYER_TRACKS.map(({ id }) => id),
+  );
+  assert.equal(new Set(STORY_LAYER_DEFINITIONS.map(({ id }) => id)).size, LAYER_TRACKS.length);
+
+  for (const layer of STORY_LAYER_DEFINITIONS) {
+    assert.notEqual(Boolean(layer.assetId), Boolean(layer.text), `${layer.id} needs one renderer`);
+    assert.ok(storyTimeline.isStoryLayerRenderable(layer.id), layer.id);
+  }
+});
+
+test("sprite crops use exact atlas cell dimensions and offsets", () => {
+  assert.deepEqual(getStorySpriteCrop(STORY_ASSETS.casualJueunTalking), {
+    cellWidth: 512,
+    cellHeight: 512,
+    translateX: -1024,
+    translateY: -512,
+  });
 });
 
 test("title layer inline distances are fixed logical pixels", () => {

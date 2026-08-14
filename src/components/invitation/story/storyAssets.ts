@@ -34,6 +34,13 @@ export type StorySpriteAsset = {
   cell: { column: number; row: number };
 };
 
+export type StoryLayerDefinition = {
+  id: string;
+  assetId?: keyof typeof STORY_ASSETS;
+  className?: "background" | "midground" | "character" | "foreground" | "mask";
+  text?: { kind: "title" | "caption"; value: string };
+};
+
 export const STORY_ASSETS = {
   characterAtlasLegacy: {
     kind: "image",
@@ -318,3 +325,59 @@ export const STORY_ASSETS = {
     cell: { column: 3, row: 1 },
   },
 } satisfies Record<string, StoryImageAsset | StorySpriteAsset>;
+
+export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
+  { id: "bg-jeju", assetId: "openingBackground", className: "background" },
+  { id: "bg-office", assetId: "officeBackground", className: "background" },
+  { id: "bg-laugh", assetId: "laughPanel", className: "background" },
+  { id: "bg-journey", assetId: "paperTurn", className: "background" },
+  { id: "bg-venue", assetId: "venueExterior", className: "background" },
+  { id: "bg-finale", assetId: "venueInterior", className: "background" },
+  { id: "opening-clouds", assetId: "openingBackground", className: "midground" },
+  { id: "opening-island", assetId: "openingBackground", className: "midground" },
+  { id: "opening-field", assetId: "sidecarRoad", className: "foreground" },
+  { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은\n의 결혼 이야기" } },
+  { id: "sidecar", assetId: "sidecar", className: "character" },
+  { id: "wheel-front", assetId: "sidecar", className: "foreground" },
+  { id: "wheel-back", assetId: "sidecar", className: "foreground" },
+  { id: "name-labels", className: "foreground", text: { kind: "caption", value: "예찬 ↘\n↙ 주은" } },
+  { id: "paper-tear", assetId: "paperTurn", className: "mask" },
+  { id: "tower-card", assetId: "towerCard", className: "midground" },
+  { id: "tower-wall-left", assetId: "towerCard", className: "foreground" },
+  { id: "tower-wall-right", assetId: "towerCard", className: "foreground" },
+  { id: "office-yechan", assetId: "casualYechanNeutral", className: "character" },
+  { id: "office-jueun", assetId: "casualJueunNeutral", className: "character" },
+  { id: "office-props", assetId: "officeDesk", className: "foreground" },
+  { id: "panel-left", assetId: "jokePanel", className: "midground" },
+  { id: "panel-right", assetId: "laughPanel", className: "midground" },
+  { id: "joke-yechan", assetId: "casualYechanTalking", className: "character" },
+  { id: "jueun-expression", assetId: "casualJueunLaughing", className: "character" },
+  { id: "speech-bubble", className: "foreground", text: { kind: "caption", value: "오늘 퇴근하고\n맛있는 거 어때요?" } },
+  { id: "laugh-burst", assetId: "laughBurst", className: "foreground" },
+  { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground" },
+  { id: "travel-route", assetId: "proposalTriptych", className: "foreground" },
+  { id: "ring-glint", assetId: "proposalTriptych", className: "foreground" },
+  { id: "venue-doors", assetId: "venueInterior", className: "midground" },
+  { id: "casual-couple", assetId: "casualJueunNeutral", className: "character" },
+  { id: "matchcut-strip", assetId: "paperVeil", className: "mask" },
+  { id: "wedding-couple", assetId: "weddingJueunNeutral", className: "character" },
+  { id: "crowd-left", assetId: "crowdLeft", className: "foreground" },
+  { id: "crowd-right", assetId: "crowdRight", className: "foreground" },
+  { id: "confetti-back", assetId: "laughBurst", className: "midground" },
+  { id: "confetti", assetId: "laughBurst", className: "foreground" },
+  { id: "confetti-front", assetId: "laughBurst", className: "foreground" },
+  { id: "final-title", className: "foreground", text: { kind: "title", value: "예찬 ♥ 주은\n우리 결혼합니다!!" } },
+  { id: "invitation-paper", assetId: "paperVeil", className: "mask" },
+] as const;
+
+export function getStorySpriteCrop(asset: StorySpriteAsset) {
+  const cellWidth = asset.width / asset.columns;
+  const cellHeight = asset.height / asset.rows;
+
+  return {
+    cellWidth,
+    cellHeight,
+    translateX: -asset.cell.column * cellWidth,
+    translateY: -asset.cell.row * cellHeight,
+  };
+}
