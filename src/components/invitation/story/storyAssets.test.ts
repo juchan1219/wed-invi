@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import test from "node:test";
+import sharp from "sharp";
 
 import { STORY_ASSETS } from "./storyAssets";
 
@@ -14,5 +15,15 @@ test("every story asset exists under doodle-v2 and declares positive dimensions"
     assert.match(asset.src, /^\/story\/doodle-v2\//, id);
     assert.ok(asset.width > 0 && asset.height > 0, id);
     assert.ok(existsSync(join(process.cwd(), "public", asset.src.slice(1))), id);
+  }
+});
+
+test("every story asset declares its real on-disk dimensions", async () => {
+  for (const [id, asset] of Object.entries(STORY_ASSETS)) {
+    const filePath = join(process.cwd(), "public", asset.src.slice(1));
+    const metadata = await sharp(filePath).metadata();
+
+    assert.equal(metadata.width, asset.width, `${id} width`);
+    assert.equal(metadata.height, asset.height, `${id} height`);
   }
 });
