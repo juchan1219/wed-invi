@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { STORY_CANVAS } from "./storyAssets";
+import * as storyTimeline from "./storyTimeline";
 import {
   CHAPTERS,
   FULL_CLIP,
@@ -11,6 +13,20 @@ import {
   sampleLayerState,
   type LayerTrack,
 } from "./storyTimeline";
+
+test("the contained story canvas keeps the 430 by 932 logical layer contract", () => {
+  assert.deepEqual(STORY_CANVAS, { width: 430, height: 932 });
+
+  assert.equal(typeof storyTimeline.isStoryLayerRenderable, "function");
+  assert.deepEqual(
+    LAYER_TRACKS.map(({ id }) => id),
+    storyTimeline.STORY_RENDERABLE_LAYER_IDS,
+  );
+  assert.ok(
+    LAYER_TRACKS.every(({ id }) => storyTimeline.isStoryLayerRenderable(id)),
+    "every timeline layer needs a DOM renderer inside the fixed canvas",
+  );
+});
 
 test("layer state uses stable spatial defaults when a track omits overrides", () => {
   const trackWithoutOverrides = {

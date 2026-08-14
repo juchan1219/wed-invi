@@ -204,6 +204,21 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
 
 export const LAYER_TRACKS: readonly LayerTrack[] = SOURCE_LAYERS.map(toLogicalTrack);
 
+// This explicit DOM contract keeps timeline-only additions from becoming invisible layers.
+export const STORY_RENDERABLE_LAYER_IDS = [
+  "bg-jeju", "bg-office", "bg-laugh", "bg-journey", "bg-venue", "bg-finale",
+  "opening-clouds", "opening-island", "opening-field", "title-shards", "sidecar", "wheel-front", "wheel-back", "name-labels",
+  "paper-tear", "tower-card", "tower-wall-left", "tower-wall-right", "office-yechan", "office-jueun", "office-props",
+  "panel-left", "panel-right", "joke-yechan", "jueun-expression", "speech-bubble", "laugh-burst",
+  "proposal-triptych", "travel-route", "ring-glint",
+  "venue-doors", "casual-couple", "matchcut-strip", "wedding-couple",
+  "crowd-left", "crowd-right", "confetti-back", "confetti", "confetti-front", "final-title", "invitation-paper",
+] as const;
+
+export function isStoryLayerRenderable(id: string) {
+  return (STORY_RENDERABLE_LAYER_IDS as readonly string[]).includes(id);
+}
+
 export const STORY_TRANSITIONS = [...new Set(
   LAYER_TRACKS.flatMap(({ techniques = [] }) => techniques),
 )] as readonly StoryTransition[];
@@ -239,10 +254,12 @@ export function assertStoryTimeline() {
   const ids = new Set<string>();
   const chapterIds = new Set(CHAPTERS.map(({ id }) => id));
   const trackIds = new Set(LAYER_TRACKS.map(({ id }) => id));
+  const renderableLayerIds = new Set<string>(STORY_RENDERABLE_LAYER_IDS);
 
   for (const track of LAYER_TRACKS) {
     if (ids.has(track.id)) throw new Error(`duplicate layer id: ${track.id}`);
     ids.add(track.id);
+    if (!renderableLayerIds.has(track.id)) throw new Error(`${track.id} has no DOM renderer`);
     for (const frames of [
       track.x,
       track.y,
@@ -268,6 +285,10 @@ export function assertStoryTimeline() {
         if (frame.value.some((value) => value < 0 || value > 100)) throw new Error(`${track.id} clip point is outside 0..100`);
       }
     }
+  }
+
+  for (const layerId of renderableLayerIds) {
+    if (!trackIds.has(layerId)) throw new Error(`${layerId} has no timeline track`);
   }
 
   for (const shot of SHOTS) {

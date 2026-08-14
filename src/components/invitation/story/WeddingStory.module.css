@@ -7,12 +7,30 @@
   background: #53bce8;
 }
 
-.stage {
-  --story-progress: 0;
+.stageShell {
+  --story-canvas-scale: 1;
   position: sticky;
   top: 0;
+  display: grid;
   height: 100svh;
-  min-height: 34rem;
+  place-items: center;
+  overflow: hidden;
+  background: #f5eedc;
+  contain: paint;
+}
+
+.stage {
+  position: relative;
+  width: 430px;
+  height: 932px;
+  transform: scale(var(--story-canvas-scale));
+  transform-origin: center;
+}
+
+.canvasPlane {
+  --story-progress: 0;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   isolation: isolate;
   background: #53bce8;
@@ -20,7 +38,7 @@
   contain: paint;
 }
 
-.stage::after {
+.canvasPlane::after {
   position: absolute;
   z-index: 40;
   inset: 0;
@@ -526,9 +544,10 @@
 
 /* Doodle branch: deliberately naive marker lines and paper-like flat color fields. */
 .story,
-.stage { background: #f7f3e8; color: #151515; }
+.stageShell,
+.canvasPlane { background: #f7f3e8; color: #151515; }
 
-.stage::after {
+.canvasPlane::after {
   opacity: 0.075;
   mix-blend-mode: multiply;
 }
@@ -644,7 +663,6 @@
 
 @media (max-width: 700px) {
   .story { height: 1850svh; }
-  .stage { min-height: 32rem; }
   .layer_bg_jeju .layerImage,
   .layer_opening_island .layerImage,
   .layer_opening_field .layerImage,
@@ -711,7 +729,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .story { left: auto; width: 100%; height: auto; margin-left: 0; padding: 1rem; background: #f7ead0; }
-  .stage { display: none; }
+  .stageShell { display: none; }
   .transcript { display: none; }
   .skip { height: auto; margin: 0 0 1rem auto; transform: none; }
   .motionFallback { display: grid; gap: 1rem; max-width: 54rem; margin: 0 auto; }

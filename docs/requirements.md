@@ -84,7 +84,10 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   `useStoryTimeline.ts`가 네이티브 스크롤을 감쇠 재생 헤드로 샘플링해 transform·opacity를 직접 갱신한다.
   종이 찢김, polygon reveal, 패널 확대, 카메라 이동, 의상 매치컷, 위/아래 역재생과 큰 점프 보정을 포함한다.
   스토리는 430×932 단일 논리 모바일 좌표를 px로 샘플링하고, 레이어별 독립 `scaleX`·`scaleY`와
-  `transform-origin`으로 화면 비율 차이를 흡수한다. 프로포즈 3단 장면은 좌/중/우 크롭을 사용한다.
+  `transform-origin`으로 화면 비율 차이를 흡수한다. `stageShell`의 `ResizeObserver`는 실제 shell 크기에서
+  `min(width / 430, height / 932, 1)`을 CSS custom property로만 갱신해, React 재렌더 없이 고정 논리 plane을
+  contain한다. 따라서 데스크톱의 여백은 크림색 종이로 남고 타임라인 좌표는 언제나 비스케일 430×932 px다.
+  프로포즈 3단 장면은 좌/중/우 크롭을 사용한다.
   꽃가루는 서로 다른 속도와 크기의 전·중·후경으로 나누고, 타이틀 글자와 웃음 표정도 장면별 독립 상태로 구성했다. 함부르크 프로포즈, 반지, 도쿄타워 사진은 원본을
   공개 경로에 복사하지 않고 동일 화풍의 355KB WebP 장면을 만드는 참고로만 썼다. reduced-motion에서는
   sticky를 제거하고 읽기 순서가 있는 6장 카드로 바뀐다. JavaScript 실행 전에도 이 대체 화면과 건너뛰기
