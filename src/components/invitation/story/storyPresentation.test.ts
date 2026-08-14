@@ -212,13 +212,17 @@ test("real animated image markup is decorative, hidden from AT, and unfocusable"
   assert.doesNotMatch(html, /href=|role="button"/);
 });
 
-test("fallback reuses the globally preloaded opening source without issuing duplicate preloads", async () => {
+test("the visible opening fallback loads eagerly without issuing a duplicate preload", async () => {
   installCssModuleHook();
   const { StoryFallback } = await import("./StoryFallback");
 
   const html = renderToStaticMarkup(createElement(StoryFallback));
-  assert.equal((html.match(/<article/g) ?? []).length, 6);
-  assert.equal((html.match(/loading="lazy"/g) ?? []).length, 6);
+  const dom = new JSDOM(html);
+  const images = [...dom.window.document.querySelectorAll("img")];
+
+  assert.equal(images.length, 6);
+  assert.equal(images[0]?.getAttribute("loading"), "eager");
+  assert.deepEqual(images.slice(1).map((image) => image.getAttribute("loading")), Array(5).fill("lazy"));
   assert.doesNotMatch(html, /rel="preload"[^>]+as="image"/);
 });
 

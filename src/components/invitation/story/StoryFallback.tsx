@@ -20,7 +20,8 @@ export function StoryFallback() {
               height={asset.height}
               sizes="(max-width: 430px) 100vw, 430px"
               className={styles.fallbackImage}
-              loading="lazy"
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "low" : undefined}
             />
             <div className={styles.fallbackCopy}>
               <small>{String(index + 1).padStart(2, "0")}</small>
