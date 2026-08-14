@@ -1,3 +1,4 @@
+import path from "node:path";
 import sharp from "sharp";
 
 const [input, output] = process.argv.slice(2);
@@ -61,6 +62,12 @@ for (let index = 0; index < pixelCount; index += 1) {
   rgba[target + 3] = connected[index] ? 0 : 255;
 }
 
-await sharp(rgba, {
+const image = sharp(rgba, {
   raw: { width: info.width, height: info.height, channels: 4 },
-}).png({ compressionLevel: 9 }).toFile(output);
+});
+
+if (path.extname(output).toLowerCase() === ".webp") {
+  await image.webp({ quality: 88, alphaQuality: 100, effort: 6 }).toFile(output);
+} else {
+  await image.png({ compressionLevel: 9 }).toFile(output);
+}

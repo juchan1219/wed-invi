@@ -524,6 +524,124 @@
 
 .motionFallback { display: none; }
 
+/* Doodle branch: deliberately naive marker lines and paper-like flat color fields. */
+.story,
+.stage { background: #f7f3e8; color: #151515; }
+
+.stage::after {
+  opacity: 0.075;
+  mix-blend-mode: multiply;
+}
+
+.sprite {
+  background-image: url("/story/doodle-character-atlas-v1.webp");
+  image-rendering: auto;
+}
+
+.doodleScene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: #f7f3e8;
+}
+
+.doodleScene i {
+  position: absolute;
+  display: block;
+  border: clamp(0.18rem, 0.42vw, 0.42rem) solid #171717;
+  background: transparent;
+  box-shadow: 0.18rem 0.14rem 0 rgba(23, 23, 23, 0.14);
+}
+
+.doodle_bg_jeju,
+.doodle_opening_island,
+.doodle_opening_field { background: #dcecf0; }
+.doodle_bg_jeju i:nth-child(1),
+.doodle_opening_island i:nth-child(1),
+.doodle_opening_field i:nth-child(1) { top: 12%; right: 12%; width: clamp(3.8rem, 9vw, 8rem); aspect-ratio: 1; border-radius: 50%; border-color: #ef6b55; background: #f7d467; }
+.doodle_bg_jeju i:nth-child(2),
+.doodle_opening_island i:nth-child(2),
+.doodle_opening_field i:nth-child(2) { right: -8%; bottom: -15%; width: 72%; height: 58%; border-radius: 55% 55% 0 0; background: #91ad83; transform: rotate(-4deg); }
+.doodle_bg_jeju i:nth-child(3),
+.doodle_opening_island i:nth-child(3),
+.doodle_opening_field i:nth-child(3) { bottom: -18%; left: -10%; width: 70%; height: 52%; border-radius: 48% 60% 0 0; background: #b9c887; transform: rotate(5deg); }
+.doodle_bg_jeju i:nth-child(4),
+.doodle_opening_island i:nth-child(4),
+.doodle_opening_field i:nth-child(4) { right: 22%; bottom: 21%; width: 42%; height: 10%; border-width: 0.25rem 0 0; border-style: dashed; border-radius: 50%; transform: rotate(-8deg); }
+.doodle_bg_jeju i:nth-child(5),
+.doodle_opening_island i:nth-child(5),
+.doodle_opening_field i:nth-child(5) { top: 20%; left: 12%; width: 16%; height: 5%; border-width: 0.25rem 0 0; border-color: #8db9cd; border-radius: 50%; box-shadow: 3rem 1rem 0 -0.1rem #f7f3e8; }
+
+.doodle_bg_office,
+.doodle_tower_card { background: #f5edda; }
+.doodle_bg_office i:nth-child(1),
+.doodle_tower_card i:nth-child(1) { bottom: 8%; left: 37%; width: 26%; height: 75%; border-radius: 18% 18% 2% 2%; background: #d6e5e8; transform: rotate(-1deg); }
+.doodle_bg_office i:nth-child(2),
+.doodle_tower_card i:nth-child(2) { bottom: 8%; left: 18%; width: 19%; height: 45%; border-radius: 12% 8% 0 0; background: #efb49e; transform: rotate(2deg); }
+.doodle_bg_office i:nth-child(3),
+.doodle_tower_card i:nth-child(3) { right: 18%; bottom: 8%; width: 19%; height: 55%; border-radius: 8% 15% 0 0; background: #e7d27e; transform: rotate(-2deg); }
+.doodle_bg_office i:nth-child(n + 4),
+.doodle_tower_card i:nth-child(n + 4) { width: 3%; height: 4%; border-width: 0.17rem; background: #fffdf6; box-shadow: 3rem 0 0 #fffdf6, 6rem 0 0 #fffdf6, 0 3rem 0 #fffdf6, 3rem 3rem 0 #fffdf6; }
+.doodle_bg_office i:nth-child(4), .doodle_tower_card i:nth-child(4) { top: 27%; left: 42%; }
+.doodle_bg_office i:nth-child(5), .doodle_tower_card i:nth-child(5) { top: 48%; left: 42%; }
+.doodle_bg_office i:nth-child(6), .doodle_tower_card i:nth-child(6) { top: 66%; left: 42%; }
+
+.doodle_bg_laugh { background: #f8e6a9; }
+.doodle_bg_laugh i { width: clamp(1.2rem, 3vw, 3rem); aspect-ratio: 1; border-radius: 50% 45% 55% 40%; background: #ef6b55; box-shadow: none; }
+.doodle_bg_laugh i:nth-child(1) { top: 12%; left: 8%; }
+.doodle_bg_laugh i:nth-child(2) { top: 28%; right: 10%; background: #8db9cd; transform: scale(1.4); }
+.doodle_bg_laugh i:nth-child(3) { bottom: 15%; left: 12%; background: #91ad83; transform: scale(0.7); }
+.doodle_bg_laugh i:nth-child(4) { right: 28%; bottom: 12%; transform: scale(0.55); }
+.doodle_bg_laugh i:nth-child(5) { top: 8%; left: 48%; background: #fffdf6; transform: scale(0.45); }
+
+.doodle_bg_venue { background: #dcecf0; }
+.doodle_bg_venue i:nth-child(1) { right: 15%; bottom: -3%; left: 15%; height: 64%; border-radius: 46% 46% 0 0; background: #f5edda; }
+.doodle_bg_venue i:nth-child(2) { bottom: -4%; left: 39%; width: 22%; height: 45%; border-radius: 50% 50% 0 0; background: #efb49e; }
+.doodle_bg_venue i:nth-child(3) { bottom: 48%; left: 48%; width: 3%; aspect-ratio: 1; border-radius: 50%; background: #ef6b55; }
+.doodle_bg_venue i:nth-child(4) { bottom: 16%; left: 5%; width: 23%; height: 15%; border-width: 0.28rem 0 0; border-radius: 50%; transform: rotate(-8deg); }
+.doodle_bg_venue i:nth-child(5) { right: 5%; bottom: 12%; width: 22%; height: 14%; border-width: 0.28rem 0 0; border-radius: 50%; transform: rotate(9deg); }
+
+.doodle_bg_finale { background: #f3d8d1; }
+.doodle_bg_finale i { width: clamp(1.2rem, 3vw, 2.8rem); aspect-ratio: 1; border-radius: 60% 55% 50% 45%; background: #ef6b55; box-shadow: none; transform: rotate(45deg); }
+.doodle_bg_finale i:nth-child(1) { top: 12%; left: 10%; }
+.doodle_bg_finale i:nth-child(2) { top: 20%; right: 12%; background: #f7d467; transform: rotate(22deg) scale(1.5); }
+.doodle_bg_finale i:nth-child(3) { bottom: 15%; left: 15%; background: #91ad83; transform: rotate(70deg) scale(0.7); }
+.doodle_bg_finale i:nth-child(4) { right: 28%; bottom: 9%; background: #8db9cd; transform: rotate(10deg) scale(0.6); }
+.doodle_bg_finale i:nth-child(5) { top: 8%; left: 48%; background: #fffdf6; transform: rotate(45deg) scale(0.5); }
+
+.doodleSidecar { position: absolute; inset: 0; display: block; }
+.sidecarBody { position: absolute; right: 5%; bottom: 8%; left: 7%; height: 27%; border: clamp(0.22rem, 0.5vw, 0.45rem) solid #171717; border-radius: 48% 22% 22% 42%; background: #efb49e; transform: rotate(-2deg); }
+.sidecarBeans { position: absolute; right: 13%; bottom: 24%; left: 14%; display: flex; align-items: flex-end; justify-content: center; height: 69%; }
+.sidecarBeans .sprite { width: 45%; height: auto; aspect-ratio: 3 / 4; }
+.sidecarBeans .sprite + .sprite { margin-left: -7%; transform: translateY(8%) rotate(3deg); }
+.sidecarWheel { position: absolute; inset: 0; }
+.sidecarWheel i { position: absolute; bottom: 2%; width: 20%; aspect-ratio: 1; border: clamp(0.22rem, 0.5vw, 0.45rem) solid #171717; border-radius: 50%; background: #f7f3e8; }
+.sidecarWheel i:first-child { left: 12%; }
+.sidecarWheel i:last-child { right: 10%; }
+
+.layer_proposal_triptych { border-color: #171717; background: #f7f3e8; box-shadow: 0.8rem 0.9rem 0 #171717; }
+.layer_proposal_triptych .layerImage { background: #f7f3e8; }
+.comicPanel { border-color: #171717; background-color: #f7f3e8; box-shadow: 0.65rem 0.75rem 0 #171717; }
+.layer_panel_left .comicPanel,
+.layer_panel_right .comicPanel { background-image: none; }
+
+.copyLine { border-color: #171717; background: rgba(247, 243, 232, 0.96); color: #171717; box-shadow: 0.3em 0.34em 0 #171717; }
+.layer_name_labels,
+.chapterNav,
+.scrollHint { color: #171717; text-shadow: none; }
+.chapterNav i { background: rgba(23, 23, 23, 0.2); }
+
+.crowd i { height: calc(60% + var(--person-height, 0%)); border: 0.25rem solid #171717; border-bottom: 0; border-radius: 48% 48% 0 0; background: #f7f3e8; box-shadow: none; }
+.crowd i::before { top: 18%; left: 31%; width: 8%; aspect-ratio: 1; border-radius: 50%; background: #171717; box-shadow: 0.85rem 0 0 #171717; }
+.crowd i:nth-child(2), .crowd i:nth-child(3), .crowd i:nth-child(4), .crowd i:nth-child(5) { background: #f7f3e8; }
+
+.fallbackDoodle { position: relative; min-height: 10rem; overflow: hidden; border-bottom: 0.25rem solid #171717; background: #f3d8d1; }
+.fallbackDoodle i { position: absolute; bottom: -2rem; width: 7rem; height: 9rem; border: 0.3rem solid #171717; border-bottom: 0; border-radius: 50% 50% 0 0; background: #f7f3e8; }
+.fallbackDoodle i:first-child { left: 24%; transform: rotate(-4deg); }
+.fallbackDoodle i:nth-child(2) { right: 24%; transform: rotate(5deg); }
+.fallbackDoodle span { position: absolute; top: 1rem; left: 1rem; font-size: 3rem; font-weight: 1000; }
+
 @media (max-width: 700px) {
   .story { height: 1850svh; }
   .stage { min-height: 32rem; }

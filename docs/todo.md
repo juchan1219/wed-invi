@@ -17,6 +17,7 @@
 - [x] 기본 URL·잘못된 개인화 URL·관리자 로그인 회귀 확인
 - [x] hydration·runtime 콘솔 오류 0개 확인
 - [x] 함부르크 프로포즈·반지·도쿄타워 실제 사진을 참고한 개인화 여정 장면 추가
+- [x] 별도 브랜치에서 첨부 레퍼런스 기반 콩 캐릭터·낙서 배경·낙서 프로포즈 3컷 테마 구현
 - [ ] iOS Safari와 카카오톡 인앱 브라우저에서 긴 sticky 섹션 체감 확인
 
 조사와 새 설계: [`scroll-story-reference-analysis.md`](scroll-story-reference-analysis.md),

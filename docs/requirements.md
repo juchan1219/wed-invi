@@ -90,10 +90,16 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   sticky를 제거하고 읽기 순서가 있는 6장 카드로 바뀐다. JavaScript 실행 전에도 이 대체 화면과 건너뛰기
   링크가 DOM에 존재하며, 스크린리더에는 애니메이션 카드 대신 16숏 전체 대본을 한 번만 제공한다.
 
+  `codex/doodle-wedding-story` 변형은 같은 타임라인을 유지하면서 사진풍 배경과 사람형 캐릭터를
+  흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체한다. 제주·오피스·웃음·예식장·피날레 배경은
+  소수의 평면색과 삐뚤한 CSS 선화로 만들고, 프로포즈 3컷은 실제 사진의 사건만 보존한 낙서 WebP로 사용한다.
+  reduced-motion 카드도 사진 대신 단순한 두 캐릭터 선화로 통일한다.
+
   검증은 `npm run test:story` 20개, `npm run typecheck`, `npm run build`, 1440×900·390×844의 주요 진행률
   스크린샷, 역스크롤·큰 점프·새로고침 복원, `/i/not-a-valid-token`, `/admin/login`, 브라우저 콘솔 오류
   0건까지 수행했다. 조사 근거는 `docs/scroll-story-reference-analysis.md`, 구현 계약은
   `docs/superpowers/specs/2026-08-14-scroll-wedding-story-rebuild-design.md`에 있다.
+  낙서 테마의 규칙은 `docs/superpowers/specs/2026-08-14-doodle-wedding-story-theme.md`에 있다.
 
 ### 제안했으나 제외한 것
 

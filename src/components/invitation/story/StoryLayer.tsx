@@ -5,15 +5,7 @@ import { sampleLayerState, type LayerTrack } from "./storyTimeline";
 import styles from "./WeddingStory.module.css";
 
 const BACKGROUNDS: Partial<Record<string, string>> = {
-  "bg-jeju": "/story/jeju-background-v3.webp",
-  "bg-office": "/story/office-background-v3.webp",
-  "bg-laugh": "/story/joke-laugh-v2.webp",
-  "bg-venue": "/story/venue-background-v3.webp",
-  "bg-finale": "/story/finale-background-v3.webp",
-  "opening-island": "/story/jeju-background-v3.webp",
-  "opening-field": "/story/jeju-background-v3.webp",
-  "tower-card": "/story/office-background-v3.webp",
-  "proposal-triptych": "/story/proposal-triptych-v3.webp",
+  "proposal-triptych": "/story/doodle-proposal-triptych-v1.webp",
 };
 
 const SPRITES: Partial<Record<string, string>> = {
@@ -79,6 +71,15 @@ function Sprite({ position }: { position: string }) {
 
 function renderGraphic(id: string): ReactNode {
   switch (id) {
+    case "bg-jeju":
+    case "bg-office":
+    case "bg-laugh":
+    case "bg-venue":
+    case "bg-finale":
+    case "opening-island":
+    case "opening-field":
+    case "tower-card":
+      return <DoodleScene id={id} />;
     case "bg-journey":
       return <span className={styles.paperTexture} />;
     case "opening-clouds":
@@ -101,7 +102,13 @@ function renderGraphic(id: string): ReactNode {
         </span>
       );
     case "sidecar":
-      return <Image src="/story/sidecar-couple-v3.webp" alt="" fill sizes="(max-width: 700px) 94vw, 62vw" className={styles.containImage} />;
+      return (
+        <span className={styles.doodleSidecar}>
+          <span className={styles.sidecarWheel}><i /><i /></span>
+          <span className={styles.sidecarBody} />
+          <span className={styles.sidecarBeans}><Sprite position="0% 0%" /><Sprite position="33.333% 0%" /></span>
+        </span>
+      );
     case "wheel-front":
     case "wheel-back":
       return <span className={styles.wheelShine} />;
@@ -153,6 +160,14 @@ function TravelRoute() {
       <circle cx="510" cy="170" r="12" />
       <circle cx="930" cy="220" r="12" />
     </svg>
+  );
+}
+
+function DoodleScene({ id }: { id: string }) {
+  return (
+    <span className={`${styles.doodleScene} ${styles[`doodle_${id.replaceAll("-", "_")}`] ?? ""}`}>
+      {Array.from({ length: 7 }, (_, index) => <i key={index} />)}
+    </span>
   );
 }
 
