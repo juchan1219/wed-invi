@@ -100,6 +100,21 @@ const OPENING_AND_OFFICE_FILES = [
   { src: "/story/doodle-v2/sidecar.png", width: 1024, height: 768, hasAlpha: true },
 ] as const;
 
+const TRANSPARENT_PROP_FILES = [
+  {
+    src: "/story/doodle-v2/06-office-desk.webp",
+    minimumTransparentRatio: 0.35,
+    minimumOpaqueRatio: 0.08,
+    minimumPadding: { left: 16, top: 40, right: 16, bottom: 8 },
+  },
+  {
+    src: "/story/doodle-v2/sidecar.png",
+    minimumTransparentRatio: 0.45,
+    minimumOpaqueRatio: 0.08,
+    minimumPadding: { left: 64, top: 64, right: 64, bottom: 64 },
+  },
+] as const;
+
 const SPRITE_CELL_SIZE = 512;
 const MINIMUM_SPRITE_PADDING = 80;
 
@@ -129,6 +144,10 @@ function alphaBounds(
 
   if (maxX === -1 || maxY === -1) return undefined;
   return { left: minX, top: minY, right: SPRITE_CELL_SIZE - 1 - maxX, bottom: SPRITE_CELL_SIZE - 1 - maxY };
+}
+
+function pixelAlpha(data: Buffer, channels: number, width: number, x: number, y: number) {
+  return data[(y * width + x) * channels + 3];
 }
 
 test("every story asset exists under doodle-v2 and declares positive dimensions", () => {
@@ -183,6 +202,61 @@ test("opening and office scenes register their exact files, dimensions, and alph
     assert.equal(metadata.width, asset.width, `${asset.src} width`);
     assert.equal(metadata.height, asset.height, `${asset.src} height`);
     assert.equal(metadata.hasAlpha, asset.hasAlpha, `${asset.src} alpha`);
+  }
+});
+
+test("transparent props keep meaningful alpha coverage, artwork, clear background samples, and padding", async () => {
+  for (const asset of TRANSPARENT_PROP_FILES) {
+    const filePath = join(process.cwd(), "public", asset.src.slice(1));
+    const { data, info } = await sharp(filePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const totalPixels = info.width * info.height;
+    let transparentPixels = 0;
+    let opaquePixels = 0;
+    let minX = info.width;
+    let minY = info.height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        const alpha = pixelAlpha(data, info.channels, info.width, x, y);
+        if (alpha === 0) transparentPixels++;
+        if (alpha === 255) opaquePixels++;
+        if (alpha === 0) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+
+    assert.ok(transparentPixels / totalPixels >= asset.minimumTransparentRatio, `${asset.src} transparent coverage`);
+    assert.ok(opaquePixels / totalPixels >= asset.minimumOpaqueRatio, `${asset.src} opaque artwork`);
+    assert.ok(maxX >= minX && maxY >= minY, `${asset.src} nonempty alpha bounds`);
+
+    const backgroundSamples = [
+      [0, 0],
+      [info.width - 1, 0],
+      [0, info.height - 1],
+      [info.width - 1, info.height - 1],
+      [Math.floor(info.width / 2), 0],
+    ] as const;
+    for (const [x, y] of backgroundSamples) {
+      assert.equal(pixelAlpha(data, info.channels, info.width, x, y), 0, `${asset.src} transparent sample ${x},${y}`);
+    }
+
+    const padding = {
+      left: minX,
+      top: minY,
+      right: info.width - 1 - maxX,
+      bottom: info.height - 1 - maxY,
+    };
+    for (const edge of ["left", "top", "right", "bottom"] as const) {
+      assert.ok(
+        padding[edge] >= asset.minimumPadding[edge],
+        `${asset.src} ${edge} padding: ${padding[edge]}px`,
+      );
+    }
   }
 });
 
