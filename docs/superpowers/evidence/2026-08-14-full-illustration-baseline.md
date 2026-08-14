@@ -41,7 +41,7 @@ Visual review of the three captures confirms the new visual direction is present
 
 ### Verified mobile captures
 
-The controller used the supported in-app Browser at `http://localhost:3001/`: it created each tab, then applied `browser.capabilities.get("viewport").set(...)`, navigated to the local page, measured the DOM viewport, and captured the viewport screenshot. `sips` independently confirmed every physical PNG dimension. The capability was reset after capture.
+The controller used the supported in-app Browser at `http://localhost:3000/`: it created each tab, then applied `browser.capabilities.get("viewport").set(...)`, navigated to the local page, measured the DOM viewport, and captured the viewport screenshot. `sips` independently confirmed every physical PNG dimension. The capability was reset after capture.
 
 | Viewport | Scene | DOM viewport | Physical PNG | Scroll / progress | Observed shot | Screenshot |
 | --- | --- | --- | --- | --- | --- | --- |
