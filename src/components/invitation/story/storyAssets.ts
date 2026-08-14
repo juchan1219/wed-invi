@@ -32,14 +32,47 @@ export type StorySpriteAsset = {
   columns: number;
   rows: number;
   cell: { column: number; row: number };
+  display: { cellWidth: number; cellHeight: number };
+};
+
+export type StoryImageCrop = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  display: { width: number; height: number };
+};
+
+export type StoryLayerPart = {
+  assetId: keyof typeof STORY_ASSETS;
+  x: number;
+  y: number;
 };
 
 export type StoryLayerDefinition = {
   id: string;
   assetId?: keyof typeof STORY_ASSETS;
   className?: "background" | "midground" | "character" | "foreground" | "mask";
+  crop?: StoryImageCrop;
+  parts?: readonly StoryLayerPart[];
   text?: { kind: "title" | "caption"; value: string };
 };
+
+function storySprite(
+  src: StorySpriteAsset["src"],
+  cell: StorySpriteAsset["cell"],
+): StorySpriteAsset {
+  return {
+    kind: "sprite",
+    src,
+    width: 2048,
+    height: 1024,
+    columns: 4,
+    rows: 2,
+    cell,
+    display: { cellWidth: 256, cellHeight: 256 },
+  };
+}
 
 export const STORY_ASSETS = {
   characterAtlasLegacy: {
@@ -180,150 +213,22 @@ export const STORY_ASSETS = {
     height: 932,
     fit: "contain",
   },
-  casualYechanNeutral: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 0, row: 0 },
-  },
-  casualYechanDriving: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 1, row: 0 },
-  },
-  casualYechanTalking: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 2, row: 0 },
-  },
-  casualYechanLaughing: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 3, row: 0 },
-  },
-  casualJueunNeutral: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 0, row: 1 },
-  },
-  casualJueunSidecarPassenger: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 1, row: 1 },
-  },
-  casualJueunTalking: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 2, row: 1 },
-  },
-  casualJueunLaughing: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-casual.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 3, row: 1 },
-  },
-  weddingYechanNeutral: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 0, row: 0 },
-  },
-  weddingYechanWalking: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 1, row: 0 },
-  },
-  weddingYechanWaving: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 2, row: 0 },
-  },
-  weddingYechanCheering: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 3, row: 0 },
-  },
-  weddingJueunNeutral: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 0, row: 1 },
-  },
-  weddingJueunWalking: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 1, row: 1 },
-  },
-  weddingJueunWaving: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 2, row: 1 },
-  },
-  weddingJueunCheering: {
-    kind: "sprite",
-    src: "/story/doodle-v2/characters-wedding.webp",
-    width: 2048,
-    height: 1024,
-    columns: 4,
-    rows: 2,
-    cell: { column: 3, row: 1 },
-  },
+  casualYechanNeutral: storySprite("/story/doodle-v2/characters-casual.webp", { column: 0, row: 0 }),
+  casualYechanDriving: storySprite("/story/doodle-v2/characters-casual.webp", { column: 1, row: 0 }),
+  casualYechanTalking: storySprite("/story/doodle-v2/characters-casual.webp", { column: 2, row: 0 }),
+  casualYechanLaughing: storySprite("/story/doodle-v2/characters-casual.webp", { column: 3, row: 0 }),
+  casualJueunNeutral: storySprite("/story/doodle-v2/characters-casual.webp", { column: 0, row: 1 }),
+  casualJueunSidecarPassenger: storySprite("/story/doodle-v2/characters-casual.webp", { column: 1, row: 1 }),
+  casualJueunTalking: storySprite("/story/doodle-v2/characters-casual.webp", { column: 2, row: 1 }),
+  casualJueunLaughing: storySprite("/story/doodle-v2/characters-casual.webp", { column: 3, row: 1 }),
+  weddingYechanNeutral: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 0, row: 0 }),
+  weddingYechanWalking: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 1, row: 0 }),
+  weddingYechanWaving: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 2, row: 0 }),
+  weddingYechanCheering: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 3, row: 0 }),
+  weddingJueunNeutral: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 0, row: 1 }),
+  weddingJueunWalking: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 1, row: 1 }),
+  weddingJueunWaving: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 2, row: 1 }),
+  weddingJueunCheering: storySprite("/story/doodle-v2/characters-wedding.webp", { column: 3, row: 1 }),
 } satisfies Record<string, StoryImageAsset | StorySpriteAsset>;
 
 export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
@@ -338,8 +243,18 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "opening-field", assetId: "sidecarRoad", className: "foreground" },
   { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은\n의 결혼 이야기" } },
   { id: "sidecar", assetId: "sidecar", className: "character" },
-  { id: "wheel-front", assetId: "sidecar", className: "foreground" },
-  { id: "wheel-back", assetId: "sidecar", className: "foreground" },
+  {
+    id: "wheel-front",
+    assetId: "sidecar",
+    className: "foreground",
+    crop: { x: 176, y: 392, width: 224, height: 224, display: { width: 56, height: 56 } },
+  },
+  {
+    id: "wheel-back",
+    assetId: "sidecar",
+    className: "foreground",
+    crop: { x: 672, y: 392, width: 224, height: 224, display: { width: 56, height: 56 } },
+  },
   { id: "name-labels", className: "foreground", text: { kind: "caption", value: "예찬 ↘\n↙ 주은" } },
   { id: "paper-tear", assetId: "paperTurn", className: "mask" },
   { id: "tower-card", assetId: "towerCard", className: "midground" },
@@ -358,9 +273,23 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "travel-route", assetId: "proposalTriptych", className: "foreground" },
   { id: "ring-glint", assetId: "proposalTriptych", className: "foreground" },
   { id: "venue-doors", assetId: "venueInterior", className: "midground" },
-  { id: "casual-couple", assetId: "casualJueunNeutral", className: "character" },
+  {
+    id: "casual-couple",
+    className: "character",
+    parts: [
+      { assetId: "casualYechanNeutral", x: -56, y: 0 },
+      { assetId: "casualJueunNeutral", x: 56, y: 0 },
+    ],
+  },
   { id: "matchcut-strip", assetId: "paperVeil", className: "mask" },
-  { id: "wedding-couple", assetId: "weddingJueunNeutral", className: "character" },
+  {
+    id: "wedding-couple",
+    className: "character",
+    parts: [
+      { assetId: "weddingYechanWalking", x: -56, y: 0 },
+      { assetId: "weddingJueunWalking", x: 56, y: 0 },
+    ],
+  },
   { id: "crowd-left", assetId: "crowdLeft", className: "foreground" },
   { id: "crowd-right", assetId: "crowdRight", className: "foreground" },
   { id: "confetti-back", assetId: "laughBurst", className: "midground" },
@@ -371,13 +300,33 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
 ] as const;
 
 export function getStorySpriteCrop(asset: StorySpriteAsset) {
-  const cellWidth = asset.width / asset.columns;
-  const cellHeight = asset.height / asset.rows;
+  const intrinsicCellWidth = asset.width / asset.columns;
+  const intrinsicCellHeight = asset.height / asset.rows;
+  const viewportWidth = asset.display.cellWidth;
+  const viewportHeight = asset.display.cellHeight;
 
   return {
-    cellWidth,
-    cellHeight,
-    translateX: -asset.cell.column * cellWidth,
-    translateY: -asset.cell.row * cellHeight,
+    intrinsicCellWidth,
+    intrinsicCellHeight,
+    viewportWidth,
+    viewportHeight,
+    atlasWidth: viewportWidth * asset.columns,
+    atlasHeight: viewportHeight * asset.rows,
+    translateX: -asset.cell.column * viewportWidth,
+    translateY: -asset.cell.row * viewportHeight,
+  };
+}
+
+export function getStoryImageCrop(asset: StoryImageAsset, crop: StoryImageCrop) {
+  const scaleX = crop.display.width / crop.width;
+  const scaleY = crop.display.height / crop.height;
+
+  return {
+    viewportWidth: crop.display.width,
+    viewportHeight: crop.display.height,
+    sourceWidth: asset.width * scaleX,
+    sourceHeight: asset.height * scaleY,
+    translateX: -crop.x * scaleX,
+    translateY: -crop.y * scaleY,
   };
 }

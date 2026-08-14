@@ -106,8 +106,10 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   오프닝·사이드카 도로·종이 전환·타워 카드·사무실 배경은 불투명 WebP, 사무실 desk는 alpha WebP,
   sidecar는 alpha PNG로 등록했으며 각 레지스트리 크기는 실제 파일 메타데이터와 테스트로 고정한다.
   41개 타임라인 레이어와 같은 순서의 선언형 renderer definition이 이 자산들을 소비하고, 이미지 크기·fit·
-  focal point는 typed inline CSS custom property로 전달한다. sprite는 레지스트리 cell 크기만큼 overflow-hidden한 뒤
-  정확한 row/column pixel offset으로 atlas를 이동한다. 세부 전환 안무와 전체 viewport 검수는 후속 단계에 남아 있다.
+  focal point는 typed inline CSS custom property로 전달한다. sprite는 512px intrinsic atlas cell과 256px 논리 표시
+  cell을 분리해 1024×512 표시 atlas를 정확한 row/column offset으로 이동한다. couple 레이어 하나 안에는 예찬·주은
+  두 sprite를 선언형 part로 합성하고, wheel 레이어는 1024×768 sidecar에서 서로 다른 224×224 영역을 56×56으로
+  crop한다. 세부 전환 안무와 전체 viewport 검수는 후속 단계에 남아 있다.
 
   shots 7–16용 최종 자산은 430×932 좌·우 웃음 패널, 실제 alpha 웃음 burst, 세 개의 정확한
   430×932 크롭으로 구성된 1290×932 프로포즈 삼연작, 430×932 예식장 외부·내부, 실제 alpha

@@ -5,6 +5,7 @@ import {
   STORY_ASSETS,
   STORY_CANVAS,
   STORY_LAYER_DEFINITIONS,
+  getStoryImageCrop,
   getStorySpriteCrop,
 } from "./storyAssets";
 import * as storyAssets from "./storyAssets";
@@ -37,6 +38,7 @@ test("the contained story canvas keeps the 430 by 932 logical layer contract", (
 test("every raster layer resolves to a registered asset", () => {
   for (const layer of STORY_LAYER_DEFINITIONS) {
     if (layer.assetId) assert.ok(STORY_ASSETS[layer.assetId], layer.id);
+    for (const part of layer.parts ?? []) assert.ok(STORY_ASSETS[part.assetId], layer.id);
   }
 });
 
@@ -48,17 +50,78 @@ test("every timeline layer has exactly one non-null renderer definition", () => 
   assert.equal(new Set(STORY_LAYER_DEFINITIONS.map(({ id }) => id)).size, LAYER_TRACKS.length);
 
   for (const layer of STORY_LAYER_DEFINITIONS) {
-    assert.notEqual(Boolean(layer.assetId), Boolean(layer.text), `${layer.id} needs one renderer`);
+    assert.equal(
+      [layer.assetId, layer.text, layer.parts].filter(Boolean).length,
+      1,
+      `${layer.id} needs one renderer`,
+    );
     assert.ok(storyTimeline.isStoryLayerRenderable(layer.id), layer.id);
   }
 });
 
-test("sprite crops use exact atlas cell dimensions and offsets", () => {
+test("sprite crops separate intrinsic pixels from the 256px logical display cell", () => {
   assert.deepEqual(getStorySpriteCrop(STORY_ASSETS.casualJueunTalking), {
-    cellWidth: 512,
-    cellHeight: 512,
-    translateX: -1024,
-    translateY: -512,
+    intrinsicCellWidth: 512,
+    intrinsicCellHeight: 512,
+    viewportWidth: 256,
+    viewportHeight: 256,
+    atlasWidth: 1024,
+    atlasHeight: 512,
+    translateX: -512,
+    translateY: -256,
+  });
+});
+
+test("couple layers compose both partners from unique registered sprite assets", () => {
+  const casual = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "casual-couple");
+  const wedding = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "wedding-couple");
+
+  assert.deepEqual(casual?.parts?.map(({ assetId }) => assetId), [
+    "casualYechanNeutral",
+    "casualJueunNeutral",
+  ]);
+  assert.deepEqual(wedding?.parts?.map(({ assetId }) => assetId), [
+    "weddingYechanWalking",
+    "weddingJueunWalking",
+  ]);
+
+  for (const layer of [casual, wedding]) {
+    assert.ok(layer?.parts?.length === 2);
+    assert.equal(new Set(layer.parts.map(({ assetId }) => assetId)).size, 2);
+    assert.ok(layer.parts.every(({ assetId }) => STORY_ASSETS[assetId].kind === "sprite"));
+  }
+});
+
+test("wheel layers crop two distinct bounded sidecar regions instead of shrinking the vehicle", () => {
+  const wheelDefinitions = ["wheel-front", "wheel-back"].map((id) => {
+    const definition = STORY_LAYER_DEFINITIONS.find((layer) => layer.id === id);
+    assert.equal(definition?.assetId, "sidecar");
+    assert.ok(definition.crop);
+    return definition;
+  });
+  const crops = wheelDefinitions.map(({ crop }) => crop!);
+
+  assert.notDeepEqual(crops[0], crops[1]);
+  for (const crop of crops) {
+    assert.ok(crop.x >= 0 && crop.y >= 0);
+    assert.ok(crop.x + crop.width <= STORY_ASSETS.sidecar.width);
+    assert.ok(crop.y + crop.height <= STORY_ASSETS.sidecar.height);
+  }
+  assert.deepEqual(getStoryImageCrop(STORY_ASSETS.sidecar, crops[0]), {
+    viewportWidth: 56,
+    viewportHeight: 56,
+    sourceWidth: 256,
+    sourceHeight: 192,
+    translateX: -44,
+    translateY: -98,
+  });
+  assert.deepEqual(getStoryImageCrop(STORY_ASSETS.sidecar, crops[1]), {
+    viewportWidth: 56,
+    viewportHeight: 56,
+    sourceWidth: 256,
+    sourceHeight: 192,
+    translateX: -168,
+    translateY: -98,
   });
 });
 

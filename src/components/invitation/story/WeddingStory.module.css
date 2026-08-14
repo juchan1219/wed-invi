@@ -86,18 +86,48 @@
   top: 50%;
   left: 50%;
   display: block;
-  width: var(--story-sprite-cell-width);
-  height: var(--story-sprite-cell-height);
+  width: var(--story-sprite-viewport-width);
+  height: var(--story-sprite-viewport-height);
   overflow: hidden;
   transform: translate(-50%, -50%);
 }
 
 .spriteImage {
   display: block;
-  width: auto;
-  height: auto;
+  width: var(--story-sprite-atlas-width);
+  height: var(--story-sprite-atlas-height);
   max-width: none;
   transform: translate(var(--story-sprite-translate-x), var(--story-sprite-translate-y));
+}
+
+.imageCrop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: var(--story-image-crop-width);
+  height: var(--story-image-crop-height);
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+.imageCropSource {
+  display: block;
+  width: var(--story-image-source-width);
+  height: var(--story-image-source-height);
+  max-width: none;
+  transform: translate(var(--story-image-translate-x), var(--story-image-translate-y));
+}
+
+.layerComposition,
+.layerCompositionPart {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.layerCompositionPart {
+  transform: translate(var(--story-part-x), var(--story-part-y));
 }
 
 .layerText {
@@ -153,15 +183,15 @@
 .layer_office_yechan,
 .layer_office_jueun,
 .layer_joke_yechan,
-.layer_jueun_expression,
-.layer_casual_couple,
-.layer_wedding_couple { inset: auto; width: 256px; height: 256px; overflow: visible; }
+.layer_jueun_expression { inset: auto; width: 256px; height: 256px; overflow: visible; }
 .layer_office_yechan { bottom: 4%; left: -9%; }
 .layer_office_jueun { right: -9%; bottom: 4%; }
 .layer_joke_yechan { bottom: 22%; left: 8%; }
 .layer_jueun_expression { right: 8%; bottom: 2%; }
-.layer_casual_couple { bottom: var(--story-casual-couple-bottom); left: var(--story-casual-couple-left); }
-.layer_wedding_couple { right: 20%; bottom: 2%; }
+.layer_casual_couple,
+.layer_wedding_couple { inset: auto; width: 352px; height: 256px; overflow: visible; }
+.layer_casual_couple { bottom: var(--story-casual-couple-bottom); left: 9%; }
+.layer_wedding_couple { right: 9%; bottom: 2%; }
 
 .layer_office_props { z-index: 12; inset: auto 4% 4%; height: 260px; }
 .layer_panel_left,

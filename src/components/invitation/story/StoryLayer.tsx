@@ -3,9 +3,12 @@ import type { CSSProperties } from "react";
 import {
   STORY_ASSETS,
   STORY_LAYER_DEFINITIONS,
+  getStoryImageCrop,
   getStorySpriteCrop,
+  type StoryImageCrop,
   type StoryImageAsset,
   type StoryLayerDefinition,
+  type StoryLayerPart,
   type StorySpriteAsset,
 } from "./storyAssets";
 import { inlineClipPathForTrack } from "./timelineMath";
@@ -21,10 +24,26 @@ type ImageCSSProperties = CSSProperties & {
 };
 
 type SpriteCSSProperties = CSSProperties & {
-  "--story-sprite-cell-width": `${number}px`;
-  "--story-sprite-cell-height": `${number}px`;
+  "--story-sprite-viewport-width": `${number}px`;
+  "--story-sprite-viewport-height": `${number}px`;
+  "--story-sprite-atlas-width": `${number}px`;
+  "--story-sprite-atlas-height": `${number}px`;
   "--story-sprite-translate-x": `${number}px`;
   "--story-sprite-translate-y": `${number}px`;
+};
+
+type ImageCropCSSProperties = CSSProperties & {
+  "--story-image-crop-width": `${number}px`;
+  "--story-image-crop-height": `${number}px`;
+  "--story-image-source-width": `${number}px`;
+  "--story-image-source-height": `${number}px`;
+  "--story-image-translate-x": `${number}px`;
+  "--story-image-translate-y": `${number}px`;
+};
+
+type CompositionPartCSSProperties = CSSProperties & {
+  "--story-part-x": `${number}px`;
+  "--story-part-y": `${number}px`;
 };
 
 const STORY_LAYER_DEFINITION_BY_ID = new Map<string, StoryLayerDefinition>(
@@ -62,9 +81,11 @@ export function StoryLayer({ track }: { track: LayerTrack }) {
 function StoryLayerContent({ definition }: { definition: StoryLayerDefinition }) {
   if (definition.assetId) {
     const asset = STORY_ASSETS[definition.assetId];
-    return asset.kind === "sprite"
-      ? <SpriteLayer asset={asset} />
-      : <ImageLayer asset={asset} />;
+    return <AssetLayer asset={asset} crop={definition.crop} />;
+  }
+
+  if (definition.parts) {
+    return <CompositionLayer parts={definition.parts} />;
   }
 
   if (definition.text) {
@@ -76,6 +97,45 @@ function StoryLayerContent({ definition }: { definition: StoryLayerDefinition })
   }
 
   throw new Error(`${definition.id} has no renderable content`);
+}
+
+function AssetLayer({
+  asset,
+  crop,
+}: {
+  asset: StoryImageAsset | StorySpriteAsset;
+  crop?: StoryImageCrop;
+}) {
+  if (asset.kind === "sprite") {
+    if (crop) throw new Error("sprite assets cannot use an image crop");
+    return <SpriteLayer asset={asset} />;
+  }
+
+  return crop ? <CroppedImageLayer asset={asset} crop={crop} /> : <ImageLayer asset={asset} />;
+}
+
+function CompositionLayer({ parts }: { parts: readonly StoryLayerPart[] }) {
+  return (
+    <span className={styles.layerComposition} aria-hidden="true">
+      {parts.map((part) => {
+        const style = {
+          "--story-part-x": `${part.x}px`,
+          "--story-part-y": `${part.y}px`,
+        } satisfies CompositionPartCSSProperties;
+
+        return (
+          <span
+            key={part.assetId}
+            className={styles.layerCompositionPart}
+            style={style as CSSProperties}
+            aria-hidden="true"
+          >
+            <AssetLayer asset={STORY_ASSETS[part.assetId]} />
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 function ImageLayer({ asset }: { asset: StoryImageAsset }) {
@@ -106,8 +166,10 @@ function ImageLayer({ asset }: { asset: StoryImageAsset }) {
 function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
   const crop = getStorySpriteCrop(asset);
   const style = {
-    "--story-sprite-cell-width": `${crop.cellWidth}px`,
-    "--story-sprite-cell-height": `${crop.cellHeight}px`,
+    "--story-sprite-viewport-width": `${crop.viewportWidth}px`,
+    "--story-sprite-viewport-height": `${crop.viewportHeight}px`,
+    "--story-sprite-atlas-width": `${crop.atlasWidth}px`,
+    "--story-sprite-atlas-height": `${crop.atlasHeight}px`,
     "--story-sprite-translate-x": `${crop.translateX}px`,
     "--story-sprite-translate-y": `${crop.translateY}px`,
   } satisfies SpriteCSSProperties;
@@ -121,6 +183,39 @@ function SpriteLayer({ asset }: { asset: StorySpriteAsset }) {
         height={asset.height}
         sizes={`${asset.width}px`}
         className={styles.spriteImage}
+        aria-hidden="true"
+      />
+    </span>
+  );
+}
+
+function CroppedImageLayer({
+  asset,
+  crop,
+}: {
+  asset: StoryImageAsset;
+  crop: StoryImageCrop;
+}) {
+  const layout = getStoryImageCrop(asset, crop);
+  const style = {
+    "--story-image-crop-width": `${layout.viewportWidth}px`,
+    "--story-image-crop-height": `${layout.viewportHeight}px`,
+    "--story-image-source-width": `${layout.sourceWidth}px`,
+    "--story-image-source-height": `${layout.sourceHeight}px`,
+    "--story-image-translate-x": `${layout.translateX}px`,
+    "--story-image-translate-y": `${layout.translateY}px`,
+  } satisfies ImageCropCSSProperties;
+
+  return (
+    <span className={styles.imageCrop} style={style as CSSProperties} aria-hidden="true">
+      <Image
+        src={asset.src}
+        alt=""
+        width={asset.width}
+        height={asset.height}
+        loading={asset.eager ? "eager" : "lazy"}
+        sizes={`${layout.sourceWidth}px`}
+        className={styles.imageCropSource}
         aria-hidden="true"
       />
     </span>

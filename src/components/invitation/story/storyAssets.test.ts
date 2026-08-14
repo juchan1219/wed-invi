@@ -6,6 +6,22 @@ import sharp from "sharp";
 
 import { STORY_ASSETS } from "./storyAssets";
 
+function expectedSprite(
+  src: "/story/doodle-v2/characters-casual.webp" | "/story/doodle-v2/characters-wedding.webp",
+  cell: { column: number; row: number },
+) {
+  return {
+    kind: "sprite" as const,
+    src,
+    width: 2048,
+    height: 1024,
+    columns: 4,
+    rows: 2,
+    cell,
+    display: { cellWidth: 256, cellHeight: 256 },
+  };
+}
+
 const STYLE_BIBLE_ASSETS = {
   styleGuide: {
     kind: "image",
@@ -14,22 +30,22 @@ const STYLE_BIBLE_ASSETS = {
     height: 932,
     fit: "contain",
   },
-  casualYechanNeutral: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 0, row: 0 } },
-  casualYechanDriving: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 1, row: 0 } },
-  casualYechanTalking: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 2, row: 0 } },
-  casualYechanLaughing: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 3, row: 0 } },
-  casualJueunNeutral: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 0, row: 1 } },
-  casualJueunSidecarPassenger: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 1, row: 1 } },
-  casualJueunTalking: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 2, row: 1 } },
-  casualJueunLaughing: { kind: "sprite", src: "/story/doodle-v2/characters-casual.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 3, row: 1 } },
-  weddingYechanNeutral: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 0, row: 0 } },
-  weddingYechanWalking: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 1, row: 0 } },
-  weddingYechanWaving: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 2, row: 0 } },
-  weddingYechanCheering: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 3, row: 0 } },
-  weddingJueunNeutral: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 0, row: 1 } },
-  weddingJueunWalking: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 1, row: 1 } },
-  weddingJueunWaving: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 2, row: 1 } },
-  weddingJueunCheering: { kind: "sprite", src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, columns: 4, rows: 2, cell: { column: 3, row: 1 } },
+  casualYechanNeutral: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 0, row: 0 }),
+  casualYechanDriving: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 1, row: 0 }),
+  casualYechanTalking: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 2, row: 0 }),
+  casualYechanLaughing: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 3, row: 0 }),
+  casualJueunNeutral: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 0, row: 1 }),
+  casualJueunSidecarPassenger: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 1, row: 1 }),
+  casualJueunTalking: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 2, row: 1 }),
+  casualJueunLaughing: expectedSprite("/story/doodle-v2/characters-casual.webp", { column: 3, row: 1 }),
+  weddingYechanNeutral: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 0, row: 0 }),
+  weddingYechanWalking: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 1, row: 0 }),
+  weddingYechanWaving: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 2, row: 0 }),
+  weddingYechanCheering: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 3, row: 0 }),
+  weddingJueunNeutral: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 0, row: 1 }),
+  weddingJueunWalking: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 1, row: 1 }),
+  weddingJueunWaving: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 2, row: 1 }),
+  weddingJueunCheering: expectedSprite("/story/doodle-v2/characters-wedding.webp", { column: 3, row: 1 }),
 } as const;
 
 const STYLE_BIBLE_FILES = [
