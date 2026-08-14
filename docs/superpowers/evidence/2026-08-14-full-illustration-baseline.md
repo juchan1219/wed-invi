@@ -29,7 +29,7 @@ The following installed Next.js 16.2.12 references were searched and read in ful
 
 ## Browser evidence
 
-The in-app Browser was used against `http://localhost:3000/`. Screenshots are stored outside the repository at `/tmp/wed-invi-full-illustration-baseline/`.
+The in-app Browser was used against the local development route. Screenshots are stored outside the repository at `/tmp/wed-invi-full-illustration-baseline/`.
 
 | Scene | Requested story progress | Observed scroll / progress | Observed shot | Actual viewport | Screenshot |
 | --- | ---: | ---: | --- | --- | --- |
@@ -39,20 +39,19 @@ The in-app Browser was used against `http://localhost:3000/`. Screenshots are st
 
 Visual review of the three captures confirms the new visual direction is present: flat paper-color fields, heavy irregular black outlines, bean characters, CSS-built Jeju/office scenery, and the three-panel doodle proposal artwork.
 
-### Requested mobile viewport limitation
+### Verified mobile captures
 
-The Browser viewport capability was set before creating fresh tabs, then measured again in two follow-up checks. The Browser accepted each request, but its rendered page dimensions did not change:
+The controller used the supported in-app Browser at `http://localhost:3001/`: it created each tab, then applied `browser.capabilities.get("viewport").set(...)`, navigated to the local page, measured the DOM viewport, and captured the viewport screenshot. `sips` independently confirmed every physical PNG dimension. The capability was reset after capture.
 
-| Requested viewport | DOM measurement (`window.innerWidth` × `window.innerHeight`) | Device pixel ratio |
-| --- | --- | ---: |
-| 390x844 | 1280x720 | 2 |
-| 430x932 | 1280x720 | 2 |
-| 1280x720 | 1280x720 | 2 |
+| Viewport | Scene | DOM viewport | Physical PNG | Scroll / progress | Observed shot | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| 390x844 | Opening | 390x844 | 390x844 | 0px / 0% | `island-opens` | `actual-390x844-opening.png` |
+| 390x844 | Office | 390x844 | 390x844 | 4063px / 27% | `through-window` | `actual-390x844-office.png` |
+| 390x844 | Proposal | 390x844 | 390x844 | 8954px / 59% | `route-connects` | `actual-390x844-proposal.png` |
+| 430x932 | Opening | 430x932 | 430x932 | 0px / 0% | `island-opens` | `actual-430x932-opening.png` |
+| 430x932 | Office | 430x932 | 430x932 | 4704px / 28% | `awkward-desk` | `actual-430x932-office.png` |
+| 430x932 | Proposal | 430x932 | 430x932 | 9960px / 59% | `route-connects` | `actual-430x932-proposal.png` |
 
-This is an in-app Browser session limitation, not a claim about the application's responsive CSS. The nominal mobile PNG files also stayed 1280x720; they are retained for diagnosis:
+### Earlier viewport no-op (troubleshooting history)
 
-- `390x844-opening.png` (actually 1280x720)
-- `430x932-office.png` (actually 1280x720)
-- `1280x720-proposal.png` (1280x720)
-
-These nominal mobile captures are **not** claimed as mobile verification. The required 390x844 and 430x932 visual evidence needs recapture when the in-app Browser viewport override is functioning.
+An earlier in-app Browser session accepted `viewport.set` before fresh-tab creation but kept the DOM and PNG output at 1280x720. Those nominal files (`390x844-opening.png`, `430x932-office.png`, and `1280x720-proposal.png`) remain diagnostic artifacts only. The controller-assisted captures above establish the valid mobile baseline; applying the supported override after each tab is created produced the requested dimensions.

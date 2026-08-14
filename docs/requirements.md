@@ -94,15 +94,14 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체한다. 제주·오피스·웃음·예식장·피날레 배경은
   소수의 평면색과 삐뚤한 CSS 선화로 만들고, 프로포즈 3컷은 실제 사진의 사건만 보존한 낙서 WebP로 사용한다.
   reduced-motion 카드도 사진 대신 단순한 두 캐릭터 선화로 통일한다. 이 변형은 현재
-  rough prototype 체크포인트다. 1280×720에서 오프닝·오피스·프로포즈 위치를 확인했지만,
-  390×844·430×932 모바일 캡처는 in-app Browser 세션의 viewport override가 1280×720으로 고정되어
-  유효하게 검증하지 못했고, 네트워크 제한으로 `npm run build`도 완료하지 못했다. 따라서 모바일 레이아웃과
+  rough prototype 체크포인트다. 1280×720와 390×844·430×932에서 오프닝·오피스·프로포즈 위치를
+  실제 DOM viewport 및 PNG 크기로 확인했다. 다만 네트워크 제한으로 `npm run build`는 완료하지 못했으므로,
   production build 근거는 최종 아트로 승격하기 전의 남은 검증 항목이다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률
   스크린샷, 역스크롤·큰 점프·새로고침 복원, `/i/not-a-valid-token`, `/admin/login`, 브라우저 콘솔 오류
-  0건까지 수행했다. 이 결과를 현재 doodle rough prototype의 모바일·production build 검증으로 해석하지 않는다.
+  0건까지 수행했다. 이 결과를 현재 doodle rough prototype의 production build 검증으로 해석하지 않는다.
   조사 근거는 `docs/scroll-story-reference-analysis.md`, 구현 계약은
   `docs/superpowers/specs/2026-08-14-scroll-wedding-story-rebuild-design.md`에 있다.
   낙서 테마의 규칙은 `docs/superpowers/specs/2026-08-14-doodle-wedding-story-theme.md`에 있다.
