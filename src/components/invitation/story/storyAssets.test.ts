@@ -199,8 +199,7 @@ const PROPOSAL_AND_FINALE_TRANSPARENT_FILES = [
     bounds: {
       minWidth: 120,
       minHeight: 360,
-      bottomEdge: "full-body-or-bottom-crop",
-      minimumPadding: { left: 8, top: 100, right: 40 },
+      minimumPadding: { left: 8, top: 100, right: 40, bottom: 8 },
     },
   },
   {
@@ -211,8 +210,7 @@ const PROPOSAL_AND_FINALE_TRANSPARENT_FILES = [
     bounds: {
       minWidth: 120,
       minHeight: 360,
-      bottomEdge: "full-body-or-bottom-crop",
-      minimumPadding: { left: 100, top: 200, right: 8 },
+      minimumPadding: { left: 100, top: 200, right: 8, bottom: 8 },
     },
   },
   {
@@ -359,6 +357,73 @@ test("proposal triptych keeps three exact 430px focal crops", async () => {
     const crop = await sharp(cropBuffer).stats();
     assert.ok(crop.entropy > 2, `proposal panel ${panel + 1} retains scene detail`);
   }
+
+  const { data, info } = await sharp(filePath).raw().toBuffer({ resolveWithObject: true });
+  const darkPixels = (left: number, top: number, width: number, height: number) => {
+    let count = 0;
+    for (let y = top; y < top + height; y++) {
+      for (let x = left; x < left + width; x++) {
+        const index = (y * info.width + x) * info.channels;
+        const luminance = (data[index] + data[index + 1] + data[index + 2]) / 3;
+        if (luminance < 80) count++;
+      }
+    }
+    return count;
+  };
+
+  assert.ok(darkPixels(290, 465, 65, 30) >= 600, "Hamburg Yechan keeps thick black glasses");
+  assert.ok(darkPixels(945, 460, 25, 25) >= 20, "Tokyo Yechan keeps a visible smile");
+  assert.ok(darkPixels(1138, 480, 24, 15) >= 20, "Tokyo Jueun keeps a visible smile");
+});
+
+test("venue exterior and interior keep the same door frame and path geometry", async () => {
+  const [exterior, interior] = await Promise.all([
+    sharp(join(process.cwd(), "public/story/doodle-v2/13-venue-exterior.webp")).raw().toBuffer({ resolveWithObject: true }),
+    sharp(join(process.cwd(), "public/story/doodle-v2/14-venue-interior.webp")).raw().toBuffer({ resolveWithObject: true }),
+  ]);
+  assert.equal(exterior.info.width, 430);
+  assert.equal(interior.info.width, 430);
+  assert.equal(exterior.info.height, 932);
+  assert.equal(interior.info.height, 932);
+
+  const geometryBands = [
+    { left: 135, top: 475, width: 160, height: 30 },
+    { left: 135, top: 505, width: 25, height: 145 },
+    { left: 270, top: 505, width: 25, height: 145 },
+    { left: 85, top: 650, width: 45, height: 245 },
+    { left: 300, top: 650, width: 45, height: 245 },
+  ] as const;
+  let difference = 0;
+  let samples = 0;
+  for (const band of geometryBands) {
+    for (let y = band.top; y < band.top + band.height; y++) {
+      for (let x = band.left; x < band.left + band.width; x++) {
+        for (let channel = 0; channel < 3; channel++) {
+          difference += Math.abs(
+            exterior.data[(y * exterior.info.width + x) * exterior.info.channels + channel]
+              - interior.data[(y * interior.info.width + x) * interior.info.channels + channel],
+          );
+          samples++;
+        }
+      }
+    }
+  }
+  assert.ok(difference / samples <= 12, `door/path geometry mean difference: ${difference / samples}`);
+});
+
+test("laugh burst keeps a meaningful central ellipse fully transparent", async () => {
+  const filePath = join(process.cwd(), "public/story/doodle-v2/09-laugh-burst.webp");
+  const { data, info } = await sharp(filePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let samples = 0;
+  for (let y = 316; y <= 616; y++) {
+    for (let x = 137; x <= 293; x++) {
+      const normalized = ((x - 215) / 78) ** 2 + ((y - 466) / 150) ** 2;
+      if (normalized > 1) continue;
+      samples++;
+      assert.equal(pixelAlpha(data, info.channels, info.width, x, y), 0, `burst center ${x},${y}`);
+    }
+  }
+  assert.ok(samples >= 36_000, "burst center ellipse sample coverage");
 });
 
 test("proposal and finale overlays keep real alpha, clear samples, useful coverage, and intended bounds", async () => {
@@ -390,15 +455,16 @@ test("proposal and finale overlays keep real alpha, clear samples, useful covera
     assert.ok(opaquePixels / totalPixels >= asset.minimumOpaqueRatio, `${asset.src} opaque artwork`);
     assert.ok(maxX - minX + 1 >= asset.bounds.minWidth, `${asset.src} artwork width`);
     assert.ok(maxY - minY + 1 >= asset.bounds.minHeight, `${asset.src} artwork height`);
-    if (asset.bounds.bottomEdge === "touch") {
+    if ("bottomEdge" in asset.bounds && asset.bounds.bottomEdge === "touch") {
       assert.equal(maxY, info.height - 1, `${asset.src} must reach bottom edge`);
-    } else if (asset.bounds.bottomEdge === "clear") {
+    } else if ("bottomEdge" in asset.bounds && asset.bounds.bottomEdge === "clear") {
       assert.ok(maxY < info.height - 1, `${asset.src} must keep bottom clear`);
     }
     if ("minimumPadding" in asset.bounds) {
       assert.ok(minX >= asset.bounds.minimumPadding.left, `${asset.src} left crop rule`);
       assert.ok(minY >= asset.bounds.minimumPadding.top, `${asset.src} top crop rule`);
       assert.ok(info.width - 1 - maxX >= asset.bounds.minimumPadding.right, `${asset.src} right crop rule`);
+      assert.ok(info.height - 1 - maxY >= asset.bounds.minimumPadding.bottom, `${asset.src} full-body bottom padding`);
     }
 
     for (const [x, y] of asset.transparentSamples) {
