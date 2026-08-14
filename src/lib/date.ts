@@ -50,25 +50,30 @@ export function formatCeremonyDateShort(): string {
   return `${year}. ${String(month).padStart(2, "0")}. ${String(day).padStart(2, "0")}`;
 }
 
+/** ICU의 dayPeriod 번역에 의존하지 않고 24시간제 숫자를 한국어 시각으로 만든다. */
+export function formatKoreanTimeParts(hour24: number, minute: number): string {
+  const meridiem = hour24 < 12 ? "오전" : "오후";
+  const hour12 = hour24 % 12 || 12;
+  return minute === 0
+    ? `${meridiem} ${hour12}시`
+    : `${meridiem} ${hour12}시 ${minute}분`;
+}
+
 /** "오후 1시" / "오후 1시 30분" — 정각이면 분을 생략한다. */
 export function formatCeremonyTime(): string {
-  const parts = new Intl.DateTimeFormat("ko-KR", {
+  const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ,
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
   }).formatToParts(ceremonyDate());
 
   const get = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((p) => p.type === type)?.value ?? "";
 
-  const meridiem = get("dayPeriod");
-  const hour = get("hour");
+  const hour = Number(get("hour"));
   const minute = Number(get("minute"));
-
-  return minute === 0
-    ? `${meridiem} ${hour}시`
-    : `${meridiem} ${hour}시 ${minute}분`;
+  return formatKoreanTimeParts(hour, minute);
 }
 
 export type CalendarCell = { day: number | null; isCeremony: boolean };

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:story": "tsx --test src/components/invitation/story/*.test.ts",
+    "test:story": "tsx --test src/components/invitation/story/*.test.ts src/lib/date.test.ts",
     "typecheck": "tsc --noEmit",
     "photos:prep": "tsx scripts/prep-photos.ts",
     "db:generate": "drizzle-kit generate",
