@@ -165,7 +165,9 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   정방향·역방향·`0.521↔0.999` 직접 점프 destination 동등성을 고정한다. proposal pan의 두 quarter-point는
   명시적 `easeInOut` 보간값을 검증한다. fallback registry/order, loading policy, pending/reduced presentation,
   shot-boundary announcement throttling, 실제 Next Image 장식/비포커스 SSR markup도 회귀 테스트로 고정한다.
-  `npm run test:story` 69개,
+  실제 `WeddingStory` SSR/mount 테스트는 pending fallback·skip target·16숏 transcript와 reduced-motion에서
+  rAF/IntersectionObserver/ResizeObserver/scroll listener 0회, full-motion에서 containment/timeline observer 활성화를
+  대조한다. `npm run test:story` 72개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,

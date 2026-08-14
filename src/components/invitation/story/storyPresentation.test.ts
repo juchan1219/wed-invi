@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import test from "node:test";
-import { createElement } from "react";
+import { act, createElement } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
+import { JSDOM } from "jsdom";
 
 import * as storyAssets from "./storyAssets";
 import * as storyTimeline from "./storyTimeline";
@@ -13,6 +15,94 @@ function installCssModuleHook() {
     const classes = new Proxy({}, { get: (_target, property) => String(property) });
     module.exports = { __esModule: true, default: classes };
   };
+}
+
+function installDomEnvironment(reducedMotion: boolean) {
+  const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", {
+    url: "http://localhost/",
+  });
+  const counters = {
+    animationFrames: 0,
+    intersectionObservers: 0,
+    resizeObservers: 0,
+    scrollListeners: 0,
+  };
+
+  Object.defineProperties(globalThis, {
+    window: { configurable: true, writable: true, value: dom.window },
+    document: { configurable: true, writable: true, value: dom.window.document },
+    navigator: { configurable: true, writable: true, value: dom.window.navigator },
+    HTMLElement: { configurable: true, writable: true, value: dom.window.HTMLElement },
+    Element: { configurable: true, writable: true, value: dom.window.Element },
+    Node: { configurable: true, writable: true, value: dom.window.Node },
+    IS_REACT_ACT_ENVIRONMENT: { configurable: true, writable: true, value: true },
+  });
+
+  dom.window.matchMedia = (() => ({
+    matches: reducedMotion,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => false,
+  })) as typeof dom.window.matchMedia;
+  Object.defineProperties(dom.window, {
+    scrollY: { configurable: true, value: 0 },
+    innerHeight: { configurable: true, value: 932 },
+  });
+  Object.defineProperty(dom.window.HTMLElement.prototype, "offsetHeight", {
+    configurable: true,
+    get: () => 18_500,
+  });
+  dom.window.HTMLElement.prototype.getBoundingClientRect = () => ({
+    x: 0,
+    y: 0,
+    top: 0,
+    right: 430,
+    bottom: 932,
+    left: 0,
+    width: 430,
+    height: 932,
+    toJSON() {},
+  });
+
+  const requestFrame = (() => {
+    counters.animationFrames += 1;
+    return counters.animationFrames;
+  }) as typeof requestAnimationFrame;
+  globalThis.requestAnimationFrame = requestFrame;
+  globalThis.cancelAnimationFrame = () => {};
+  dom.window.requestAnimationFrame = requestFrame;
+  dom.window.cancelAnimationFrame = () => {};
+
+  class FakeIntersectionObserver implements IntersectionObserver {
+    readonly root = null;
+    readonly rootMargin = "100% 0px";
+    readonly thresholds = [0];
+    constructor() { counters.intersectionObservers += 1; }
+    disconnect() {}
+    observe() {}
+    takeRecords() { return []; }
+    unobserve() {}
+  }
+  class FakeResizeObserver implements ResizeObserver {
+    constructor() { counters.resizeObservers += 1; }
+    disconnect() {}
+    observe() {}
+    unobserve() {}
+  }
+  globalThis.IntersectionObserver = FakeIntersectionObserver;
+  globalThis.ResizeObserver = FakeResizeObserver;
+
+  const addEventListener = dom.window.addEventListener.bind(dom.window);
+  dom.window.addEventListener = ((type: string, ...args: Parameters<Window["addEventListener"]> extends [string, ...infer Rest] ? Rest : never) => {
+    if (type === "scroll") counters.scrollListeners += 1;
+    return addEventListener(type, ...args);
+  }) as typeof dom.window.addEventListener;
+
+  return { counters, dom, container: dom.window.document.querySelector("#root")! };
 }
 
 test("fallback panel contract selects six final registry illustrations and chapter copy in order", () => {
@@ -60,15 +150,14 @@ test("motion presentation keeps pending and reduced states non-sticky without a 
   const getPresentation = (storyTimeline as unknown as {
     getStoryMotionPresentation?: (mode: "pending" | "full" | "reduce") => {
       showStage: boolean;
-      showFallback: boolean;
       runTimeline: boolean;
     };
   }).getStoryMotionPresentation;
 
   assert.equal(typeof getPresentation, "function");
-  assert.deepEqual(getPresentation!("pending"), { showStage: false, showFallback: true, runTimeline: false });
-  assert.deepEqual(getPresentation!("reduce"), { showStage: false, showFallback: true, runTimeline: false });
-  assert.deepEqual(getPresentation!("full"), { showStage: true, showFallback: false, runTimeline: true });
+  assert.deepEqual(getPresentation!("pending"), { showStage: false, runTimeline: false });
+  assert.deepEqual(getPresentation!("reduce"), { showStage: false, runTimeline: false });
+  assert.deepEqual(getPresentation!("full"), { showStage: true, runTimeline: true });
 });
 
 test("progress announcements change at shot boundaries, not within animation frames", () => {
@@ -130,4 +219,76 @@ test("fallback reuses the globally preloaded opening source without issuing dupl
   assert.equal((html.match(/<article/g) ?? []).length, 6);
   assert.equal((html.match(/loading="lazy"/g) ?? []).length, 6);
   assert.doesNotMatch(html, /rel="preload"[^>]+as="image"/);
+});
+
+test("WeddingStory SSR starts with a complete non-blank fallback and a valid first skip target", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const html = renderToStaticMarkup(createElement("div", null,
+    createElement(WeddingStory, { contentTargetId: "invitation-content" }),
+    createElement("main", { id: "invitation-content" }, createElement("button", null, "청첩장 첫 컨트롤")),
+  ));
+  const document = new JSDOM(html).window.document;
+  const story = document.querySelector("section[data-motion='pending']");
+  assert.ok(story);
+
+  const skip = story.firstElementChild;
+  assert.equal(skip?.tagName, "A");
+  assert.equal(skip?.getAttribute("href"), "#invitation-content");
+  const target = document.querySelector("#invitation-content");
+  assert.ok(target);
+  assert.ok((skip!.compareDocumentPosition(target) & document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING) !== 0);
+  assert.equal(target.querySelector("button")?.textContent, "청첩장 첫 컨트롤");
+
+  assert.equal(story.querySelector(".stageShell")?.getAttribute("aria-hidden"), "true");
+  assert.equal(story.querySelectorAll(".motionFallback > article").length, 6);
+  assert.equal(story.querySelector("ol[aria-label='결혼 이야기 전체 대본']")?.children.length, 16);
+});
+
+test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const environment = installDomEnvironment(true);
+  let root: Root | undefined;
+
+  await act(async () => {
+    root = createRoot(environment.container);
+    root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+  });
+
+  const story = environment.container.querySelector("section");
+  assert.equal(story?.getAttribute("data-motion"), "reduce");
+  assert.equal(story?.querySelector(".stageShell")?.getAttribute("aria-hidden"), "true");
+  assert.equal(story?.querySelectorAll(".motionFallback > article").length, 6);
+  assert.deepEqual(environment.counters, {
+    animationFrames: 0,
+    intersectionObservers: 0,
+    resizeObservers: 0,
+    scrollListeners: 0,
+  });
+
+  await act(async () => root?.unmount());
+  environment.dom.window.close();
+});
+
+test("WeddingStory allowed-motion mount activates containment and timeline observers", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const environment = installDomEnvironment(false);
+  let root: Root | undefined;
+
+  await act(async () => {
+    root = createRoot(environment.container);
+    root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+  });
+
+  const story = environment.container.querySelector("section");
+  assert.equal(story?.getAttribute("data-motion"), "full");
+  assert.equal(story?.querySelector(".stageShell")?.getAttribute("aria-hidden"), "false");
+  assert.equal(environment.counters.intersectionObservers, 1);
+  assert.equal(environment.counters.resizeObservers, 1);
+  assert.equal(environment.counters.scrollListeners, 1);
+
+  await act(async () => root?.unmount());
+  environment.dom.window.close();
 });

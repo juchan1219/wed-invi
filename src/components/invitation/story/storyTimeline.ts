@@ -77,7 +77,6 @@ export function getStoryMotionPresentation(mode: StoryMotionMode) {
   const full = mode === "full";
   return {
     showStage: full,
-    showFallback: !full,
     runTimeline: full,
   };
 }
