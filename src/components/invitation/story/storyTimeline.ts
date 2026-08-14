@@ -88,6 +88,14 @@ type SourceLayer = {
   id: string;
   kind: LayerKind;
   frames: readonly SourceFrame[];
+  xFrames?: readonly NumberFrame[];
+  yFrames?: readonly NumberFrame[];
+  scaleXFrames?: readonly NumberFrame[];
+  scaleYFrames?: readonly NumberFrame[];
+  rotateFrames?: readonly NumberFrame[];
+  opacityFrames?: readonly NumberFrame[];
+  originXFrames?: readonly NumberFrame[];
+  originYFrames?: readonly NumberFrame[];
   clipFrames?: readonly ClipFrame[];
   techniques?: readonly StoryTransition[];
 };
@@ -100,16 +108,32 @@ function numberFrames(
   return frames.map(({ at, ease, [field]: value }) => ({ at, value: value * factor, ease }));
 }
 
-function toLogicalTrack({ id, kind, frames, clipFrames, techniques }: SourceLayer): LayerTrack {
+function toLogicalTrack({
+  id,
+  kind,
+  frames,
+  xFrames,
+  yFrames,
+  scaleXFrames,
+  scaleYFrames,
+  rotateFrames,
+  opacityFrames,
+  originXFrames,
+  originYFrames,
+  clipFrames,
+  techniques,
+}: SourceLayer): LayerTrack {
   return {
     id,
     kind,
-    x: numberFrames(frames, "x", LOGICAL_WIDTH / 100),
-    y: numberFrames(frames, "y", LOGICAL_HEIGHT / 100),
-    scaleX: numberFrames(frames, "size"),
-    scaleY: numberFrames(frames, "size"),
-    rotate: numberFrames(frames, "rotate"),
-    opacity: numberFrames(frames, "opacity"),
+    x: xFrames ?? numberFrames(frames, "x", LOGICAL_WIDTH / 100),
+    y: yFrames ?? numberFrames(frames, "y", LOGICAL_HEIGHT / 100),
+    scaleX: scaleXFrames ?? numberFrames(frames, "size"),
+    scaleY: scaleYFrames ?? numberFrames(frames, "size"),
+    rotate: rotateFrames ?? numberFrames(frames, "rotate"),
+    opacity: opacityFrames ?? numberFrames(frames, "opacity"),
+    originX: originXFrames,
+    originY: originYFrames,
     clip: clipFrames,
     techniques,
   };
@@ -144,9 +168,22 @@ export const SHOTS: readonly StoryShot[] = [
 ] as const;
 
 const SOURCE_LAYERS: readonly SourceLayer[] = [
-  { id: "bg-jeju", kind: "background", frames: [f(0, 1, 0, 0, 1.02), f(0.12, 1, 0, 0, 1.08), f(0.15, 1, 0, -2, 1.12), f(0.17, 0, 0, -4, 1.16)] },
-  { id: "bg-office", kind: "background", frames: [f(0, 0), f(0.145, 0), f(0.17, 1), f(0.5, 1), f(0.53, 0)] },
-  { id: "bg-laugh", kind: "background", frames: [f(0, 0), f(0.31, 0), f(0.335, 1), f(0.5, 1), f(0.53, 0)] },
+  {
+    id: "bg-jeju",
+    kind: "background",
+    frames: [f(0, 1, 0, 0, 1.02), f(0.12, 1, 0, 0, 1.08), f(0.15, 1, 0, -2, 1.12), f(0.17, 0, 0, -4, 1.16)],
+    xFrames: [{ at: 0, value: 0 }, { at: 0.15, value: -36 }, { at: 0.17, value: -44 }],
+  },
+  {
+    id: "bg-office",
+    kind: "background",
+    frames: [f(0, 0), f(0.14, 0), f(0.15, 0.3), f(0.17, 1), f(0.5, 1), f(0.53, 0)],
+    scaleXFrames: [{ at: 0, value: 1.35 }, { at: 0.21, value: 1.35 }, { at: 0.255, value: 1 }],
+    scaleYFrames: [{ at: 0, value: 1.35 }, { at: 0.21, value: 1.35 }, { at: 0.255, value: 1 }],
+    originXFrames: [{ at: 0, value: 51 }, { at: 1, value: 51 }],
+    originYFrames: [{ at: 0, value: 43 }, { at: 1, value: 43 }],
+  },
+  { id: "bg-laugh", kind: "background", frames: [f(0, 0), f(0.315, 0.3), f(0.335, 1), f(0.5, 1), f(0.53, 0)] },
   { id: "bg-journey", kind: "background", frames: [f(0, 0), f(0.5, 0), f(0.53, 1), f(0.68, 1), f(0.71, 0)] },
   { id: "bg-venue", kind: "background", frames: [f(0, 0), f(0.68, 0), f(0.71, 1), f(0.84, 1), f(0.87, 0)] },
   { id: "bg-finale", kind: "background", frames: [f(0, 0), f(0.84, 0), f(0.87, 1), f(1, 1)] },
@@ -155,17 +192,51 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
   { id: "opening-island", kind: "scenery", frames: [f(0, 0, 0, 12, 0.92), f(0.02, 1, 0, 0, 1), f(0.12, 1, -2, -1, 1.04), f(0.15, 0, -4, -4, 1.08), f(0.64, 0), f(0.66, 1, 0, 5, 1.2), f(0.7, 0, -5, -4, 1.5)] },
   { id: "opening-field", kind: "scenery", frames: [f(0, 0, 0, 18, 1.08), f(0.025, 1, 0, 0, 1.04), f(0.1, 1, -5, 0, 1.12), f(0.15, 0, -10, 8, 1.2), f(0.64, 0), f(0.66, 1, 0, 10, 1.16), f(0.7, 0, -12, 4, 1.35)] },
   { id: "title-shards", kind: "type", frames: [f(0, 0, 0, -18, 0.72, -6), f(0.016, 1, 0, 0, 1.04, 1), f(0.036, 1, 0, 0, 1, -1), f(0.048, 1), f(0.058, 0, 5, -20, 1.18, 8)] },
-  { id: "sidecar", kind: "character", frames: [f(0, 0, -4, 32, 0.72), f(0.045, 0, -4, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.105, 1, 0, 3, 1.02, -1), f(0.145, 1, 0, 0, 1.08, 1), f(0.165, 0, 0, -8, 1.16)] },
+  {
+    id: "sidecar",
+    kind: "character",
+    frames: [f(0, 0, 0, 32, 0.72), f(0.0425, 0.3, 0, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.1, 1, 0, 3, 1.02, -1), f(0.15, 1, 0, 20, 1.08, 1), f(0.165, 0, 0, 30, 1.16)],
+    xFrames: [
+      { at: 0, value: 520 },
+      { at: 0.0425, value: 520 },
+      { at: 0.1, value: 70 },
+      { at: 0.13, value: 108 },
+      { at: 0.15, value: 155 },
+      { at: 0.165, value: 240 },
+    ],
+    yFrames: [
+      { at: 0, value: 298 },
+      { at: 0.0425, value: 280 },
+      { at: 0.1, value: 28 },
+      { at: 0.13, value: 82 },
+      { at: 0.15, value: 186 },
+      { at: 0.165, value: 280 },
+    ],
+  },
   { id: "wheel-front", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1, 0), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
   { id: "wheel-back", kind: "prop", frames: [f(0, 0, 0, 24, 0.8), f(0.055, 0, 0, 20, 0.9), f(0.07, 1, 0, 3, 1), f(0.105, 1, 1, 0, 1.08, 240), f(0.15, 1, 0, -2, 1.14, 520), f(0.165, 0, 0, -8, 1.2, 680)] },
   { id: "name-labels", kind: "type", frames: [f(0, 0, 0, 3, 0.8), f(0.09, 0, 0, 3, 0.8), f(0.112, 1, 0, 0, 1.05, -2), f(0.14, 1, 0, -1, 1), f(0.155, 0, 0, -4, 1.1)] },
 
-  { id: "paper-tear", kind: "transition", techniques: ["paperTear"], frames: [f(0, 0, 0, 105, 1.2), f(0.145, 0, 0, 105, 1.2), f(0.17, 1, 0, 15, 1.08, -2), f(0.195, 1, 0, -55, 1.18, 1), f(0.215, 0, 0, -120, 1.25)] },
+  {
+    id: "paper-tear",
+    kind: "transition",
+    techniques: ["paperTear"],
+    frames: [f(0, 0), f(0.135, 0.3), f(0.15, 1), f(0.195, 1), f(0.2175, 0.3), f(0.225, 0)],
+    scaleXFrames: [{ at: 0, value: 0.15 }, { at: 0.135, value: 0.15 }, { at: 0.17, value: 2.4 }, { at: 0.225, value: 2.4 }],
+    scaleYFrames: [{ at: 0, value: 0.15 }, { at: 0.135, value: 0.15 }, { at: 0.17, value: 2.4 }, { at: 0.225, value: 2.4 }],
+    originXFrames: [{ at: 0, value: 84 }, { at: 1, value: 84 }],
+    originYFrames: [{ at: 0, value: 78 }, { at: 1, value: 78 }],
+  },
   {
     id: "tower-card",
     kind: "prop",
     techniques: ["polygonReveal", "cameraZoom"],
-    frames: [f(0, 0, 0, 20, 0.18, -8), f(0.165, 0, 0, 20, 0.18, -8), f(0.19, 1, 0, 0, 0.42, 2), f(0.225, 1, 0, 0, 1.08, 0), f(0.255, 0, 0, 0, 2.4)],
+    frames: [f(0, 0), f(0.16, 0), f(0.17, 0.35), f(0.195, 1), f(0.245, 1), f(0.265, 0)],
+    scaleXFrames: [{ at: 0, value: 0.72 }, { at: 0.17, value: 0.72 }, { at: 0.195, value: 1 }, { at: 0.21, value: 1 }, { at: 0.255, value: 4.8 }],
+    scaleYFrames: [{ at: 0, value: 0.58 }, { at: 0.17, value: 0.58 }, { at: 0.195, value: 1 }, { at: 0.21, value: 1 }, { at: 0.255, value: 4.8 }],
+    rotateFrames: [{ at: 0, value: -5 }, { at: 0.17, value: -5 }, { at: 0.195, value: 0 }, { at: 1, value: 0 }],
+    originXFrames: [{ at: 0, value: 51 }, { at: 1, value: 51 }],
+    originYFrames: [{ at: 0, value: 43 }, { at: 1, value: 43 }],
     clipFrames: [
       { at: 0.15, value: [50, 0, 50, 0, 50, 100, 50, 100], ease: "easeOut" },
       { at: 0.19, value: [12, 5, 88, 0, 94, 96, 6, 100], ease: "easeOut" },
@@ -176,16 +247,55 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
   { id: "tower-wall-right", kind: "scenery", frames: [f(0, 0, 52, 0, 1.1), f(0.2, 0, 52, 0, 1.1), f(0.225, 1, 0, 0, 1), f(0.255, 1, 18, 0, 1.08), f(0.28, 0, 58, 0, 1.15)] },
   { id: "office-yechan", kind: "character", frames: [f(0, 0, -28, 15, 0.82), f(0.215, 0, -28, 15, 0.82), f(0.245, 1, -18, 2, 1), f(0.3, 1, -14, 0, 1.04, 1), f(0.33, 0, -20, 4, 1.08)] },
   { id: "office-jueun", kind: "character", frames: [f(0, 0, 28, 15, 0.82), f(0.215, 0, 28, 15, 0.82), f(0.245, 1, 18, 2, 1), f(0.3, 1, 14, 0, 1.04, -1), f(0.33, 0, 20, 4, 1.08)] },
-  { id: "office-props", kind: "prop", frames: [f(0, 0, 0, 18, 0.7), f(0.255, 0, 0, 18, 0.7), f(0.278, 1, 0, 2, 1.04, -2), f(0.3, 1, 0, 0, 1, 1), f(0.327, 1, 0, -1, 1.02), f(0.34, 0, 0, 5, 1.08)] },
+  {
+    id: "office-props",
+    kind: "prop",
+    frames: [f(0, 0), f(0.255, 0.35), f(0.27, 1), f(0.3375, 1), f(0.35, 0)],
+    yFrames: [{ at: 0, value: 280 }, { at: 0.255, value: 280 }, { at: 0.3375, value: 665 }],
+    scaleXFrames: [{ at: 0, value: 1 }, { at: 1, value: 1 }],
+    scaleYFrames: [{ at: 0, value: 1 }, { at: 0.315, value: 1 }, { at: 0.3375, value: 0.82 }],
+  },
 
-  { id: "panel-left", kind: "scenery", techniques: ["panelExpansion"], frames: [f(0, 0, -55, 0, 0.72, -7), f(0.325, 0, -55, 0, 0.72, -7), f(0.35, 1, -22, 0, 0.94, -3), f(0.45, 1, -18, 0, 1, -1), f(0.49, 1, 0, 0, 1.2, 0), f(0.525, 0, 0, 0, 1.35)] },
-  { id: "panel-right", kind: "scenery", frames: [f(0, 0, 55, 0, 0.72, 7), f(0.36, 0, 55, 0, 0.72, 7), f(0.395, 1, 22, 0, 0.94, 3), f(0.45, 1, 18, 0, 1, 1), f(0.49, 1, 0, 0, 1.2, 0), f(0.525, 0, 0, 0, 1.35)] },
+  {
+    id: "panel-left",
+    kind: "scenery",
+    techniques: ["panelExpansion"],
+    frames: [f(0, 0), f(0.315, 0.3), f(0.33, 1), f(0.5125, 1), f(0.53, 0)],
+    xFrames: [{ at: 0, value: -430 }, { at: 0.315, value: -430 }, { at: 0.37, value: 0 }, { at: 1, value: 0 }],
+    scaleXFrames: [{ at: 0, value: 1 }, { at: 0.455, value: 1 }, { at: 0.49, value: 0.5 }, { at: 1, value: 0.5 }],
+    scaleYFrames: [{ at: 0, value: 1 }, { at: 1, value: 1 }],
+    originXFrames: [{ at: 0, value: 0 }, { at: 1, value: 0 }],
+  },
+  {
+    id: "panel-right",
+    kind: "scenery",
+    techniques: ["polygonReveal", "panelExpansion"],
+    frames: [f(0, 0), f(0.375, 0.3), f(0.39, 0.7), f(0.5125, 1), f(0.53, 0)],
+    scaleXFrames: [{ at: 0, value: 1 }, { at: 0.455, value: 1 }, { at: 0.49, value: 0.5 }, { at: 1, value: 0.5 }],
+    scaleYFrames: [{ at: 0, value: 1 }, { at: 1, value: 1 }],
+    originXFrames: [{ at: 0, value: 100 }, { at: 1, value: 100 }],
+    clipFrames: [
+      { at: 0.3675, value: [100, 0, 100, 0, 100, 100, 100, 100], ease: "easeOut" },
+      { at: 0.39, value: [76, 0, 100, 4, 100, 96, 82, 100], ease: "easeOut" },
+      { at: 0.455, value: [8, 0, 100, 0, 100, 100, 5, 100], ease: "easeOut" },
+      { at: 0.47, value: FULL_CLIP },
+    ],
+  },
   { id: "joke-yechan", kind: "character", frames: [f(0, 0, -35, 8, 0.8), f(0.33, 0, -35, 8, 0.8), f(0.36, 1, -20, 2, 1, -4), f(0.405, 1, -14, 0, 1.08, 1), f(0.49, 1, -8, 0, 1.12, -1), f(0.525, 0, -4, 3, 1.2)] },
   { id: "jueun-expression", kind: "character", frames: [f(0, 0, 30, 8, 0.8), f(0.38, 0, 30, 8, 0.8), f(0.405, 1, 20, 2, 1, 0, "hold"), f(0.43, 1, 18, 1, 1.03, -1, "hold"), f(0.455, 1, 15, 0, 1.08, 2, "hold"), f(0.49, 1, 8, 0, 1.12, -1), f(0.525, 0, 4, 3, 1.2)] },
   { id: "speech-bubble", kind: "prop", frames: [f(0, 0, 10, 6, 0.25, -12), f(0.345, 0, 10, 6, 0.25, -12), f(0.375, 1, 2, 0, 1.05, 3), f(0.415, 1, 0, -1, 1, -1), f(0.45, 0, -6, -10, 1.35, 8)] },
-  { id: "laugh-burst", kind: "type", frames: [f(0, 0, 0, 8, 0.2, -8), f(0.43, 0, 0, 8, 0.2, -8), f(0.46, 1, 0, 0, 1.25, 5), f(0.49, 1, 0, -3, 1.5, -3), f(0.52, 0, 0, -10, 2, 8)] },
+  {
+    id: "laugh-burst",
+    kind: "type",
+    frames: [f(0, 0), f(0.43, 0.3), f(0.455, 0.7), f(0.47, 1), f(0.5275, 0.3), f(0.535, 0)],
+    scaleXFrames: [{ at: 0, value: 0.2 }, { at: 0.43, value: 0.2 }, { at: 0.52, value: 1.6 }, { at: 1, value: 1.6 }],
+    scaleYFrames: [{ at: 0, value: 0.2 }, { at: 0.43, value: 0.2 }, { at: 0.52, value: 1.6 }, { at: 1, value: 1.6 }],
+    rotateFrames: [{ at: 0, value: -8 }, { at: 0.43, value: -8 }, { at: 0.52, value: 0 }, { at: 1, value: 0 }],
+    originXFrames: [{ at: 0, value: 50 }, { at: 1, value: 50 }],
+    originYFrames: [{ at: 0, value: 50 }, { at: 1, value: 50 }],
+  },
 
-  { id: "proposal-triptych", kind: "prop", frames: [f(0, 0, 0, 25, 0.55, -8), f(0.51, 0, 0, 25, 0.55, -8), f(0.545, 1, 0, 3, 0.9, 3), f(0.59, 1, 0, 0, 1, -1), f(0.64, 1, -3, -1, 1.08, 1), f(0.685, 1, 0, 0, 2.8), f(0.71, 0, 0, 0, 3.4)] },
+  { id: "proposal-triptych", kind: "prop", frames: [f(0, 0, 0, 25, 0.55, -8), f(0.51, 0, 0, 25, 0.55, -8), f(0.5125, 0.3, 0, 25, 0.55, -8), f(0.545, 1, 0, 3, 0.9, 3), f(0.59, 1, 0, 0, 1, -1), f(0.64, 1, -3, -1, 1.08, 1), f(0.685, 1, 0, 0, 2.8), f(0.71, 0, 0, 0, 3.4)] },
   { id: "travel-route", kind: "prop", frames: [f(0, 0, 0, 0, 1), f(0.54, 0), f(0.58, 1, 0, 0, 1.02), f(0.62, 1, 0, 0, 1), f(0.66, 0, 0, 0, 1.1)] },
   { id: "ring-glint", kind: "prop", frames: [f(0, 0, -28, 18, 0.35, -10), f(0.565, 0, -28, 18, 0.35, -10), f(0.59, 1, -24, 10, 0.48, -4), f(0.62, 1, 0, 0, 0.55, 5), f(0.65, 1, 23, -8, 0.62, -3), f(0.69, 0, 35, -16, 0.72, 4)] },
 

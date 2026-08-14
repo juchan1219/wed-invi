@@ -19,7 +19,19 @@ import {
   assertStoryTimeline,
   sampleLayerState,
   type LayerTrack,
+  type LayerState,
 } from "./storyTimeline";
+
+function requiredTrack(id: string) {
+  const track = LAYER_TRACKS.find((candidate) => candidate.id === id);
+  assert.ok(track, `missing timeline track: ${id}`);
+  return track;
+}
+
+function spatialState(state: LayerState) {
+  const { opacity: _opacity, ...spatial } = state;
+  return spatial;
+}
 
 test("the contained story canvas keeps the 430 by 932 logical layer contract", () => {
   assert.deepEqual(STORY_CANVAS, { width: 430, height: 932 });
@@ -90,6 +102,24 @@ test("couple layers compose both partners from unique registered sprite assets",
     assert.equal(new Set(layer.parts.map(({ assetId }) => assetId)).size, 2);
     assert.ok(layer.parts.every(({ assetId }) => STORY_ASSETS[assetId].kind === "sprite"));
   }
+});
+
+test("the opening sidecar composes the vehicle with both casual riders above it", () => {
+  const sidecar = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "sidecar");
+
+  assert.deepEqual(sidecar?.parts?.map(({ assetId }) => assetId), [
+    "sidecar",
+    "casualYechanDriving",
+    "casualJueunSidecarPassenger",
+  ]);
+});
+
+test("the laugh panel is revealed only by its polygon-clipped panel layer", () => {
+  const laughBackground = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "bg-laugh");
+  const rightPanel = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "panel-right");
+
+  assert.equal(laughBackground?.assetId, "officeBackground");
+  assert.equal(rightPanel?.assetId, "laughPanel");
 });
 
 test("wheel layers crop two distinct bounded sidecar regions instead of shrinking the vehicle", () => {
@@ -258,6 +288,147 @@ test("polygon reveal is sampled from a real production layer", () => {
     sampleLayerState(reveal, 0.21).clip,
     [0, 0, 100, 0, 100, 100, 0, 100],
   );
+});
+
+test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for 1.5 percent", () => {
+  const boundaries = [
+    { at: 0.05, outgoing: "bg-jeju", incoming: "opening-field", connector: "opening-field" },
+    { at: 0.1, outgoing: "opening-field", incoming: "opening-clouds", connector: "sidecar" },
+    { at: 0.15, outgoing: "bg-jeju", incoming: "paper-tear", connector: "paper-tear" },
+    { at: 0.21, outgoing: "tower-card", incoming: "bg-office", connector: "tower-card" },
+    { at: 0.27, outgoing: "bg-office", incoming: "office-props", connector: "office-props" },
+    { at: 0.33, outgoing: "office-props", incoming: "bg-laugh", connector: "panel-left" },
+    { at: 0.39, outgoing: "panel-left", incoming: "panel-right", connector: "panel-right" },
+    { at: 0.455, outgoing: "panel-right", incoming: "laugh-burst", connector: "panel-right" },
+    { at: 0.52, outgoing: "laugh-burst", incoming: "proposal-triptych", connector: "laugh-burst" },
+  ] as const;
+  const overlapOffsets = [-0.0075, -0.005, -0.0025, 0, 0.0025, 0.005, 0.0075] as const;
+
+  for (const boundary of boundaries) {
+    const outgoing = requiredTrack(boundary.outgoing);
+    const incoming = requiredTrack(boundary.incoming);
+    for (const offset of overlapOffsets) {
+      const progress = boundary.at + offset;
+      assert.ok(
+        sampleLayerState(outgoing, progress).opacity > 0.25,
+        `${boundary.outgoing} must remain visible at ${progress}`,
+      );
+      assert.ok(
+        sampleLayerState(incoming, progress).opacity > 0.25,
+        `${boundary.incoming} must already be visible at ${progress}`,
+      );
+    }
+
+    const connector = requiredTrack(boundary.connector);
+    assert.notDeepEqual(
+      spatialState(sampleLayerState(connector, boundary.at - 0.0075)),
+      spatialState(sampleLayerState(connector, boundary.at + 0.0075)),
+      `${boundary.connector} must connect the boundary spatially`,
+    );
+  }
+});
+
+test("the paper, tower zoom, and laugh merge use their required transition geometry", () => {
+  const paper = requiredTrack("paper-tear");
+  const tower = requiredTrack("tower-card");
+  const rightPanel = requiredTrack("panel-right");
+
+  assert.ok(paper.techniques?.includes("paperTear"));
+  assert.equal(sampleLayerState(paper, 0.135).scaleX, 0.15);
+  assert.equal(sampleLayerState(paper, 0.17).scaleX, 2.4);
+  assert.deepEqual(
+    [sampleLayerState(paper, 0.15).originX, sampleLayerState(paper, 0.15).originY],
+    [84, 78],
+  );
+
+  assert.ok(tower.techniques?.includes("cameraZoom"));
+  assert.ok(sampleLayerState(tower, 0.245).scaleX > 2);
+  assert.deepEqual(
+    [sampleLayerState(tower, 0.21).originX, sampleLayerState(tower, 0.21).originY],
+    [51, 43],
+  );
+
+  assert.ok(rightPanel.techniques?.includes("polygonReveal"));
+  assert.notDeepEqual(sampleLayerState(rightPanel, 0.455).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(rightPanel, 0.47).clip, FULL_CLIP);
+});
+
+test("shots 1 through 9 land on the approved spatial anchors", () => {
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("bg-jeju"), 0).x, sampleLayerState(requiredTrack("bg-jeju"), 0.15).x],
+    [0, -36],
+  );
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("sidecar"), 0.0425).x, sampleLayerState(requiredTrack("sidecar"), 0.1).x],
+    [520, 70],
+  );
+
+  const towerEntry = sampleLayerState(requiredTrack("tower-card"), 0.17);
+  const towerSettled = sampleLayerState(requiredTrack("tower-card"), 0.195);
+  assert.deepEqual([towerEntry.scaleX, towerEntry.scaleY, towerEntry.rotate], [0.72, 0.58, -5]);
+  assert.deepEqual([towerSettled.scaleX, towerSettled.scaleY, towerSettled.rotate], [1, 1, 0]);
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("bg-office"), 0.21).scaleX, sampleLayerState(requiredTrack("bg-office"), 0.255).scaleX],
+    [1.35, 1],
+  );
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("office-props"), 0.255).y, sampleLayerState(requiredTrack("office-props"), 0.3375).y],
+    [280, 665],
+  );
+
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("panel-left"), 0.315).x, sampleLayerState(requiredTrack("panel-left"), 0.37).x],
+    [-430, 0],
+  );
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("panel-left"), 0.49).scaleX, sampleLayerState(requiredTrack("panel-right"), 0.49).scaleX],
+    [0.5, 0.5],
+  );
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("laugh-burst"), 0.43).scaleX, sampleLayerState(requiredTrack("laugh-burst"), 0.52).scaleX],
+    [0.2, 1.6],
+  );
+  assert.deepEqual(
+    [sampleLayerState(requiredTrack("laugh-burst"), 0.52).x, sampleLayerState(requiredTrack("laugh-burst"), 0.52).rotate],
+    [0, 0],
+    "the centered final burst keeps its black rays on the triptych divider axes",
+  );
+});
+
+test("boundary samples, reverse calls, and large direct jumps are deterministic", () => {
+  const samples = [
+    ...SHOTS.slice(1, 10).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
+    0.02,
+    0.58,
+  ];
+  const trackIds = [
+    "bg-jeju",
+    "sidecar",
+    "paper-tear",
+    "tower-card",
+    "office-props",
+    "panel-left",
+    "panel-right",
+    "laugh-burst",
+    "proposal-triptych",
+  ];
+  const capture = (progresses: readonly number[]) => new Map(
+    progresses.map((progress) => [
+      progress,
+      trackIds.map((id) => sampleLayerState(requiredTrack(id), progress)),
+    ]),
+  );
+
+  const forward = capture(samples);
+  const reverse = capture([...samples].reverse());
+  for (const progress of samples) assert.deepEqual(reverse.get(progress), forward.get(progress));
+
+  const lowBeforeJump = capture([0.02]).get(0.02);
+  capture([0.58, 0.02]);
+  assert.deepEqual(capture([0.02]).get(0.02), lowBeforeJump);
+  const highBeforeJump = capture([0.58]).get(0.58);
+  capture([0.02, 0.58]);
+  assert.deepEqual(capture([0.58]).get(0.58), highBeforeJump);
 });
 
 test("the complete timeline passes its runtime invariant audit", () => {

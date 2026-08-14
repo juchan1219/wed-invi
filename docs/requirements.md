@@ -109,17 +109,28 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   focal point는 typed inline CSS custom property로 전달한다. sprite는 512px intrinsic atlas cell과 256px 논리 표시
   cell을 분리해 1024×512 표시 atlas를 정확한 row/column offset으로 이동한다. couple 레이어 하나 안에는 예찬·주은
   두 sprite를 선언형 part로 합성하고, wheel 레이어는 1024×768 sidecar에서 서로 다른 224×224 영역을 56×56으로
-  crop한다. 세부 전환 안무와 전체 viewport 검수는 후속 단계에 남아 있다.
+  crop한다. shots 1–6의 세부 안무는 오프닝 배경의 36px 이동, sidecar의 520→70px 진입과 두 casual sprite
+  합성, 우하단 coral paper corner를 원점으로 한 0.15→2.4배 종이 확대, 0.72×0.58→1 tower card 진입,
+  51%/43% 창 원점의 1→4.8배 camera zoom, 그 아래 1.35→1배 office background와 desk 연결로 구현했다.
 
   shots 7–16용 최종 자산은 430×932 좌·우 웃음 패널, 실제 alpha 웃음 burst, 세 개의 정확한
   430×932 크롭으로 구성된 1290×932 프로포즈 삼연작, 430×932 예식장 외부·내부, 실제 alpha
   좌·우 하객 전경과 veil/paper sweep으로 제작했다. 삼연작은 함부르크 프로포즈·실내 반지 공개·
   도쿄타워 웨딩 스냅의 사건과 콩 캐릭터 얼굴을 유지한다. 투명 전경은 새 neon-magenta source만
   chroma-key하고 nearest-opaque edge 색으로 오염을 제거했으며, 실제 크기·alpha coverage·배경 sample·
-  bounds를 자산 테스트로 고정했다. 이 자산의 renderer 연결은 완료했으며 세부 전환 안무와
-  390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에 남아 있다. 렌더러 자체는 모든 장면을
+  bounds를 자산 테스트로 고정했다. 이 자산의 renderer 연결은 완료했으며
+  shots 7–9는 왼쪽 joke panel의 -430→0px 진입, 오른쪽 laugh panel의 우측 polygon reveal, 독립 캐릭터
+  sprite, 양 패널의 `scaleX: 0.5` 압축·합류, proposal 삼연작 분할축에 맞춘 0.2→1.6배 laugh burst로
+  안무했다. shots 10–16 세부 안무와 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
+  남아 있다. 렌더러 자체는 모든 장면을
   `next/image` 기반 장식 이미지, 정확한 sprite crop, 스크린리더 중복을 피하는 HTML text로만 구성하며 기존
   CSS 사람·건물·사이드카·군중·예식장 placeholder 분기를 제거했다.
+
+  shots 1–9의 모든 경계와 최소 9→10 handoff는 전체 진행률 1.5% 구간에서 outgoing/incoming layer가
+  각각 opacity 0.25를 넘긴다. 3→4는 paper scale, 4→5는 4.8배 camera zoom, 8→9는 polygon clip을
+  사용하므로 전체 화면 opacity만 바꾸는 crossfade가 아니다. 경계 전후 정방향·역방향 표본과
+  0.02↔0.58 직접 점프는 동일한 순수 sampling 결과를 내며 `npm run test:story` 49개,
+  `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률

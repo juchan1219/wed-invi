@@ -234,7 +234,7 @@ export const STORY_ASSETS = {
 export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "bg-jeju", assetId: "openingBackground", className: "background" },
   { id: "bg-office", assetId: "officeBackground", className: "background" },
-  { id: "bg-laugh", assetId: "laughPanel", className: "background" },
+  { id: "bg-laugh", assetId: "officeBackground", className: "background" },
   { id: "bg-journey", assetId: "paperTurn", className: "background" },
   { id: "bg-venue", assetId: "venueExterior", className: "background" },
   { id: "bg-finale", assetId: "venueInterior", className: "background" },
@@ -242,7 +242,15 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "opening-island", assetId: "openingBackground", className: "midground" },
   { id: "opening-field", assetId: "sidecarRoad", className: "foreground" },
   { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은\n의 결혼 이야기" } },
-  { id: "sidecar", assetId: "sidecar", className: "character" },
+  {
+    id: "sidecar",
+    className: "character",
+    parts: [
+      { assetId: "sidecar", x: 0, y: 0 },
+      { assetId: "casualYechanDriving", x: 20, y: -145 },
+      { assetId: "casualJueunSidecarPassenger", x: 105, y: -105 },
+    ],
+  },
   {
     id: "wheel-front",
     assetId: "sidecar",

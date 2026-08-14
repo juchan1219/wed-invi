@@ -195,8 +195,7 @@
 
 .layer_office_props { z-index: 12; inset: auto 4% 4%; height: 260px; }
 .layer_panel_left,
-.layer_panel_right { z-index: 5; inset: 12% 31% 23% -8%; overflow: hidden; border: 8px solid #171717; box-shadow: 0.65rem 0.75rem 0 #171717; }
-.layer_panel_right { inset: 32% -8% 3% 31%; }
+.layer_panel_right { z-index: 5; inset: 0; overflow: hidden; }
 .layer_speech_bubble { z-index: 16; inset: 18% 4% auto auto; }
 .layer_laugh_burst { z-index: 25; }
 
