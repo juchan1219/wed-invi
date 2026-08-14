@@ -108,6 +108,14 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   sidecar는 alpha PNG로 등록했으며 각 레지스트리 크기는 실제 파일 메타데이터와 테스트로 고정한다.
   타임라인·렌더러에서 이 자산들을 소비하는 전환과 전체 viewport 검수는 최종 아트 통합 단계에 남아 있다.
 
+  shots 7–16용 최종 자산은 430×932 좌·우 웃음 패널, 실제 alpha 웃음 burst, 세 개의 정확한
+  430×932 크롭으로 구성된 1290×932 프로포즈 삼연작, 430×932 예식장 외부·내부, 실제 alpha
+  좌·우 하객 전경과 veil/paper sweep으로 제작했다. 삼연작은 함부르크 프로포즈·실내 반지 공개·
+  도쿄타워 웨딩 스냅의 사건과 콩 캐릭터 얼굴을 유지한다. 투명 전경은 새 neon-magenta source만
+  chroma-key하고 nearest-opaque edge 색으로 오염을 제거했으며, 실제 크기·alpha coverage·배경 sample·
+  bounds를 자산 테스트로 고정했다. 이 자산을 타임라인·렌더러에서 실제로 소비하는 전환과
+  390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에 남아 있다.
+
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률
   스크린샷, 역스크롤·큰 점프·새로고침 복원, `/i/not-a-valid-token`, `/admin/login`, 브라우저 콘솔 오류

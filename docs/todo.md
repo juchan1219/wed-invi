@@ -20,6 +20,7 @@
 - [x] 별도 브랜치에서 첨부 레퍼런스 기반 콩 캐릭터·낙서 배경·낙서 프로포즈 3컷 rough prototype 체크포인트 생성
 - [x] 낙서 rough prototype의 390×844·430×932 실 viewport 오프닝·오피스·프로포즈 baseline 캡처 확보
 - [x] shots 1–6 오프닝·사이드카·종이 전환·타워·사무실 풀 일러스트 제작 및 실제 크기·alpha 레지스트리 등록
+- [x] shots 7–16 웃음 패널·프로포즈 삼연작·예식장·하객·veil/paper 풀 일러스트 제작 및 실제 크기·alpha 레지스트리 등록
 - [ ] 낙서 rough prototype을 최종 아트로 승격하고 production build 근거 확보
 - [ ] iOS Safari와 카카오톡 인앱 브라우저에서 긴 sticky 섹션 체감 확인
 
