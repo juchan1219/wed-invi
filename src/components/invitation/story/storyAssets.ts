@@ -1,5 +1,13 @@
 export const STORY_CANVAS = { width: 430, height: 932 } as const;
 
+const STORY_TITLE_LETTER_DROPS_PX = [633.76, 810.84, 987.92, 1165, 1342.08] as const;
+
+export function titleLetterDropStyle(index: number) {
+  const distance = STORY_TITLE_LETTER_DROPS_PX[index];
+  if (distance === undefined) throw new RangeError(`unknown title letter index: ${index}`);
+  return `${distance}px`;
+}
+
 export type StoryImageAsset = {
   kind: "image";
   src: `/story/doodle-v2/${string}`;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { STORY_CANVAS } from "./storyAssets";
+import * as storyAssets from "./storyAssets";
 import * as storyTimeline from "./storyTimeline";
 import {
   CHAPTERS,
@@ -25,6 +26,17 @@ test("the contained story canvas keeps the 430 by 932 logical layer contract", (
   assert.ok(
     LAYER_TRACKS.every(({ id }) => storyTimeline.isStoryLayerRenderable(id)),
     "every timeline layer needs a DOM renderer inside the fixed canvas",
+  );
+});
+
+test("title layer inline distances are fixed logical pixels", () => {
+  assert.equal(typeof storyAssets.titleLetterDropStyle, "function");
+  assert.deepEqual(storyAssets.titleLetterDropStyle(0), "633.76px");
+  assert.deepEqual(storyAssets.titleLetterDropStyle(4), "1342.08px");
+  assert.doesNotMatch(
+    storyAssets.titleLetterDropStyle(2),
+    /(vw|vh)/,
+    "animated inline styles must not depend on the outer viewport",
   );
 });
 

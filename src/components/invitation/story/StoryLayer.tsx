@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { titleLetterDropStyle } from "./storyAssets";
 import { inlineClipPathForTrack } from "./timelineMath";
 import { sampleLayerState, type LayerTrack } from "./storyTimeline";
 import styles from "./WeddingStory.module.css";
@@ -44,11 +45,7 @@ export function StoryLayer({ track }: { track: LayerTrack }) {
 }
 
 function ImageLayer({ id, src }: { id: string; src: string }) {
-  const sizes = id === "tower-card"
-    ? "(max-width: 700px) 82vw, 56vw"
-    : id === "proposal-triptych"
-      ? "(max-width: 700px) 94vw, 90vw"
-      : "100vw";
+  const sizes = "430px";
   return (
     <Image
       src={src}
@@ -93,7 +90,7 @@ function renderGraphic(id: string): ReactNode {
               <i
                 key={letter}
                 style={{
-                  "--letter-drop": `${68 + index * 19}svh`,
+                  "--letter-drop": titleLetterDropStyle(index),
                   "--letter-rotate": `${[-9, 5, -2, 8, -6][index]}deg`,
                 } as CSSProperties}
               >{letter}</i>
