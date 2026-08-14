@@ -284,7 +284,12 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "laugh-burst", assetId: "laughBurst", className: "foreground" },
   { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground" },
   { id: "travel-route", assetId: "proposalTriptych", className: "foreground" },
-  { id: "ring-glint", assetId: "proposalTriptych", className: "foreground" },
+  {
+    id: "ring-glint",
+    assetId: "proposalTriptych",
+    className: "foreground",
+    crop: { x: 464, y: 340, width: 248, height: 300, display: { width: 248, height: 300 } },
+  },
   { id: "venue-doors", assetId: "venueInterior", className: "midground" },
   {
     id: "casual-couple",

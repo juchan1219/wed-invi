@@ -126,7 +126,15 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   shots 7–9는 왼쪽 joke panel의 -430→0px 진입, 오른쪽 laugh panel의 우측 polygon reveal, 독립 캐릭터
   sprite, 양 패널의 `scaleX: 0.5` 압축·합류, 중앙·무회전 handoff 상태의 0.2→1.6배 laugh burst로
   안무했다. burst ray와 proposal 삼연작 divider의 pixel-level 정렬은 unit test가 증명하지 않으며 Task 12
-  브라우저/image QA에 남긴다. shots 10–16 세부 안무와 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
+  브라우저/image QA에 남긴다. shots 10–12는 같은 1290×932 `proposalTriptych` DOM을 opacity 0.98 이상으로 유지한 채
+  x `0→-430→-860px`로 이동하고, 가운데 반지 상자만 같은 원화의 `(464,340,248,300)` crop으로 복제해
+  `0.8→1.12→1` pulse한다. 도쿄 패널은 tower 원점 기준 `1→1.8`배가 되고, `1.35`배 예식장 외부의 coral diagonal
+  polygon reveal과 2% 겹친다. 원화의 venue arch x=210은 허용 오차가 아닌 source 기준점이며, 각각의 pan·origin·scale을
+  적용한 handoff 좌표는 tower x=210.0, arch x=208.5로 실제 차이 1.5px다. 테스트는 이 두 변환값의 차이가 12px 이하인지 고정한다.
+  예식장 내부는 중앙 polygon을 넓혀 드러내고, 평상복·웨딩 sprite는 0.5% 구간에서 같은 x/y/scale을 공유한다.
+  양쪽 하객은 `-180/+180px`에서 20px 차등 parallax로 들어오고 웨딩 커플은 y `610→470px`로 전진한다.
+  마지막 veil/paper는 `(390,-180,.35)→(-40,-20,2.2)`로 쓸며 예식장 배경 clip을 중앙으로 닫아 cream canvas와
+  일반 청첩장 본문 사이를 공간적으로 연결한다. 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
   남아 있다. 렌더러 자체는 모든 장면을
   `next/image` 기반 장식 이미지, 정확한 sprite crop, 스크린리더 중복을 피하는 HTML text로만 구성하며 기존
   CSS 사람·건물·사이드카·군중·예식장 placeholder 분기를 제거했다.
@@ -138,7 +146,8 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   전체의 최솟값을 완전히 덮는다. 경계 전후 정방향·역방향 표본과 0.02↔0.58 직접 점프에서 실제 sequence가 반환한
   destination state는 direct baseline과 동일하다. sidecar 자식 wheel의 center를 parent origin 기준으로 scale·rotate하는
   순수 기하 검증은 progress 0.065·0.1·0.13·0.15를 고정하며, 0.15의 이전 sibling 모델 오차 10.9px 이상을 포착한다.
-  `npm run test:story` 52개,
+  shots 10–16도 각 경계의 visible spatial connector, triptych no-fade, 2% tower/venue overlap, 0.5% wardrobe overlap,
+  정방향·역방향·`0.521↔0.999` 직접 점프 destination 동등성을 고정한다. `npm run test:story` 59개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,

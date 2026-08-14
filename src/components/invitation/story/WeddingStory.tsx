@@ -27,9 +27,6 @@ function StoryLayerTreeNode({ node }: { node: StoryLayerNode }) {
 }
 
 const storyCanvasLayoutStyle = {
-  "--story-casual-couple-bottom": STORY_CANVAS_LAYOUT.casualCouple.bottom,
-  "--story-casual-couple-left": STORY_CANVAS_LAYOUT.casualCouple.left,
-  "--story-casual-couple-width": `${STORY_CANVAS_LAYOUT.casualCouple.width}px`,
   "--story-chapter-nav-min-bottom": `${STORY_CANVAS_LAYOUT.chapterNavMinimumBottom}px`,
   "--story-sidecar-wheel-front-left": `${STORY_CANVAS_LAYOUT.sidecar.wheelFront.left}px`,
   "--story-sidecar-wheel-front-top": `${STORY_CANVAS_LAYOUT.sidecar.wheelFront.top}px`,

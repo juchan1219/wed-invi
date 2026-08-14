@@ -539,6 +539,197 @@ test("shots 1 through 9 land on the approved spatial anchors", () => {
   );
 });
 
+test("shots 10 through 12 pan one opaque 1290px proposal strip without panel crossfades", () => {
+  const proposalShots = SHOTS.slice(9, 12);
+  assert.deepEqual(proposalShots.map(({ id }) => id), [
+    "postcards-open",
+    "route-connects",
+    "jeju-expands",
+  ]);
+  assert.ok(proposalShots.every(({ layerIds }) => layerIds.includes("proposal-triptych")));
+
+  const proposalDefinition = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "proposal-triptych");
+  assert.equal(proposalDefinition?.assetId, "proposalTriptych");
+  assert.deepEqual(
+    [STORY_ASSETS.proposalTriptych.width, STORY_ASSETS.proposalTriptych.height],
+    [1290, 932],
+  );
+
+  const triptych = requiredTrack("proposal-triptych");
+  assert.equal(sampleLayerState(triptych, 0.5).opacity, 0, "the strip must not ghost over shots 1–9");
+  assert.deepEqual(
+    [0.52, 0.58, 0.64].map((progress) => sampleLayerState(triptych, progress).x),
+    [0, -430, -860],
+  );
+  for (let step = 520; step <= 700; step += 1) {
+    assert.ok(sampleLayerState(triptych, step / 1000).opacity >= 0.98, `triptych faded at ${step / 1000}`);
+  }
+});
+
+test("the ring answer is a clipped duplicate that pulses 0.8 to 1.12 to 1", () => {
+  const ringDefinition = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "ring-glint");
+  assert.equal(ringDefinition?.assetId, "proposalTriptych");
+  assert.deepEqual(ringDefinition?.crop, {
+    x: 464,
+    y: 340,
+    width: 248,
+    height: 300,
+    display: { width: 248, height: 300 },
+  });
+
+  const ring = requiredTrack("ring-glint");
+  assert.deepEqual(
+    [0.58, 0.61, 0.64].map((progress) => sampleLayerState(ring, progress).scaleX),
+    [0.8, 1.12, 1],
+  );
+  assert.deepEqual(
+    [sampleLayerState(ring, 0.61).originX, sampleLayerState(ring, 0.61).originY],
+    [50, 50],
+  );
+});
+
+test("the Tokyo tower zoom and venue reveal meet on the same coral line for two percent", () => {
+  const triptych = requiredTrack("proposal-triptych");
+  const exterior = requiredTrack("bg-venue");
+
+  assert.deepEqual(
+    [sampleLayerState(triptych, 0.64).scaleX, sampleLayerState(triptych, 0.7).scaleX],
+    [1, 1.8],
+  );
+  assert.equal(sampleLayerState(exterior, 0.69).scaleX, 1.35);
+  assert.ok(exterior.techniques?.includes("polygonReveal"));
+  assert.notDeepEqual(sampleLayerState(exterior, 0.69).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(exterior, 0.72).clip, FULL_CLIP);
+
+  for (let step = 690; step <= 710; step += 1) {
+    const progress = step / 1000;
+    assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `Tokyo left overlap at ${progress}`);
+    assert.ok(sampleLayerState(exterior, progress).opacity >= 0.98, `venue left overlap at ${progress}`);
+  }
+
+  // The authored source anchors are x=1055 for the right-panel tower and
+  // x=210 for the venue arch. Project both through their independent handoff
+  // transforms; the comparison is their resulting difference, not a claim
+  // that 210px itself is the tolerance.
+  const tower = sampleLayerState(triptych, 0.7);
+  const towerLineX = tower.x + (1290 * tower.originX / 100)
+    + (1055 - 1290 * tower.originX / 100) * tower.scaleX;
+  const venue = sampleLayerState(exterior, 0.7);
+  const venueOriginX = 430 * venue.originX / 100;
+  const venueArchX = venue.x + venueOriginX + (210 - venueOriginX) * venue.scaleX;
+  const handoffDifference = Math.abs(towerLineX - venueArchX);
+  assert.ok(handoffDifference <= 12, `${handoffDifference}px tower/arch handoff drift`);
+});
+
+test("venue doors reveal the interior and casual clothes match cut at identical geometry", () => {
+  const exterior = requiredTrack("bg-venue");
+  const interior = requiredTrack("venue-doors");
+  const casual = requiredTrack("casual-couple");
+  const weddingCouple = requiredTrack("wedding-couple");
+
+  assert.equal(sampleLayerState(exterior, 0.74).opacity, 1);
+  assert.ok(interior.techniques?.includes("polygonReveal"));
+  assert.notDeepEqual(sampleLayerState(interior, 0.78).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(interior, 0.84).clip, FULL_CLIP);
+
+  for (const progress of [0.8175, 0.82, 0.8225]) {
+    const before = sampleLayerState(casual, progress);
+    const after = sampleLayerState(weddingCouple, progress);
+    assert.ok(before.opacity > 0 && after.opacity > 0, `missing 0.5% wardrobe overlap at ${progress}`);
+    assert.deepEqual([before.x, before.y], [after.x, after.y]);
+    assert.ok(Math.abs(before.scaleY - after.scaleY) <= 0.005, `body height drift at ${progress}`);
+  }
+});
+
+test("the finale uses differential crowd parallax, a 610 to 470 couple walk, and veil sweep", () => {
+  const crowdLeft = requiredTrack("crowd-left");
+  const crowdRight = requiredTrack("crowd-right");
+  assert.deepEqual(
+    [sampleLayerState(crowdLeft, 0.8).opacity, sampleLayerState(crowdRight, 0.8).opacity],
+    [0, 0],
+    "crowds must not ghost over the venue approach",
+  );
+  assert.deepEqual(
+    [sampleLayerState(crowdLeft, 0.86).x, sampleLayerState(crowdRight, 0.86).x],
+    [-180, 180],
+  );
+  assert.deepEqual(
+    [sampleLayerState(crowdLeft, 0.9).x, sampleLayerState(crowdRight, 0.9).x],
+    [0, 20],
+  );
+
+  const couple = requiredTrack("wedding-couple");
+  assert.deepEqual(
+    [sampleLayerState(couple, 0.86).y, sampleLayerState(couple, 0.93).y],
+    [610, 470],
+  );
+
+  const veil = requiredTrack("invitation-paper");
+  assert.equal(sampleLayerState(veil, 0.9).opacity, 0, "the veil must not ghost over the crowd entrance");
+  const veilStart = sampleLayerState(veil, 0.93);
+  const veilEnd = sampleLayerState(veil, 1);
+  assert.deepEqual([veilStart.x, veilStart.y, veilStart.scaleX], [390, -180, 0.35]);
+  assert.deepEqual([veilEnd.x, veilEnd.y, veilEnd.scaleX], [-40, -20, 2.2]);
+
+  const finalBackground = sampleLayerState(requiredTrack("bg-finale"), 1);
+  assert.deepEqual(
+    finalBackground.clip,
+    [50, 50, 50, 50, 50, 50, 50, 50],
+    "the venue must spatially close away so the cream canvas remains behind the veil",
+  );
+});
+
+test("shots 10 through 16 keep a spatial connector at every boundary", () => {
+  const boundaries = [
+    { at: 0.58, connector: "proposal-triptych" },
+    { at: 0.64, connector: "proposal-triptych" },
+    { at: 0.7, connector: "bg-venue" },
+    { at: 0.78, connector: "venue-doors" },
+    { at: 0.86, connector: "crowd-left" },
+    { at: 0.93, connector: "invitation-paper" },
+  ] as const;
+
+  for (const { at, connector } of boundaries) {
+    const track = requiredTrack(connector);
+    assert.ok(sampleLayerState(track, at).opacity > 0.25, `${connector} is not visible at ${at}`);
+    assert.notDeepEqual(
+      spatialState(sampleLayerState(track, at - 0.0075)),
+      spatialState(sampleLayerState(track, at + 0.0075)),
+      `${connector} does not bridge ${at}`,
+    );
+  }
+});
+
+test("second-half boundary, reverse, and direct-jump samples are deterministic", () => {
+  const samples = [
+    ...SHOTS.slice(10).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
+    0.521,
+    0.999,
+  ];
+  const ids = [
+    "proposal-triptych",
+    "ring-glint",
+    "bg-venue",
+    "venue-doors",
+    "casual-couple",
+    "wedding-couple",
+    "crowd-left",
+    "crowd-right",
+    "invitation-paper",
+  ];
+  const captureState = (progress: number) => ids.map(
+    (id) => sampleLayerState(requiredTrack(id), progress),
+  );
+  const forward = new Map(samples.map((progress) => [progress, captureState(progress)]));
+  const reverse = new Map([...samples].reverse().map((progress) => [progress, captureState(progress)]));
+  for (const progress of samples) assert.deepEqual(reverse.get(progress), forward.get(progress));
+
+  const low = captureState(0.521);
+  const high = captureState(0.999);
+  assert.deepEqual([0.521, 0.999].map(captureState), [low, high]);
+  assert.deepEqual([0.999, 0.521].map(captureState), [high, low]);
+});
+
 test("boundary samples, reverse calls, and large direct jumps are deterministic", () => {
   const samples = [
     ...SHOTS.slice(1, 10).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
