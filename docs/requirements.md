@@ -103,6 +103,11 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   실제 DOM viewport 및 PNG 크기로 확인했다. 다만 네트워크 제한으로 `npm run build`는 완료하지 못했으므로,
   production build 근거는 최종 아트로 승격하기 전의 남은 검증 항목이다.
 
+  최종 아트 승격용 shots 1–6 자산은 2배수 430×932 배경 5개와 실제 alpha 전경 2개로 제작했다.
+  오프닝·사이드카 도로·종이 전환·타워 카드·사무실 배경은 불투명 WebP, 사무실 desk는 alpha WebP,
+  sidecar는 alpha PNG로 등록했으며 각 레지스트리 크기는 실제 파일 메타데이터와 테스트로 고정한다.
+  타임라인·렌더러에서 이 자산들을 소비하는 전환과 전체 viewport 검수는 최종 아트 통합 단계에 남아 있다.
+
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률
   스크린샷, 역스크롤·큰 점프·새로고침 복원, `/i/not-a-valid-token`, `/admin/login`, 브라우저 콘솔 오류

@@ -38,6 +38,68 @@ const STYLE_BIBLE_FILES = [
   { src: "/story/doodle-v2/characters-wedding.webp", width: 2048, height: 1024, hasAlpha: true },
 ] as const;
 
+const OPENING_AND_OFFICE_ASSETS = {
+  openingBackground: {
+    kind: "image",
+    src: "/story/doodle-v2/01-opening-background.webp",
+    width: 860,
+    height: 1864,
+    fit: "cover",
+  },
+  sidecarRoad: {
+    kind: "image",
+    src: "/story/doodle-v2/02-sidecar-road.webp",
+    width: 860,
+    height: 1864,
+    fit: "cover",
+  },
+  paperTurn: {
+    kind: "image",
+    src: "/story/doodle-v2/03-paper-turn.webp",
+    width: 860,
+    height: 1864,
+    fit: "cover",
+  },
+  towerCard: {
+    kind: "image",
+    src: "/story/doodle-v2/04-tower-card.webp",
+    width: 860,
+    height: 1864,
+    fit: "contain",
+  },
+  officeBackground: {
+    kind: "image",
+    src: "/story/doodle-v2/05-office-background.webp",
+    width: 860,
+    height: 1864,
+    fit: "cover",
+  },
+  officeDesk: {
+    kind: "image",
+    src: "/story/doodle-v2/06-office-desk.webp",
+    width: 860,
+    height: 520,
+    fit: "contain",
+  },
+  sidecar: {
+    kind: "image",
+    src: "/story/doodle-v2/sidecar.png",
+    width: 1024,
+    height: 768,
+    fit: "contain",
+  },
+} as const;
+
+const OPENING_AND_OFFICE_FILES = [
+  { src: "/story/doodle-v2/01-opening-background.webp", width: 860, height: 1864, hasAlpha: false },
+  { src: "/story/doodle-v2/02-sidecar-road.webp", width: 860, height: 1864, hasAlpha: false },
+  { src: "/story/doodle-v2/03-paper-turn.webp", width: 860, height: 1864, hasAlpha: false },
+  { src: "/story/doodle-v2/04-tower-card.webp", width: 860, height: 1864, hasAlpha: false },
+  { src: "/story/doodle-v2/05-office-background.webp", width: 860, height: 1864, hasAlpha: false },
+  { src: "/story/doodle-v2/06-office-desk.webp", width: 860, height: 520, hasAlpha: true },
+  { src: "/story/doodle-v2/sidecar.png", width: 1024, height: 768, hasAlpha: true },
+] as const;
+
 const SPRITE_CELL_SIZE = 512;
 const MINIMUM_SPRITE_PADDING = 80;
 
@@ -102,6 +164,22 @@ test("style bible files retain their exact dimensions and alpha contract", async
     const filePath = join(process.cwd(), "public", asset.src.slice(1));
     const metadata = await sharp(filePath).metadata();
 
+    assert.equal(metadata.width, asset.width, `${asset.src} width`);
+    assert.equal(metadata.height, asset.height, `${asset.src} height`);
+    assert.equal(metadata.hasAlpha, asset.hasAlpha, `${asset.src} alpha`);
+  }
+});
+
+test("opening and office scenes register their exact files, dimensions, and alpha contract", async () => {
+  for (const [id, expected] of Object.entries(OPENING_AND_OFFICE_ASSETS)) {
+    assert.deepEqual(STORY_ASSETS[id as keyof typeof STORY_ASSETS], expected, id);
+  }
+
+  for (const asset of OPENING_AND_OFFICE_FILES) {
+    const filePath = join(process.cwd(), "public", asset.src.slice(1));
+    assert.ok(existsSync(filePath), `${asset.src} exists`);
+
+    const metadata = await sharp(filePath).metadata();
     assert.equal(metadata.width, asset.width, `${asset.src} width`);
     assert.equal(metadata.height, asset.height, `${asset.src} height`);
     assert.equal(metadata.hasAlpha, asset.hasAlpha, `${asset.src} alpha`);
