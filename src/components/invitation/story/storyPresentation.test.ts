@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
 import { act, createElement } from "react";
@@ -228,7 +229,9 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
     createElement(WeddingStory, { contentTargetId: "invitation-content" }),
     createElement("main", { id: "invitation-content" }, createElement("button", null, "청첩장 첫 컨트롤")),
   ));
-  const document = new JSDOM(html).window.document;
+  const css = readFileSync(new URL("./WeddingStory.module.css", import.meta.url), "utf8");
+  const dom = new JSDOM(`<style>${css}</style>${html}`, { pretendToBeVisual: true });
+  const { document } = dom.window;
   const story = document.querySelector("section[data-motion='pending']");
   assert.ok(story);
 
@@ -240,9 +243,14 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
   assert.ok((skip!.compareDocumentPosition(target) & document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING) !== 0);
   assert.equal(target.querySelector("button")?.textContent, "청첩장 첫 컨트롤");
 
-  assert.equal(story.querySelector(".stageShell")?.getAttribute("aria-hidden"), "true");
-  assert.equal(story.querySelectorAll(".motionFallback > article").length, 6);
+  const stage = story.querySelector(".stageShell");
+  const fallback = story.querySelector(".motionFallback");
+  assert.equal(stage?.getAttribute("aria-hidden"), "true");
+  assert.equal(dom.window.getComputedStyle(stage!).display, "none");
+  assert.equal(dom.window.getComputedStyle(fallback!).display, "grid");
+  assert.equal(fallback?.querySelectorAll(":scope > article").length, 6);
   assert.equal(story.querySelector("ol[aria-label='결혼 이야기 전체 대본']")?.children.length, 16);
+  dom.window.close();
 });
 
 test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", async () => {

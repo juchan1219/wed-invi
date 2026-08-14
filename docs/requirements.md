@@ -167,7 +167,9 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   shot-boundary announcement throttling, 실제 Next Image 장식/비포커스 SSR markup도 회귀 테스트로 고정한다.
   실제 `WeddingStory` SSR/mount 테스트는 pending fallback·skip target·16숏 transcript와 reduced-motion에서
   rAF/IntersectionObserver/ResizeObserver/scroll listener 0회, full-motion에서 containment/timeline observer 활성화를
-  대조한다. `npm run test:story` 72개,
+  대조한다. SSR 테스트는 실제 CSS module 원문을 jsdom에 주입해 pending fallback의 계산된 `display:grid`와 stage의
+  `display:none`까지 확인한다. 테스트 DOM은 README의 Node 20.9+ 계약을 지키는 `jsdom@26.1.0`에 exact pin했다.
+  `npm run test:story` 72개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
