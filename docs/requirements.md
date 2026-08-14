@@ -131,11 +131,14 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   `0.8→1.12→1` pulse한다. 도쿄 패널은 tower 원점 기준 `1→1.8`배가 되고, `1.35`배 예식장 외부의 coral diagonal
   polygon reveal과 2% 겹친다. 원화의 venue arch x=210은 허용 오차가 아닌 source 기준점이며, 각각의 pan·origin·scale을
   적용한 handoff 좌표는 tower x=210.0, arch x=208.5로 실제 차이 1.5px다. 테스트는 이 두 변환값의 차이가 12px 이하인지 고정한다.
+  diagonal wipe는 `venueExterior`를 재사용하는 clipped `venue-reveal`(stack 12)이 opaque
+  `proposal-triptych`(stack 11) 위에서 progress `0.69–0.72`에만 그린다. `0.72`에서 외부가 full clip이 된 뒤
+  duplicate가 꺼지고 같은 외부 underlay로 인계되므로 hard cut이 없으며, 이후 doorway reveal을 우회하지 않는다.
   `StoryLayer`가 소비하는 explicit `stack/coverage` 합성 계약에서 예식장 full interior(0) < exterior(1) < clipped
   interior doorway(2) 순서를 고정한다. full interior는 doorway가 완전히 열린 뒤에만 활성화되므로 exterior가 유지된 채
   중앙 polygon만 넓어진다. shots 1–3의 opaque `opening-field`는 shots 10–12 동안 opacity 0이라 높은 foreground stack으로
   triptych를 다시 덮지 않는다. 평상복 커플은 y `660→610px`로 문까지 실제 이동하고, 평상복·웨딩 sprite는 정확히
-  progress `0.8175–0.8225`의 0.5%에서만 같은 x/y/scale로 동시에 보인다.
+  progress `[0.8175, 0.8225)`의 정확한 0.5%에서만 같은 x/y/scale로 동시에 보인다.
   양쪽 하객은 `-180/+180px`에서 20px 차등 parallax로 들어오고 웨딩 커플은 y `610→470px`로 전진한다.
   마지막 veil/paper는 `(390,-180,.35)→(-40,-20,2.2)`로 쓸며 예식장 배경 clip을 중앙으로 닫아 cream canvas와
   일반 청첩장 본문 사이를 공간적으로 연결한다. 노출되는 canvas의 마지막 CSS cascade는 본문과 같은

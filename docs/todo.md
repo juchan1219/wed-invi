@@ -23,7 +23,7 @@
 - [x] shots 7–16 웃음 패널·프로포즈 삼연작·예식장·하객·veil/paper 풀 일러스트 제작 및 실제 크기·alpha 레지스트리 등록
 - [x] 41개 타임라인 레이어를 선언형 정의와 레지스트리 기반 image/sprite/HTML text 렌더러에 연결하고 CSS 주요 장면 placeholder 제거 — 256px sprite 표시 cell, 두 사람 couple 합성, sidecar 자식으로 중첩한 독립 wheel crop 포함
 - [x] shots 1–9 오프닝→사이드카→종이 코너→타워 창 줌→사무실 desk→좌우 웃음 패널을 최종 아트 위 공간형 타임라인으로 승격하고 production build 통과
-- [x] shots 10–16 프로포즈 삼연작→예식장→하객→피날레 공간형 타임라인 구현 — 1290×932 단일 스트립 pan, 반지 crop pulse, Tokyo tower→예식장 diagonal reveal, 0.5% 의상 match cut, 군중 parallax, veil/paper sweep 및 역방향·직접 점프 계약 포함
+- [x] shots 10–16 프로포즈 삼연작→예식장→하객→피날레 공간형 타임라인 구현 — 1290×932 단일 스트립 pan, 반지 crop pulse, Tokyo 위로 보이는 stack/clip 기반 예식장 diagonal reveal, 정확한 half-open 0.5% 의상 match cut, 군중 parallax, veil/paper sweep 및 역방향·직접 점프 계약 포함
 - [ ] 최종 아트 합성본을 390×844·430×932·1280×720 브라우저에서 아래/위/큰 점프와 laugh-burst ray/삼연작 divider 정렬 포함 시각 검수
 - [ ] iOS Safari와 카카오톡 인앱 브라우저에서 긴 sticky 섹션 체감 확인
 

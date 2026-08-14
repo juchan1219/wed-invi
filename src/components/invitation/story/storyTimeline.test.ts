@@ -624,6 +624,10 @@ test("the ring answer is a clipped duplicate that pulses 0.8 to 1.12 to 1", () =
 test("the Tokyo tower zoom and venue reveal meet on the same coral line for two percent", () => {
   const triptych = requiredTrack("proposal-triptych");
   const exterior = requiredTrack("bg-venue");
+  const reveal = requiredTrack("venue-reveal");
+  const triptychComposite = requiredComposite("proposal-triptych").composite;
+  const revealComposite = requiredComposite("venue-reveal").composite;
+  const revealDefinition = requiredComposite("venue-reveal").definition;
 
   assert.deepEqual(
     [sampleLayerState(triptych, 0.64).scaleX, sampleLayerState(triptych, 0.7).scaleX],
@@ -633,12 +637,22 @@ test("the Tokyo tower zoom and venue reveal meet on the same coral line for two 
   assert.ok(exterior.techniques?.includes("polygonReveal"));
   assert.notDeepEqual(sampleLayerState(exterior, 0.69).clip, FULL_CLIP);
   assert.deepEqual(sampleLayerState(exterior, 0.72).clip, FULL_CLIP);
+  assert.equal(revealDefinition.assetId, "venueExterior");
+  assert.equal(revealComposite.coverage, "clipped");
+  assert.ok(revealComposite.stack > triptychComposite.stack, "venue wipe must paint above Tokyo");
 
   for (let step = 690; step <= 710; step += 1) {
     const progress = step / 1000;
     assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `Tokyo left overlap at ${progress}`);
     assert.ok(sampleLayerState(exterior, progress).opacity >= 0.98, `venue left overlap at ${progress}`);
+    assert.ok(sampleLayerState(reveal, progress).opacity >= 0.98, `visible diagonal wipe missing at ${progress}`);
+    assert.notDeepEqual(sampleLayerState(reveal, progress).clip, FULL_CLIP, `wipe finished too early at ${progress}`);
   }
+  assert.deepEqual(sampleLayerState(reveal, 0.72).clip, FULL_CLIP);
+  assert.ok(sampleLayerState(reveal, 0.72).opacity >= 0.98);
+  assert.equal(sampleLayerState(reveal, 0.721).opacity, 0, "opaque reveal duplicate bypasses the later door hierarchy");
+  assert.equal(sampleLayerState(triptych, 0.721).opacity, 0);
+  assert.equal(sampleLayerState(exterior, 0.721).opacity, 1);
 
   // The authored source anchors are x=1055 for the right-panel tower and
   // x=210 for the venue arch. Project both through their independent handoff
@@ -688,14 +702,14 @@ test("venue doors reveal the interior and casual clothes match cut at identical 
   assert.equal(sampleLayerState(weddingCouple, 0.817499).opacity, 0);
   assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
 
-  for (const progress of [0.8175, 0.82, 0.8225]) {
+  for (const progress of [0.8175, 0.82, 0.822499]) {
     const before = sampleLayerState(casual, progress);
     const after = sampleLayerState(weddingCouple, progress);
     assert.ok(before.opacity > 0 && after.opacity > 0, `missing 0.5% wardrobe overlap at ${progress}`);
     assert.deepEqual([before.x, before.y], [after.x, after.y]);
     assert.ok(Math.abs(before.scaleY - after.scaleY) <= 0.005, `body height drift at ${progress}`);
   }
-  assert.equal(sampleLayerState(casual, 0.822501).opacity, 0);
+  assert.equal(sampleLayerState(casual, 0.8225).opacity, 0);
   assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
 });
 
@@ -707,9 +721,9 @@ test("the casual walk reaches one exact half-percent wardrobe overlap", () => {
   assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
   assert.ok(sampleLayerState(casual, 0.8175).opacity > 0);
   assert.ok(sampleLayerState(weddingCouple, 0.8175).opacity > 0);
-  assert.ok(sampleLayerState(casual, 0.8225).opacity > 0);
-  assert.ok(sampleLayerState(weddingCouple, 0.8225).opacity > 0);
-  assert.equal(sampleLayerState(casual, 0.822501).opacity, 0);
+  assert.ok(sampleLayerState(casual, 0.822499).opacity > 0);
+  assert.ok(sampleLayerState(weddingCouple, 0.822499).opacity > 0);
+  assert.equal(sampleLayerState(casual, 0.8225).opacity, 0);
   assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
 });
 

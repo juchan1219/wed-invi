@@ -287,7 +287,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "speech-bubble", className: "foreground", text: { kind: "caption", value: "오늘 퇴근하고\n맛있는 거 어때요?" } },
   { id: "laugh-burst", assetId: "laughBurst", className: "foreground" },
   { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground", composite: { stack: 11, coverage: "opaque-full" } },
-  { id: "travel-route", assetId: "proposalTriptych", className: "foreground" },
+  { id: "venue-reveal", assetId: "venueExterior", className: "foreground", composite: { stack: 12, coverage: "clipped" } },
   {
     id: "ring-glint",
     assetId: "proposalTriptych",
