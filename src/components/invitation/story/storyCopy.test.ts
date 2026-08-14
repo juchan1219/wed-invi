@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { STORY_BEATS } from "./storyCopy";
+import { LOOK_LABELS, STORY_BEATS } from "./storyCopy";
 
 test("the story has exactly eleven concise beats", () => {
   assert.equal(STORY_BEATS.length, 11);
@@ -14,6 +14,10 @@ test("every beat uses the approved round-eye cartoon v2 artwork", () => {
   for (const beat of STORY_BEATS) {
     assert.match(beat.image, /-v2\.webp$/, `${beat.id} still uses legacy artwork`);
   }
+});
+
+test("the forward-riding labels point to the correct characters", () => {
+  assert.deepEqual(LOOK_LABELS, { left: "예찬", right: "주은" });
 });
 
 test("the destination beat contains the confirmed ceremony details", () => {

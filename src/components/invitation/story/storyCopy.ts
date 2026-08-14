@@ -1,6 +1,8 @@
 import { wedding } from "@/config/wedding";
 import { formatCeremonyDateShort, formatCeremonyTime } from "@/lib/date";
 
+export const LOOK_LABELS = { left: "예찬", right: "주은" } as const;
+
 export type StoryBeat = {
   id: string;
   eyebrow?: string;

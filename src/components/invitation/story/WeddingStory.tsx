@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
-import { STORY_BEATS } from "./storyCopy";
+import { LOOK_LABELS, STORY_BEATS } from "./storyCopy";
 import styles from "./WeddingStory.module.css";
 
 const LAST_INDEX = STORY_BEATS.length - 1;
@@ -123,8 +123,8 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
 
               {beat.id === "look" && (
                 <div className={styles.names} aria-hidden>
-                  <span className={styles.jueun}>↘ 주은</span>
-                  <span className={styles.yechan}>예찬 ↙</span>
+                  <span className={styles.yechan}>↘ {LOOK_LABELS.left}</span>
+                  <span className={styles.jueun}>{LOOK_LABELS.right} ↙</span>
                 </div>
               )}
               {beat.id === "laugh" && <div className={styles.laughMarks} aria-hidden>HA! HA!</div>}

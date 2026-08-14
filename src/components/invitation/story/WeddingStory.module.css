@@ -67,11 +67,18 @@
 .foregroundArt {
   z-index: 1;
   object-fit: cover;
-  clip-path: inset(72% 0 0);
   transform: scale(calc(1.04 + var(--scene-progress) * 0.09)) translateY(calc(var(--scene-progress) * -1.8%));
   transform-origin: center bottom;
   filter: saturate(1.04);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 64%, #000 84%);
+  mask-image: linear-gradient(to bottom, transparent 64%, #000 84%);
   will-change: transform;
+}
+
+.scene[data-id="destination"] .foregroundArt,
+.scene[data-id="finale"] .foregroundArt {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 78%, #000 96%);
+  mask-image: linear-gradient(to bottom, transparent 78%, #000 96%);
 }
 
 .tint {
