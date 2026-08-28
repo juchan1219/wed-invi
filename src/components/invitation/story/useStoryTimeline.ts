@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
+import { writeStoryProgress } from "./storyHistory";
 import { advanceDampedPlayhead, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
 import {
   CHAPTERS,
@@ -39,10 +40,15 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     let lastShot = "";
     let lastChapter = "";
 
-    const measure = () => {
+    const measure = (persist = false) => {
       const rect = rootElement.getBoundingClientRect();
       const top = window.scrollY + rect.top;
       target = storyProgress(window.scrollY, top, rootElement.offsetHeight, window.innerHeight);
+      if (persist) {
+        const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
+        const relative = window.scrollY - top;
+        writeStoryProgress(window, relative >= 0 && relative <= travel ? target : null);
+      }
       if (shouldSnapPlayhead(playhead, target)) playhead = target;
     };
 
@@ -129,12 +135,13 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
       if (visible && Math.abs(playhead - target) >= 0.00008) frame = requestAnimationFrame(tick);
     };
 
-    const schedule = () => {
-      measure();
+    const schedule = (persist = false) => {
+      measure(persist);
       if (!visible || frame) return;
       lastTime = performance.now();
       frame = requestAnimationFrame(tick);
     };
+    const handleScroll = () => schedule(true);
 
     const syncImmediately = () => {
       measure();
@@ -153,7 +160,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
 
     observer.observe(rootElement);
     syncImmediately();
-    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", syncImmediately);
     window.addEventListener("orientationchange", syncImmediately);
     window.addEventListener("pageshow", syncImmediately);
@@ -161,7 +168,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
     return () => {
       observer.disconnect();
       cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", syncImmediately);
       window.removeEventListener("orientationchange", syncImmediately);
       window.removeEventListener("pageshow", syncImmediately);

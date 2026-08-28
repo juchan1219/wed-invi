@@ -18,9 +18,24 @@ function installCssModuleHook() {
   };
 }
 
-function installDomEnvironment(reducedMotion: boolean) {
+function installDomEnvironment(
+  reducedMotion: boolean,
+  options: {
+    navigationType?: "navigate" | "reload" | "back_forward";
+    historyState?: Record<string, unknown>;
+    initialScrollY?: number;
+    storyHeight?: number;
+  } = {},
+) {
   const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>", {
     url: "http://localhost/",
+  });
+  dom.window.history.replaceState(options.historyState ?? null, "", dom.window.location.href);
+  Object.defineProperty(dom.window.performance, "getEntriesByType", {
+    configurable: true,
+    value: (type: string) => type === "navigation"
+      ? [{ type: options.navigationType ?? "navigate" }]
+      : [],
   });
   const counters = {
     animationFrames: 0,
@@ -30,6 +45,8 @@ function installDomEnvironment(reducedMotion: boolean) {
   };
   const animationFrameCallbacks = new Map<number, FrameRequestCallback>();
   let animationFrameId = 0;
+  let scrollY = options.initialScrollY ?? 0;
+  const scrollPositions: number[] = [];
 
   Object.defineProperties(globalThis, {
     window: { configurable: true, writable: true, value: dom.window },
@@ -52,24 +69,33 @@ function installDomEnvironment(reducedMotion: boolean) {
     dispatchEvent: () => false,
   })) as typeof dom.window.matchMedia;
   Object.defineProperties(dom.window, {
-    scrollY: { configurable: true, value: 0 },
+    scrollY: { configurable: true, get: () => scrollY },
     innerHeight: { configurable: true, value: 932 },
   });
+  dom.window.scrollTo = ((first: number | ScrollToOptions, second?: number) => {
+    scrollY = typeof first === "number" ? (second ?? 0) : (first.top ?? scrollY);
+    scrollPositions.push(scrollY);
+  }) as typeof dom.window.scrollTo;
   Object.defineProperty(dom.window.HTMLElement.prototype, "offsetHeight", {
     configurable: true,
-    get: () => 18_500,
+    get: () => options.storyHeight ?? 932 * 18.5,
   });
-  dom.window.HTMLElement.prototype.getBoundingClientRect = () => ({
-    x: 0,
-    y: 0,
-    top: 0,
-    right: 430,
-    bottom: 932,
-    left: 0,
-    width: 430,
-    height: 932,
-    toJSON() {},
-  });
+  dom.window.HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+    const isStoryRoot = this.tagName === "SECTION" && this.hasAttribute("data-motion");
+    const height = isStoryRoot ? (options.storyHeight ?? 932 * 18.5) : 932;
+    const top = isStoryRoot ? -scrollY : 0;
+    return {
+      x: 0,
+      y: top,
+      top,
+      right: 430,
+      bottom: top + height,
+      left: 0,
+      width: 430,
+      height,
+      toJSON() {},
+    };
+  };
 
   const requestFrame = ((callback: FrameRequestCallback) => {
     counters.animationFrames += 1;
@@ -115,7 +141,16 @@ function installDomEnvironment(reducedMotion: boolean) {
     return true;
   };
 
-  return { counters, dom, container: dom.window.document.querySelector("#root")!, runAnimationFrame };
+  const setScrollY = (value: number) => { scrollY = value; };
+
+  return {
+    counters,
+    dom,
+    container: dom.window.document.querySelector("#root")!,
+    runAnimationFrame,
+    scrollPositions,
+    setScrollY,
+  };
 }
 
 test("fallback panel contract selects six final registry illustrations and chapter copy in order", () => {
@@ -323,5 +358,106 @@ test("WeddingStory allowed-motion mount activates containment and timeline obser
   assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "");
 
   await act(async () => root?.unmount());
+  environment.dom.window.close();
+});
+
+test("reload restores saved story progress only after the full-height layout mounts", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const storyHeight = 932 * 18.5;
+  const travel = storyHeight - 932;
+
+  for (const progress of [0.42, 0.82]) {
+    const environment = installDomEnvironment(false, {
+      navigationType: "reload",
+      historyState: {
+        __NA: true,
+        __wedInviStory: { version: 1, path: "/", progress },
+      },
+      initialScrollY: 0,
+      storyHeight,
+    });
+    let root: Root | undefined;
+
+    await act(async () => {
+      root = createRoot(environment.container);
+      root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+    });
+
+    assert.equal(environment.container.querySelector("section")?.getAttribute("data-motion"), "full");
+    assert.ok(Math.abs(environment.scrollPositions.at(-1)! - travel * progress) < 1e-9);
+
+    await act(async () => root?.unmount());
+    environment.dom.window.close();
+  }
+
+  for (const ignored of [
+    { navigationType: "navigate" as const, path: "/" },
+    { navigationType: "back_forward" as const, path: "/" },
+    { navigationType: "reload" as const, path: "/another-route" },
+  ]) {
+    const environment = installDomEnvironment(false, {
+      navigationType: ignored.navigationType,
+      historyState: { __wedInviStory: { version: 1, path: ignored.path, progress: 0.82 } },
+      storyHeight,
+    });
+    let root: Root | undefined;
+    await act(async () => {
+      root = createRoot(environment.container);
+      root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+    });
+    assert.deepEqual(environment.scrollPositions, []);
+    await act(async () => root?.unmount());
+    environment.dom.window.close();
+  }
+
+  const reduced = installDomEnvironment(true, {
+    navigationType: "reload",
+    historyState: { __wedInviStory: { version: 1, path: "/", progress: 0.82 } },
+    storyHeight,
+  });
+  let reducedRoot: Root | undefined;
+  await act(async () => {
+    reducedRoot = createRoot(reduced.container);
+    reducedRoot.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+  });
+  assert.deepEqual(reduced.scrollPositions, []);
+  await act(async () => reducedRoot?.unmount());
+  reduced.dom.window.close();
+});
+
+test("normal story scroll merges and clears namespaced progress in the current history entry", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const storyHeight = 932 * 18.5;
+  const travel = storyHeight - 932;
+  const environment = installDomEnvironment(false, {
+    navigationType: "navigate",
+    historyState: { __NA: true, nextInternal: "preserved" },
+    storyHeight,
+  });
+  let root: Root | undefined;
+
+  await act(async () => {
+    root = createRoot(environment.container);
+    root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+  });
+
+  environment.setScrollY(travel * 0.82);
+  await act(async () => { environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll")); });
+  assert.deepEqual(environment.dom.window.history.state, {
+    __NA: true,
+    nextInternal: "preserved",
+    __wedInviStory: { version: 1, path: "/", progress: 0.82 },
+  });
+
+  environment.setScrollY(storyHeight + 20);
+  await act(async () => { environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll")); });
+  assert.deepEqual(environment.dom.window.history.state, { __NA: true, nextInternal: "preserved" });
+
+  await act(async () => root?.unmount());
+  environment.setScrollY(travel * 0.5);
+  environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
+  assert.deepEqual(environment.dom.window.history.state, { __NA: true, nextInternal: "preserved" });
   environment.dom.window.close();
 });

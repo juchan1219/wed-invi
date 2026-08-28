@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
 import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
+import { readReloadStoryProgress } from "./storyHistory";
 import {
   CHAPTERS,
   LAYER_TRACKS,
@@ -42,6 +43,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   const rootRef = useRef<HTMLElement>(null);
   const stageShellRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const reloadRestoredRef = useRef(false);
   const [motionMode, setMotionMode] = useState<StoryMotionMode>("pending");
   const presentation = getStoryMotionPresentation(motionMode);
   const initialAnnouncement = getStoryProgressAnnouncement(0);
@@ -81,6 +83,18 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
       documentStyle.overflowAnchor = previousOverflowAnchor;
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (motionMode !== "full" || reloadRestoredRef.current) return;
+    reloadRestoredRef.current = true;
+    const progress = readReloadStoryProgress(window);
+    const rootElement = rootRef.current;
+    if (progress === null || !rootElement) return;
+
+    const storyTop = window.scrollY + rootElement.getBoundingClientRect().top;
+    const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
+    window.scrollTo(0, storyTop + travel * progress);
+  }, [motionMode]);
 
   useStoryTimeline({ root: rootRef, stage: stageRef, enabled: presentation.runTimeline });
 
