@@ -72,6 +72,11 @@ function installDomEnvironment(
     scrollY: { configurable: true, get: () => scrollY },
     innerHeight: { configurable: true, value: 932 },
   });
+  Object.defineProperty(dom.window.history, "scrollRestoration", {
+    configurable: true,
+    writable: true,
+    value: "auto",
+  });
   dom.window.scrollTo = ((first: number | ScrollToOptions, second?: number) => {
     scrollY = typeof first === "number" ? (second ?? 0) : (first.top ?? scrollY);
     scrollPositions.push(scrollY);
@@ -369,7 +374,10 @@ test("reload restores saved story progress only after the full-height layout mou
   const storyHeight = 932 * 18.5;
   const travel = storyHeight - 932;
 
-  for (const [progress, browserRestoredY] of [[0.42, 4093], [0.82, 7332.5]] as const) {
+  for (const [progress, browserRestoredY, lateDriftY] of [
+    [0.42, 4093, 7583],
+    [0.82, 7332.5, 3048.5],
+  ] as const) {
     const environment = installDomEnvironment(false, {
       navigationType: "reload",
       historyState: {
@@ -387,6 +395,7 @@ test("reload restores saved story progress only after the full-height layout mou
     });
 
     assert.equal(environment.container.querySelector("section")?.getAttribute("data-motion"), "full");
+    assert.equal(environment.dom.window.history.scrollRestoration, "manual");
     environment.setScrollY(browserRestoredY);
     await act(async () => {
       environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
@@ -394,6 +403,15 @@ test("reload restores saved story progress only after the full-height layout mou
       for (let frame = 0; frame < 8; frame += 1) environment.runAnimationFrame(frame * 16);
     });
     assert.ok(Math.abs(environment.currentScrollY() - travel * progress) < 1e-9);
+    assert.equal(environment.dom.window.history.state.__wedInviStory.progress, progress);
+
+    environment.setScrollY(lateDriftY);
+    await act(async () => {
+      environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
+      for (let frame = 0; frame < 4; frame += 1) environment.runAnimationFrame(160 + frame * 16);
+    });
+    assert.ok(Math.abs(environment.currentScrollY() - travel * progress) < 1e-9);
+    assert.equal(environment.dom.window.history.state.__wedInviStory.progress, progress);
 
     const restoreCount = environment.scrollPositions.length;
     await act(async () => {
@@ -402,7 +420,20 @@ test("reload restores saved story progress only after the full-height layout mou
     });
     assert.equal(environment.scrollPositions.length, restoreCount, "reload progress restores only once");
 
+    await act(async () => {
+      environment.dom.window.dispatchEvent(new environment.dom.window.Event("pointerdown"));
+    });
+    assert.equal(environment.dom.window.history.scrollRestoration, "auto");
+    environment.setScrollY(travel * 0.5);
+    await act(async () => {
+      environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
+      for (let frame = 0; frame < 4; frame += 1) environment.runAnimationFrame(240 + frame * 16);
+    });
+    assert.equal(environment.currentScrollY(), travel * 0.5);
+    assert.equal(environment.dom.window.history.state.__wedInviStory.progress, 0.5);
+
     await act(async () => root?.unmount());
+    assert.equal(environment.dom.window.history.scrollRestoration, "auto");
     environment.dom.window.close();
   }
 
@@ -421,6 +452,7 @@ test("reload restores saved story progress only after the full-height layout mou
       root = createRoot(environment.container);
       root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
     });
+    assert.equal(environment.dom.window.history.scrollRestoration, "auto");
     assert.deepEqual(environment.scrollPositions, []);
     await act(async () => root?.unmount());
     environment.dom.window.close();
@@ -436,6 +468,7 @@ test("reload restores saved story progress only after the full-height layout mou
     reducedRoot = createRoot(reduced.container);
     reducedRoot.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
   });
+  assert.equal(reduced.dom.window.history.scrollRestoration, "auto");
   assert.deepEqual(reduced.scrollPositions, []);
   await act(async () => reducedRoot?.unmount());
   reduced.dom.window.close();

@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
 import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
-import { readReloadStoryProgress, writeStoryProgress } from "./storyHistory";
+import { readReloadStoryProgress } from "./storyHistory";
 import {
   CHAPTERS,
   LAYER_TRACKS,
@@ -43,12 +43,41 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   const rootRef = useRef<HTMLElement>(null);
   const stageShellRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const reloadRestoredRef = useRef(false);
+  const reloadProgressRef = useRef<number | null>(null);
+  const reloadOwnershipRef = useRef(false);
   const [motionMode, setMotionMode] = useState<StoryMotionMode>("pending");
   const presentation = getStoryMotionPresentation(motionMode);
   const initialAnnouncement = getStoryProgressAnnouncement(0);
 
   useCanvasContainment(stageShellRef, presentation.showStage);
+
+  useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const progress = readReloadStoryProgress(window);
+    if (progress === null) return;
+
+    const previousRestoration = window.history.scrollRestoration;
+    reloadProgressRef.current = progress;
+    reloadOwnershipRef.current = true;
+    window.history.scrollRestoration = "manual";
+
+    const release = () => {
+      if (!reloadOwnershipRef.current) return;
+      reloadOwnershipRef.current = false;
+      window.history.scrollRestoration = previousRestoration;
+    };
+    const intentEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    for (const event of intentEvents) {
+      window.addEventListener(event, release, { capture: true, once: true, passive: true });
+    }
+    window.addEventListener("pagehide", release, { once: true });
+
+    return () => {
+      for (const event of intentEvents) window.removeEventListener(event, release, true);
+      window.removeEventListener("pagehide", release);
+      release();
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -85,38 +114,57 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   }, []);
 
   useLayoutEffect(() => {
-    if (motionMode !== "full" || reloadRestoredRef.current) return;
-    const progress = readReloadStoryProgress(window);
+    if (motionMode !== "full") return;
+    const progress = reloadProgressRef.current;
     if (progress === null) return;
 
-    let frame = 0;
+    let initialFrame = 0;
+    let correctionFrame = 0;
     let scheduled = false;
-    const restore = () => {
-      if (scheduled || reloadRestoredRef.current) return;
+    const restoreExactProgress = () => {
+      if (!reloadOwnershipRef.current) return;
+      const rootElement = rootRef.current;
+      if (!rootElement) return;
+      const storyTop = window.scrollY + rootElement.getBoundingClientRect().top;
+      const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
+      const nextScrollY = storyTop + travel * progress;
+      if (Math.abs(window.scrollY - nextScrollY) > 0.5) window.scrollTo(0, nextScrollY);
+    };
+    const scheduleInitialRestore = () => {
+      if (scheduled || !reloadOwnershipRef.current) return;
       scheduled = true;
-      frame = window.requestAnimationFrame(() => {
-        frame = window.requestAnimationFrame(() => {
-          const rootElement = rootRef.current;
-          if (!rootElement) return;
-          const storyTop = window.scrollY + rootElement.getBoundingClientRect().top;
-          const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
-          window.scrollTo(0, storyTop + travel * progress);
-          writeStoryProgress(window, progress);
-          reloadRestoredRef.current = true;
+      initialFrame = window.requestAnimationFrame(() => {
+        initialFrame = window.requestAnimationFrame(() => {
+          restoreExactProgress();
         });
       });
     };
+    const correctBrowserDrift = () => {
+      if (!reloadOwnershipRef.current || correctionFrame) return;
+      correctionFrame = window.requestAnimationFrame(() => {
+        correctionFrame = 0;
+        restoreExactProgress();
+      });
+    };
 
-    if (document.readyState === "complete") restore();
-    else window.addEventListener("pageshow", restore, { once: true });
+    if (document.readyState === "complete") scheduleInitialRestore();
+    else window.addEventListener("pageshow", scheduleInitialRestore, { once: true });
+    window.addEventListener("scroll", correctBrowserDrift, { passive: true });
 
     return () => {
-      window.removeEventListener("pageshow", restore);
-      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("pageshow", scheduleInitialRestore);
+      window.removeEventListener("scroll", correctBrowserDrift);
+      if (initialFrame) window.cancelAnimationFrame(initialFrame);
+      if (correctionFrame) window.cancelAnimationFrame(correctionFrame);
     };
   }, [motionMode]);
 
-  useStoryTimeline({ root: rootRef, stage: stageRef, enabled: presentation.runTimeline });
+  useStoryTimeline({
+    root: rootRef,
+    stage: stageRef,
+    enabled: presentation.runTimeline,
+    persistenceSuspended: reloadOwnershipRef,
+  });
 
   return (
     <section

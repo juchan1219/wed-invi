@@ -14,9 +14,10 @@ type StoryTimelineOptions = {
   root: React.RefObject<HTMLElement | null>;
   stage: React.RefObject<HTMLDivElement | null>;
   enabled: boolean;
+  persistenceSuspended?: React.RefObject<boolean>;
 };
 
-export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions) {
+export function useStoryTimeline({ root, stage, enabled, persistenceSuspended }: StoryTimelineOptions) {
   useEffect(() => {
     if (!enabled) return;
     const rootElement = root.current;
@@ -44,7 +45,7 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
       const rect = rootElement.getBoundingClientRect();
       const top = window.scrollY + rect.top;
       target = storyProgress(window.scrollY, top, rootElement.offsetHeight, window.innerHeight);
-      if (persist) {
+      if (persist && !persistenceSuspended?.current) {
         const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
         const relative = window.scrollY - top;
         writeStoryProgress(window, relative >= 0 && relative <= travel ? target : null);
@@ -173,5 +174,5 @@ export function useStoryTimeline({ root, stage, enabled }: StoryTimelineOptions)
       window.removeEventListener("orientationchange", syncImmediately);
       window.removeEventListener("pageshow", syncImmediately);
     };
-  }, [enabled, root, stage]);
+  }, [enabled, persistenceSuspended, root, stage]);
 }
