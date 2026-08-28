@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { StoryFallback } from "./StoryFallback";
 import { StoryLayer } from "./StoryLayer";
 import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
-import { readReloadStoryProgress } from "./storyHistory";
+import { readReloadStoryProgress, writeStoryProgress } from "./storyHistory";
 import {
   CHAPTERS,
   LAYER_TRACKS,
@@ -86,14 +86,34 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
 
   useLayoutEffect(() => {
     if (motionMode !== "full" || reloadRestoredRef.current) return;
-    reloadRestoredRef.current = true;
     const progress = readReloadStoryProgress(window);
-    const rootElement = rootRef.current;
-    if (progress === null || !rootElement) return;
+    if (progress === null) return;
 
-    const storyTop = window.scrollY + rootElement.getBoundingClientRect().top;
-    const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
-    window.scrollTo(0, storyTop + travel * progress);
+    let frame = 0;
+    let scheduled = false;
+    const restore = () => {
+      if (scheduled || reloadRestoredRef.current) return;
+      scheduled = true;
+      frame = window.requestAnimationFrame(() => {
+        frame = window.requestAnimationFrame(() => {
+          const rootElement = rootRef.current;
+          if (!rootElement) return;
+          const storyTop = window.scrollY + rootElement.getBoundingClientRect().top;
+          const travel = Math.max(0, rootElement.offsetHeight - window.innerHeight);
+          window.scrollTo(0, storyTop + travel * progress);
+          writeStoryProgress(window, progress);
+          reloadRestoredRef.current = true;
+        });
+      });
+    };
+
+    if (document.readyState === "complete") restore();
+    else window.addEventListener("pageshow", restore, { once: true });
+
+    return () => {
+      window.removeEventListener("pageshow", restore);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [motionMode]);
 
   useStoryTimeline({ root: rootRef, stage: stageRef, enabled: presentation.runTimeline });
