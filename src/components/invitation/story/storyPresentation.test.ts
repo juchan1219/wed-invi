@@ -396,6 +396,7 @@ test("reload restores saved story progress only after the full-height layout mou
 
     assert.equal(environment.container.querySelector("section")?.getAttribute("data-motion"), "full");
     assert.equal(environment.dom.window.history.scrollRestoration, "manual");
+    assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "none");
     environment.setScrollY(browserRestoredY);
     await act(async () => {
       environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
@@ -404,6 +405,11 @@ test("reload restores saved story progress only after the full-height layout mou
     });
     assert.ok(Math.abs(environment.currentScrollY() - travel * progress) < 1e-9);
     assert.equal(environment.dom.window.history.state.__wedInviStory.progress, progress);
+    assert.equal(
+      environment.dom.window.document.documentElement.style.overflowAnchor,
+      "none",
+      "reload ownership keeps CSS scroll anchoring suspended through late drift",
+    );
 
     environment.setScrollY(lateDriftY);
     await act(async () => {
@@ -424,6 +430,7 @@ test("reload restores saved story progress only after the full-height layout mou
       environment.dom.window.dispatchEvent(new environment.dom.window.Event("pointerdown"));
     });
     assert.equal(environment.dom.window.history.scrollRestoration, "auto");
+    assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "");
     environment.setScrollY(travel * 0.5);
     await act(async () => {
       environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
@@ -434,6 +441,7 @@ test("reload restores saved story progress only after the full-height layout mou
 
     await act(async () => root?.unmount());
     assert.equal(environment.dom.window.history.scrollRestoration, "auto");
+    assert.equal(environment.dom.window.document.documentElement.style.overflowAnchor, "");
     environment.dom.window.close();
   }
 

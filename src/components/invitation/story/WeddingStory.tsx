@@ -45,6 +45,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const reloadProgressRef = useRef<number | null>(null);
   const reloadOwnershipRef = useRef(false);
+  const reloadOverflowAnchorRef = useRef<string | null>(null);
   const [motionMode, setMotionMode] = useState<StoryMotionMode>("pending");
   const presentation = getStoryMotionPresentation(motionMode);
   const initialAnnouncement = getStoryProgressAnnouncement(0);
@@ -59,12 +60,17 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
     const previousRestoration = window.history.scrollRestoration;
     reloadProgressRef.current = progress;
     reloadOwnershipRef.current = true;
+    reloadOverflowAnchorRef.current = document.documentElement.style.overflowAnchor;
     window.history.scrollRestoration = "manual";
 
     const release = () => {
       if (!reloadOwnershipRef.current) return;
       reloadOwnershipRef.current = false;
       window.history.scrollRestoration = previousRestoration;
+      if (reloadOverflowAnchorRef.current !== null) {
+        document.documentElement.style.overflowAnchor = reloadOverflowAnchorRef.current;
+        reloadOverflowAnchorRef.current = null;
+      }
     };
     const intentEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
     for (const event of intentEvents) {
@@ -92,7 +98,9 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
       documentStyle.overflowAnchor = "none";
       anchorFrame = window.requestAnimationFrame(() => {
         anchorFrame = window.requestAnimationFrame(() => {
-          documentStyle.overflowAnchor = previousOverflowAnchor;
+          if (!reloadOwnershipRef.current) {
+            documentStyle.overflowAnchor = previousOverflowAnchor;
+          }
           anchorFrame = 0;
         });
       });
