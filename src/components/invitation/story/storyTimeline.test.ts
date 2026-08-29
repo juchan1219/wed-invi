@@ -50,6 +50,38 @@ function requiredComposite(id: string) {
   return { definition, composite: definition.composite };
 }
 
+const DEFAULT_RENDERER_STACK = {
+  background: 0,
+  scenery: 3,
+  character: 8,
+  prop: 10,
+  transition: 20,
+  type: 24,
+} as const;
+
+const CSS_STACK_OVERRIDES = new Map<string, number>([
+  ["title-shards", 28],
+]);
+
+function rendererStack(id: string) {
+  const definition = STORY_LAYER_DEFINITIONS.find((candidate) => candidate.id === id);
+  assert.ok(definition, `missing layer definition: ${id}`);
+  return definition.composite?.stack
+    ?? CSS_STACK_OVERRIDES.get(id)
+    ?? DEFAULT_RENDERER_STACK[requiredTrack(id).kind];
+}
+
+function compositedVisibleOpacity(id: string, progress: number) {
+  const targetStack = rendererStack(id);
+  return STORY_LAYER_DEFINITIONS.reduce((visibleOpacity, definition) => {
+    if (definition.id === id || definition.composite?.coverage !== "opaque-full") {
+      return visibleOpacity;
+    }
+    if (rendererStack(definition.id) <= targetStack) return visibleOpacity;
+    return visibleOpacity * (1 - sampleLayerState(requiredTrack(definition.id), progress).opacity);
+  }, sampleLayerState(requiredTrack(id), progress).opacity);
+}
+
 type StoryLayerNode = {
   track: LayerTrack;
   children: readonly StoryLayerNode[];
@@ -440,27 +472,31 @@ test("polygon reveal is sampled from a real production layer", () => {
 
 test("all seven public scenes keep visible spatial handoffs across their boundaries", () => {
   const boundaries = [
-    { at: 0.08, outgoing: "bg-jeju", incoming: "sidecar", connector: "sidecar" },
+    { at: 0.08, outgoing: "title-shards", incoming: "opening-field", connector: "opening-field" },
     { at: 0.18, outgoing: "sidecar", incoming: "paper-tear", connector: "paper-tear" },
     { at: 0.34, outgoing: "office-props", incoming: "panel-left", connector: "panel-left" },
     { at: 0.5, outgoing: "laugh-burst", incoming: "proposal-triptych", connector: "laugh-burst" },
-    { at: 0.72, outgoing: "proposal-triptych", incoming: "bg-venue", connector: "venue-reveal" },
-    { at: 0.84, outgoing: "wedding-couple", incoming: "bg-finale", connector: "crowd-left" },
+    { at: 0.72, outgoing: "proposal-triptych", incoming: "venue-reveal", connector: "venue-reveal" },
+    { at: 0.84, outgoing: "wedding-couple", incoming: "bg-finale", connector: "wedding-couple" },
   ] as const;
 
-  for (const boundary of boundaries) {
-    const outgoing = requiredTrack(boundary.outgoing);
-    const incoming = requiredTrack(boundary.incoming);
+  for (const [index, boundary] of boundaries.entries()) {
+    assert.ok(STORY_SCENES[index]?.layerIds.includes(boundary.outgoing));
+    assert.ok(STORY_SCENES[index + 1]?.layerIds.includes(boundary.incoming));
     const intervalStart = boundary.at - 0.0075;
     const intervalEnd = boundary.at + 0.0075;
     for (const progress of [intervalStart, intervalEnd]) {
       assert.ok(
-        sampleLayerState(outgoing, progress).opacity > 0.25,
+        compositedVisibleOpacity(boundary.outgoing, progress) > 0.25,
         `${boundary.outgoing} must remain visible at ${progress}`,
       );
       assert.ok(
-        sampleLayerState(incoming, progress).opacity > 0.25,
+        compositedVisibleOpacity(boundary.incoming, progress) > 0.25,
         `${boundary.incoming} must already be visible at ${progress}`,
+      );
+      assert.ok(
+        compositedVisibleOpacity(boundary.connector, progress) > 0.25,
+        `${boundary.connector} must be an unoccluded connector at ${progress}`,
       );
     }
 
