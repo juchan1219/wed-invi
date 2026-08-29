@@ -334,6 +334,32 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
   dom.window.close();
 });
 
+test("story stage stylesheet activates every scene navigation step without hiding the finale cue", () => {
+  const css = readFileSync(new URL("./WeddingStory.module.css", import.meta.url), "utf8");
+  const dom = new JSDOM(`<style>${css}</style>`);
+  const selectors = Array.from(dom.window.document.styleSheets[0]!.cssRules)
+    .map((rule): string => "selectorText" in rule && typeof rule.selectorText === "string" ? rule.selectorText : "");
+
+  for (const sceneId of [
+    "jeju-opening",
+    "same-direction",
+    "office-coworkers",
+    "joke-and-laughter",
+    "lifelong-partners",
+    "seoul-venue",
+    "wedding-finale",
+  ]) {
+    assert.ok(
+      selectors.some((selector) => selector.includes(`[data-chapter="${sceneId}"] [data-chapter-id="${sceneId}"] i::after`)),
+      `${sceneId} has no active navigation indicator`,
+    );
+  }
+
+  assert.ok(!selectors.some((selector) => /data-chapter="(?:beginning|coworkers|laughter|journey|destination|wedding)"/.test(selector)));
+  assert.ok(!selectors.some((selector) => selector.includes("data-shot=")), "the finale copy must remain visible");
+  dom.window.close();
+});
+
 test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", async () => {
   installCssModuleHook();
   const { WeddingStory } = await import("./WeddingStory");

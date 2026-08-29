@@ -238,12 +238,10 @@
   font-weight: 900;
   line-height: 1.35;
 }
-.stage[data-chapter="laughter"] .copyLine { border-color: #7d3028; color: #7d3028; box-shadow: 0.38em 0.42em 0 #7d3028; }
-.stage[data-chapter="journey"] .copyCard { top: auto; bottom: 93.2px; }
-.stage[data-chapter="destination"] .copyCard { color: #fff2cf; text-shadow: 2px 2px 0 #6f2e27; }
-.stage[data-chapter="wedding"] .copyCard { top: 93.2px; color: #6f2e27; }
-.stage[data-shot="route-connects"] .copyLine { font-size: 16px; }
-.stage[data-shot="invitation-rises"] .storyCopy { opacity: 0; }
+.stage[data-chapter="joke-and-laughter"] .copyLine { border-color: #7d3028; color: #7d3028; box-shadow: 0.38em 0.42em 0 #7d3028; font-size: 16px; }
+.stage[data-chapter="lifelong-partners"] .copyCard { top: auto; bottom: 93.2px; }
+.stage[data-chapter="seoul-venue"] .copyCard { color: #fff2cf; text-shadow: 2px 2px 0 #6f2e27; }
+.stage[data-chapter="wedding-finale"] .copyCard { top: 93.2px; color: #6f2e27; }
 
 .skip {
   position: sticky;
@@ -301,12 +299,13 @@
 .chapterNav li span { display: none; }
 .chapterNav i { display: block; width: 27.2px; height: 2.88px; overflow: hidden; background: rgba(255, 246, 219, 0.38); }
 .chapterNav i::after { display: block; width: 100%; height: 100%; background: #fb5d43; content: ""; transform: scaleX(0); transform-origin: left; }
-.stage[data-chapter="beginning"] [data-chapter-id="beginning"] i::after,
-.stage[data-chapter="coworkers"] [data-chapter-id="coworkers"] i::after,
-.stage[data-chapter="laughter"] [data-chapter-id="laughter"] i::after,
-.stage[data-chapter="journey"] [data-chapter-id="journey"] i::after,
-.stage[data-chapter="destination"] [data-chapter-id="destination"] i::after,
-.stage[data-chapter="wedding"] [data-chapter-id="wedding"] i::after { transform: scaleX(1); }
+.stage[data-chapter="jeju-opening"] [data-chapter-id="jeju-opening"] i::after,
+.stage[data-chapter="same-direction"] [data-chapter-id="same-direction"] i::after,
+.stage[data-chapter="office-coworkers"] [data-chapter-id="office-coworkers"] i::after,
+.stage[data-chapter="joke-and-laughter"] [data-chapter-id="joke-and-laughter"] i::after,
+.stage[data-chapter="lifelong-partners"] [data-chapter-id="lifelong-partners"] i::after,
+.stage[data-chapter="seoul-venue"] [data-chapter-id="seoul-venue"] i::after,
+.stage[data-chapter="wedding-finale"] [data-chapter-id="wedding-finale"] i::after { transform: scaleX(1); }
 
 .rail {
   position: absolute;
