@@ -8,6 +8,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { JSDOM } from "jsdom";
 
 import * as storyAssets from "./storyAssets";
+import {
+  STORY_COPY_CUES,
+  STORY_SCENES,
+  getStoryProgressAnnouncement,
+  nextStoryProgressAnnouncement,
+} from "./storyNarrative";
 import * as storyTimeline from "./storyTimeline";
 
 function installCssModuleHook() {
@@ -160,31 +166,30 @@ function installDomEnvironment(
   };
 }
 
-test("fallback panel contract selects six final registry illustrations and chapter copy in order", () => {
+test("fallback panel contract selects seven scene illustrations in order", () => {
   const panels = (storyAssets as unknown as {
     STORY_FALLBACK_PANELS?: readonly {
       assetId: keyof typeof storyAssets.STORY_ASSETS;
-      chapterId: string;
-      shotId: string;
+      sceneId: string;
     }[];
   }).STORY_FALLBACK_PANELS;
 
   assert.ok(panels, "storyAssets must export the fallback panel contract");
   assert.deepEqual(
-    panels.map(({ assetId, chapterId, shotId }) => ({ assetId, chapterId, shotId })),
+    panels.map(({ assetId, sceneId }) => ({ assetId, sceneId })),
     [
-      { assetId: "openingBackground", chapterId: "beginning", shotId: "island-opens" },
-      { assetId: "officeBackground", chapterId: "coworkers", shotId: "paper-to-tower" },
-      { assetId: "laughPanel", chapterId: "laughter", shotId: "joke-panel" },
-      { assetId: "proposalTriptych", chapterId: "journey", shotId: "postcards-open" },
-      { assetId: "venueExterior", chapterId: "destination", shotId: "venue-approach" },
-      { assetId: "paperVeil", chapterId: "wedding", shotId: "invitation-rises" },
+      { assetId: "openingBackground", sceneId: "jeju-opening" },
+      { assetId: "sidecarRoad", sceneId: "same-direction" },
+      { assetId: "officeBackground", sceneId: "office-coworkers" },
+      { assetId: "laughPanel", sceneId: "joke-and-laughter" },
+      { assetId: "proposalTriptych", sceneId: "lifelong-partners" },
+      { assetId: "venueExterior", sceneId: "seoul-venue" },
+      { assetId: "paperVeil", sceneId: "wedding-finale" },
     ],
   );
   for (const panel of panels) {
     assert.equal(storyAssets.STORY_ASSETS[panel.assetId].kind, "image");
-    assert.ok(storyTimeline.CHAPTERS.some(({ id }) => id === panel.chapterId));
-    assert.ok(storyTimeline.SHOTS.some(({ id }) => id === panel.shotId));
+    assert.ok(STORY_SCENES.some(({ id }) => id === panel.sceneId));
   }
 });
 
@@ -215,41 +220,28 @@ test("motion presentation keeps pending and reduced states non-sticky without a 
   assert.deepEqual(getPresentation!("full"), { showStage: true, runTimeline: true });
 });
 
-test("progress announcements change at shot boundaries, not within animation frames", () => {
-  const getAnnouncement = (storyTimeline as unknown as {
-    getStoryProgressAnnouncement?: (progress: number) => { shotId: string; value: number; text: string };
-  }).getStoryProgressAnnouncement;
-
-  assert.equal(typeof getAnnouncement, "function");
-  const withinFirstShot = [0, 0.01, 0.049].map((progress) => getAnnouncement!(progress));
-  assert.deepEqual(withinFirstShot, [withinFirstShot[0], withinFirstShot[0], withinFirstShot[0]]);
-  assert.deepEqual(getAnnouncement!(0.05), {
-    shotId: "sidecar-arrives",
+test("progress announcements change at scene boundaries, not within animation frames", () => {
+  const withinFirstScene = [0, 0.01, 0.079].map((progress) => getStoryProgressAnnouncement(progress));
+  assert.deepEqual(withinFirstScene, [withinFirstScene[0], withinFirstScene[0], withinFirstScene[0]]);
+  assert.deepEqual(getStoryProgressAnnouncement(0.08), {
+    sceneId: "same-direction",
     value: 2,
-    text: "2/16. 제주에서 시작된 우리의 여행",
+    text: "2/7. 사이드카 오토바이를 타고 같은 방향을 바라보는 두 사람",
   });
-  assert.deepEqual(getAnnouncement!(1), {
-    shotId: "invitation-rises",
-    value: 16,
-    text: "16/16. 우리 결혼합니다!!",
+  assert.deepEqual(getStoryProgressAnnouncement(1), {
+    sceneId: "wedding-finale",
+    value: 7,
+    text: "7/7. 예찬 ♥ 주은, 소중한 분들과 함께 우리 결혼합니다!!",
   });
 });
 
-test("announcement throttling returns work only when the active shot changes", () => {
-  const nextAnnouncement = (storyTimeline as unknown as {
-    nextStoryProgressAnnouncement?: (
-      previousShotId: string,
-      progress: number,
-    ) => ReturnType<typeof storyTimeline.getStoryProgressAnnouncement> | null;
-  }).nextStoryProgressAnnouncement;
-
-  assert.equal(typeof nextAnnouncement, "function");
-  assert.equal(nextAnnouncement!("island-opens", 0.01), null);
-  assert.equal(nextAnnouncement!("island-opens", 0.049), null);
-  assert.deepEqual(nextAnnouncement!("island-opens", 0.05), {
-    shotId: "sidecar-arrives",
+test("announcement throttling returns work only when the active scene changes", () => {
+  assert.equal(nextStoryProgressAnnouncement("jeju-opening", 0.01), null);
+  assert.equal(nextStoryProgressAnnouncement("jeju-opening", 0.079), null);
+  assert.deepEqual(nextStoryProgressAnnouncement("jeju-opening", 0.08), {
+    sceneId: "same-direction",
     value: 2,
-    text: "2/16. 제주에서 시작된 우리의 여행",
+    text: "2/7. 사이드카 오토바이를 타고 같은 방향을 바라보는 두 사람",
   });
 });
 
@@ -274,9 +266,9 @@ test("the visible opening fallback loads eagerly without issuing a duplicate pre
   const dom = new JSDOM(html);
   const images = [...dom.window.document.querySelectorAll("img")];
 
-  assert.equal(images.length, 6);
+  assert.equal(images.length, 7);
   assert.equal(images[0]?.getAttribute("loading"), "eager");
-  assert.deepEqual(images.slice(1).map((image) => image.getAttribute("loading")), Array(5).fill("lazy"));
+  assert.deepEqual(images.slice(1).map((image) => image.getAttribute("loading")), Array(6).fill("lazy"));
   assert.doesNotMatch(html, /rel="preload"[^>]+as="image"/);
 });
 
@@ -307,8 +299,38 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
   assert.equal(dom.window.getComputedStyle(stage!).display, "none");
   assert.equal(dom.window.getComputedStyle(fallback!).display, "grid");
   assert.equal(dom.window.getComputedStyle(story).overflowAnchor, "none");
-  assert.equal(fallback?.querySelectorAll(":scope > article").length, 6);
-  assert.equal(story.querySelector("ol[aria-label='결혼 이야기 전체 대본']")?.children.length, 16);
+  assert.equal(fallback?.querySelectorAll(":scope > article").length, 7);
+  const transcript = story.querySelector("ol[aria-label='결혼 이야기 전체 대본']");
+  assert.equal(transcript?.children.length, 7);
+  assert.deepEqual(
+    [...(transcript?.children ?? [])].map((item) => item.textContent),
+    [
+      "예찬과 주은의 결혼 이야기",
+      "사이드카 오토바이를 타고 같은 방향을 바라보는 두 사람",
+      "처음엔 회사 동기였던 두 사람",
+      "예찬의 재미난 농담에 주은은 배꼽이 빠질 뻔했던 적이 한두 번이 아니었습니다.",
+      "그렇게 평생 웃겨주고 웃어주는 짝꿍이 되기로 했습니다.",
+      "2026.12.19 오후 12시 30분,\n잠실 아펠가모에서요!",
+      "예찬 ♥ 주은, 소중한 분들과 함께 우리 결혼합니다!!",
+    ],
+  );
+  const copyCards = [...story.querySelectorAll<HTMLElement>("[data-story-copy]")];
+  assert.equal(copyCards.length, 7);
+  assert.deepEqual(copyCards.map((card) => card.dataset.storyCopy), STORY_COPY_CUES.map(({ id }) => id));
+  assert.deepEqual(
+    copyCards.map((card) => card.textContent),
+    [
+      "예찬과 주은의 결혼 이야기",
+      "처음엔 회사 동기였던 두 사람",
+      "예찬의 재미난 농담에 주은은 배꼽이 빠질 뻔했던 적이 한두 번이 아니었습니다.",
+      "그렇게 평생 웃겨주고 웃어주는",
+      "짝꿍이 되기로 했습니다.",
+      "2026.12.19 오후 12시 30분,\n잠실 아펠가모에서요!",
+      "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
+    ],
+  );
+  assert.doesNotMatch(story.innerHTML, /짝꿍이 되기도 했습니다\./);
+  assert.equal(story.querySelector("[role='progressbar']")?.getAttribute("aria-valuemax"), "7");
   dom.window.close();
 });
 
@@ -327,7 +349,7 @@ test("WeddingStory reduced-motion mount allocates no sticky timeline runtime", a
   const story = environment.container.querySelector("section");
   assert.equal(story?.getAttribute("data-motion"), "reduce");
   assert.equal(story?.querySelector(".stageShell")?.getAttribute("aria-hidden"), "true");
-  assert.equal(story?.querySelectorAll(".motionFallback > article").length, 6);
+  assert.equal(story?.querySelectorAll(".motionFallback > article").length, 7);
   assert.deepEqual(environment.counters, {
     animationFrames: 0,
     intersectionObservers: 0,

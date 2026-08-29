@@ -1,6 +1,5 @@
-import { wedding } from "@/config/wedding";
-import { formatCeremonyDateShort, formatCeremonyTime } from "@/lib/date";
 import { STORY_LAYER_DEFINITIONS } from "./storyAssets";
+import { STORY_SCENES } from "./storyNarrative";
 import {
   sampleClipTrack,
   sampleNumberTrack,
@@ -50,25 +49,6 @@ export type LayerState = {
   originX: number;
   originY: number;
   clip: Clip;
-};
-
-export type StoryChapter = {
-  id: string;
-  title: string;
-  start: number;
-  end: number;
-};
-
-export type StoryShot = {
-  id: string;
-  chapterId: string;
-  start: number;
-  end: number;
-  copyStart: number;
-  copyEnd: number;
-  eyebrow?: string;
-  copy: string;
-  layerIds: readonly string[];
 };
 
 export type StoryMotionMode = "pending" | "full" | "reduce";
@@ -151,54 +131,6 @@ function toLogicalTrack({
     clip: clipFrames,
     techniques,
   };
-}
-
-export const CHAPTERS: readonly StoryChapter[] = [
-  { id: "beginning", title: "같은 방향을 바라보기 시작한 날", start: 0, end: 0.15 },
-  { id: "coworkers", title: "처음엔 그냥 회사 동료", start: 0.15, end: 0.33 },
-  { id: "laughter", title: "웃음을 참는 데 실패했습니다", start: 0.33, end: 0.52 },
-  { id: "journey", title: "우리의 길은 이어졌습니다", start: 0.52, end: 0.7 },
-  { id: "destination", title: "우리가 향한 곳", start: 0.7, end: 0.86 },
-  { id: "wedding", title: "우리 결혼합니다", start: 0.86, end: 1 },
-] as const;
-
-export const SHOTS: readonly StoryShot[] = [
-  { id: "island-opens", chapterId: "beginning", start: 0, end: 0.05, copyStart: 0, copyEnd: 0.018, eyebrow: "예찬과 주은의", copy: "결혼 이야기", layerIds: ["bg-jeju", "opening-island", "title-shards"] },
-  { id: "sidecar-arrives", chapterId: "beginning", start: 0.05, end: 0.1, copyStart: 0.054, copyEnd: 0.094, copy: "제주에서 시작된 우리의 여행", layerIds: ["opening-field", "sidecar", "wheel-front", "wheel-back"] },
-  { id: "same-direction", chapterId: "beginning", start: 0.1, end: 0.15, copyStart: 0.104, copyEnd: 0.144, copy: "서로를 보던 두 사람은 같은 방향을 바라봤습니다.", layerIds: ["sidecar", "name-labels", "opening-clouds"] },
-  { id: "paper-to-tower", chapterId: "coworkers", start: 0.15, end: 0.21, copyStart: 0.155, copyEnd: 0.205, eyebrow: "을지로 SK T타워", copy: "그런데 처음엔—", layerIds: ["paper-tear", "tower-card", "bg-office"] },
-  { id: "through-window", chapterId: "coworkers", start: 0.21, end: 0.27, copyStart: 0.215, copyEnd: 0.265, copy: "그냥 회사 동료였습니다.", layerIds: ["tower-card", "tower-wall-left", "tower-wall-right", "office-yechan", "office-jueun"] },
-  { id: "awkward-desk", chapterId: "coworkers", start: 0.27, end: 0.33, copyStart: 0.275, copyEnd: 0.325, copy: "아주 조금… 어색한 동료였죠.", layerIds: ["office-yechan", "office-jueun", "office-props"] },
-  { id: "joke-panel", chapterId: "laughter", start: 0.33, end: 0.39, copyStart: 0.335, copyEnd: 0.385, copy: "그러다 예찬이 한마디를 건넸고—", layerIds: ["bg-laugh", "panel-left", "joke-yechan", "speech-bubble"] },
-  { id: "trying-not-to-laugh", chapterId: "laughter", start: 0.39, end: 0.455, copyStart: 0.395, copyEnd: 0.45, copy: "주은은 웃음을 참아보려 했지만", layerIds: ["panel-right", "jueun-expression", "speech-bubble"] },
-  { id: "laugh-together", chapterId: "laughter", start: 0.455, end: 0.52, copyStart: 0.46, copyEnd: 0.515, copy: "평생 웃겨주고 웃어주는 짝꿍이 되기로 했습니다.", layerIds: ["panel-left", "panel-right", "laugh-burst", "joke-yechan", "jueun-expression"] },
-  { id: "postcards-open", chapterId: "journey", start: 0.52, end: 0.58, copyStart: 0.525, copyEnd: 0.575, eyebrow: "함부르크 · 도쿄 · 그리고 서울", copy: "함부르크의 노을 아래", layerIds: ["bg-journey", "proposal-triptych"] },
-  { id: "route-connects", chapterId: "journey", start: 0.58, end: 0.64, copyStart: 0.585, copyEnd: 0.635, copy: "작은 상자 속 질문에 주은은 웃음으로 답했고", layerIds: ["proposal-triptych", "ring-glint"] },
-  { id: "jeju-expands", chapterId: "journey", start: 0.64, end: 0.7, copyStart: 0.645, copyEnd: 0.695, copy: "도쿄의 여름을 지나, 우리의 다음 장면으로", layerIds: ["proposal-triptych", "ring-glint", "venue-reveal"] },
-  { id: "venue-approach", chapterId: "destination", start: 0.7, end: 0.78, copyStart: 0.706, copyEnd: 0.774, copy: `${formatCeremonyDateShort().replaceAll(" ", "")} ${formatCeremonyTime()},`, layerIds: ["bg-venue", "venue-reveal", "venue-doors", "casual-couple"] },
-  { id: "outfit-matchcut", chapterId: "destination", start: 0.78, end: 0.86, copyStart: 0.786, copyEnd: 0.854, copy: `${wedding.venue.name}에서요!`, layerIds: ["venue-doors", "casual-couple", "matchcut-strip", "wedding-couple"] },
-  { id: "everyone-arrives", chapterId: "wedding", start: 0.86, end: 0.93, copyStart: 0.866, copyEnd: 0.924, eyebrow: "예찬 ♥ 주은", copy: "소중한 분들과 함께", layerIds: ["bg-finale", "wedding-couple", "crowd-left", "crowd-right", "confetti-back", "confetti", "confetti-front"] },
-  { id: "invitation-rises", chapterId: "wedding", start: 0.93, end: 1, copyStart: 0.936, copyEnd: 0.987, copy: "우리 결혼합니다!!", layerIds: ["final-title", "confetti-back", "confetti", "confetti-front", "invitation-paper"] },
-] as const;
-
-export function getStoryProgressAnnouncement(progress: number) {
-  const normalized = Math.min(1, Math.max(0, progress));
-  const index = SHOTS.findIndex(({ start, end }) => (
-    normalized >= start && (normalized < end || end === 1)
-  ));
-  const shotIndex = index < 0 ? SHOTS.length - 1 : index;
-  const shot = SHOTS[shotIndex]!;
-  const value = shotIndex + 1;
-  return {
-    shotId: shot.id,
-    value,
-    text: `${value}/${SHOTS.length}. ${shot.copy}`,
-  };
-}
-
-export function nextStoryProgressAnnouncement(previousShotId: string, progress: number) {
-  const announcement = getStoryProgressAnnouncement(progress);
-  return announcement.shotId === previousShotId ? null : announcement;
 }
 
 const SIDECAR_X_FRAMES = [
@@ -565,7 +497,6 @@ export function sampleLayerState(
 
 export function assertStoryTimeline() {
   const ids = new Set<string>();
-  const chapterIds = new Set(CHAPTERS.map(({ id }) => id));
   const trackIds = new Set(LAYER_TRACKS.map(({ id }) => id));
   const renderableLayerIds = new Set<string>(STORY_RENDERABLE_LAYER_IDS);
 
@@ -606,12 +537,12 @@ export function assertStoryTimeline() {
 
   buildStoryLayerTree(LAYER_TRACKS);
 
-  for (const shot of SHOTS) {
-    if (!chapterIds.has(shot.chapterId)) throw new Error(`${shot.id} has an unknown chapter`);
-    if (shot.start < 0 || shot.end > 1 || shot.start >= shot.end) throw new Error(`${shot.id} has invalid bounds`);
-    if (shot.copyStart < shot.start || shot.copyEnd > shot.end) throw new Error(`${shot.id} copy leaves its shot`);
-    for (const layerId of shot.layerIds) {
-      if (!trackIds.has(layerId)) throw new Error(`${shot.id} references unknown layer ${layerId}`);
+  for (let index = 0; index < STORY_SCENES.length; index += 1) {
+    const scene = STORY_SCENES[index]!;
+    if (scene.start < 0 || scene.end > 1 || scene.start >= scene.end) throw new Error(`${scene.id} has invalid bounds`);
+    if (index > 0 && STORY_SCENES[index - 1]!.end !== scene.start) throw new Error(`${scene.id} is not contiguous`);
+    for (const layerId of scene.layerIds) {
+      if (!trackIds.has(layerId)) throw new Error(`${scene.id} references unknown layer ${layerId}`);
     }
   }
 

@@ -1,12 +1,10 @@
 import { useEffect } from "react";
 import { progressBetween, storyProgress } from "./scrollMath";
 import { writeStoryProgress } from "./storyHistory";
+import { CHAPTERS, STORY_SCENES, nextStoryProgressAnnouncement } from "./storyNarrative";
 import { advanceDampedPlayhead, inlineClipPathForTrack, shouldSnapPlayhead } from "./timelineMath";
 import {
-  CHAPTERS,
   LAYER_TRACKS,
-  SHOTS,
-  nextStoryProgressAnnouncement,
   sampleLayerState,
 } from "./storyTimeline";
 
@@ -38,7 +36,7 @@ export function useStoryTimeline({ root, stage, enabled, persistenceSuspended }:
     let frame = 0;
     let lastTime = performance.now();
     let visible = true;
-    let lastShot = "";
+    let lastScene = "";
     let lastChapter = "";
 
     const measure = (persist = false) => {
@@ -110,15 +108,15 @@ export function useStoryTimeline({ root, stage, enabled, persistenceSuspended }:
         element.style.transform = `translate3d(-50%, ${(1 - opacity) * 18}px, 0) rotate(${(0.5 - opacity * 0.5).toFixed(2)}deg)`;
       }
 
-      const shot = SHOTS.find(({ start, end }) => progress >= start && (progress < end || end === 1));
+      const scene = STORY_SCENES.find(({ start, end }) => progress >= start && (progress < end || end === 1));
       const chapter = CHAPTERS.find(({ start, end }) => progress >= start && (progress < end || end === 1));
-      const announcement = nextStoryProgressAnnouncement(lastShot, progress);
-      if (shot && announcement) {
-        stageElement.dataset.shot = announcement.shotId;
+      const announcement = nextStoryProgressAnnouncement(lastScene, progress);
+      if (scene && announcement) {
+        stageElement.dataset.shot = announcement.sceneId;
         progressElement?.setAttribute("aria-valuenow", String(announcement.value));
         progressElement?.setAttribute("aria-valuetext", announcement.text);
         announcementElement?.replaceChildren(announcement.text);
-        lastShot = announcement.shotId;
+        lastScene = announcement.sceneId;
       }
       if (chapter && chapter.id !== lastChapter) {
         stageElement.dataset.chapter = chapter.id;

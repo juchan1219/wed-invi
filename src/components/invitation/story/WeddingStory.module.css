@@ -228,6 +228,7 @@
 .copyLine {
   display: inline-block;
   max-width: 378.4px;
+  white-space: pre-line;
   padding: 0.58em 0.72em;
   border: 0.16rem solid #17384c;
   background: rgba(255, 247, 223, 0.94);

@@ -241,16 +241,16 @@ export const STORY_ASSETS = {
 } satisfies Record<string, StoryImageAsset | StorySpriteAsset>;
 
 export const STORY_FALLBACK_PANELS = [
-  { assetId: "openingBackground", chapterId: "beginning", shotId: "island-opens" },
-  { assetId: "officeBackground", chapterId: "coworkers", shotId: "paper-to-tower" },
-  { assetId: "laughPanel", chapterId: "laughter", shotId: "joke-panel" },
-  { assetId: "proposalTriptych", chapterId: "journey", shotId: "postcards-open" },
-  { assetId: "venueExterior", chapterId: "destination", shotId: "venue-approach" },
-  { assetId: "paperVeil", chapterId: "wedding", shotId: "invitation-rises" },
+  { assetId: "openingBackground", sceneId: "jeju-opening" },
+  { assetId: "sidecarRoad", sceneId: "same-direction" },
+  { assetId: "officeBackground", sceneId: "office-coworkers" },
+  { assetId: "laughPanel", sceneId: "joke-and-laughter" },
+  { assetId: "proposalTriptych", sceneId: "lifelong-partners" },
+  { assetId: "venueExterior", sceneId: "seoul-venue" },
+  { assetId: "paperVeil", sceneId: "wedding-finale" },
 ] as const satisfies readonly {
   assetId: keyof typeof STORY_ASSETS;
-  chapterId: string;
-  shotId: string;
+  sceneId: string;
 }[];
 
 const PRELOADED_STORY_LAYER_IDS = new Set(["bg-jeju", "sidecar"]);

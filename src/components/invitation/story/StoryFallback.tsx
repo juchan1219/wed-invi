@@ -1,18 +1,17 @@
 import Image from "next/image";
 import { STORY_ASSETS, STORY_FALLBACK_PANELS } from "./storyAssets";
-import { CHAPTERS, SHOTS } from "./storyTimeline";
+import { STORY_SCENES } from "./storyNarrative";
 import styles from "./WeddingStory.module.css";
 
 export function StoryFallback() {
   return (
     <div className={styles.motionFallback}>
       {STORY_FALLBACK_PANELS.map((panel, index) => {
-        const chapter = CHAPTERS.find(({ id }) => id === panel.chapterId)!;
-        const shot = SHOTS.find(({ id }) => id === panel.shotId)!;
+        const scene = STORY_SCENES.find(({ id }) => id === panel.sceneId)!;
         const asset = STORY_ASSETS[panel.assetId];
         if (asset.kind !== "image") throw new Error(`${panel.assetId} is not a fallback image`);
         return (
-          <article key={chapter.id} className={styles.fallbackCard}>
+          <article key={scene.id} className={styles.fallbackCard}>
             <Image
               src={asset.src}
               alt=""
@@ -25,8 +24,8 @@ export function StoryFallback() {
             />
             <div className={styles.fallbackCopy}>
               <small>{String(index + 1).padStart(2, "0")}</small>
-              <h2>{chapter.title}</h2>
-              <p>{shot.copy}</p>
+              <h2>{scene.title}</h2>
+              <p>{scene.narration}</p>
             </div>
           </article>
         );

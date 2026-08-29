@@ -11,11 +11,10 @@ import {
 } from "./storyAssets";
 import * as storyAssets from "./storyAssets";
 import * as storyTimeline from "./storyTimeline";
+import { CHAPTERS, STORY_SCENES } from "./storyNarrative";
 import {
-  CHAPTERS,
   FULL_CLIP,
   LAYER_TRACKS,
-  SHOTS,
   STORY_TRANSITIONS,
   assertStoryTimeline,
   sampleLayerState,
@@ -362,27 +361,27 @@ test("layer state interpolates scale and transform origin axes independently", (
   });
 });
 
-test("the rebuild has six continuous chapters and sixteen ordered shots", () => {
-  assert.equal(CHAPTERS.length, 6);
+test("the rebuild has seven continuous public scenes", () => {
+  assert.equal(CHAPTERS.length, 7);
   assert.equal(CHAPTERS[0]?.start, 0);
   assert.equal(CHAPTERS.at(-1)?.end, 1);
   for (let index = 1; index < CHAPTERS.length; index += 1) {
     assert.equal(CHAPTERS[index - 1]?.end, CHAPTERS[index]?.start);
   }
 
-  assert.equal(SHOTS.length, 16);
-  assert.deepEqual([...new Set(SHOTS.map(({ id }) => id))], SHOTS.map(({ id }) => id));
-  for (let index = 1; index < SHOTS.length; index += 1) {
-    assert.ok(SHOTS[index - 1]!.end <= SHOTS[index]!.start);
+  assert.equal(STORY_SCENES.length, 7);
+  assert.deepEqual([...new Set(STORY_SCENES.map(({ id }) => id))], STORY_SCENES.map(({ id }) => id));
+  for (let index = 1; index < STORY_SCENES.length; index += 1) {
+    assert.ok(STORY_SCENES[index - 1]!.end <= STORY_SCENES[index]!.start);
   }
 });
 
-test("copy intervals never overlap and every shot owns visible story layers", () => {
-  for (let index = 0; index < SHOTS.length; index += 1) {
-    const shot = SHOTS[index]!;
-    assert.ok(shot.copyStart >= shot.start && shot.copyEnd <= shot.end);
-    assert.ok(shot.layerIds.length >= 2, `${shot.id} has too few layers`);
-    if (index > 0) assert.ok(SHOTS[index - 1]!.copyEnd <= shot.copyStart);
+test("public scenes own visible story layers and contain their copy cues", () => {
+  for (const scene of STORY_SCENES) {
+    assert.ok(scene.layerIds.length >= 2, `${scene.id} has too few layers`);
+    for (const cue of scene.copyCues) {
+      assert.ok(cue.start >= scene.start && cue.end <= scene.end, `${cue.id} leaves ${scene.id}`);
+    }
   }
 });
 
@@ -554,14 +553,9 @@ test("shots 1 through 9 land on the approved spatial anchors", () => {
   );
 });
 
-test("shots 10 through 12 pan one opaque 1290px proposal strip without panel crossfades", () => {
-  const proposalShots = SHOTS.slice(9, 12);
-  assert.deepEqual(proposalShots.map(({ id }) => id), [
-    "postcards-open",
-    "route-connects",
-    "jeju-expands",
-  ]);
-  assert.ok(proposalShots.every(({ layerIds }) => layerIds.includes("proposal-triptych")));
+test("lifelong partners scene pans one opaque 1290px proposal strip without panel crossfades", () => {
+  const proposalScene = STORY_SCENES.find(({ id }) => id === "lifelong-partners");
+  assert.ok(proposalScene?.layerIds.includes("proposal-triptych"));
 
   const proposalDefinition = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "proposal-triptych");
   assert.equal(proposalDefinition?.assetId, "proposalTriptych");
@@ -592,7 +586,7 @@ test("opaque opening scenery cannot cover the proposal strip during the tower zo
   assert.equal(openingComposite.coverage, "opaque-full");
   assert.equal(proposalComposite.coverage, "opaque-full");
   assert.ok(openingComposite.stack > proposalComposite.stack, "test fixture must model the actual foreground order");
-  assert.ok(!SHOTS[11]?.layerIds.includes("opening-field"), "Tokyo shot must not claim opaque opening scenery");
+  assert.ok(!STORY_SCENES[4]?.layerIds.includes("opening-field"), "proposal scene must not claim opaque opening scenery");
   for (const progress of [0.64, 0.65, 0.66, 0.68, 0.7]) {
     assert.equal(sampleLayerState(openingField, progress).opacity, 0, `opening field covers proposal at ${progress}`);
     assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `proposal missing at ${progress}`);
@@ -802,7 +796,7 @@ test("shots 10 through 16 keep a spatial connector at every boundary", () => {
 
 test("second-half boundary, reverse, and direct-jump samples are deterministic", () => {
   const samples = [
-    ...SHOTS.slice(10).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
+    ...STORY_SCENES.slice(4).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
     0.521,
     0.999,
   ];
@@ -832,7 +826,7 @@ test("second-half boundary, reverse, and direct-jump samples are deterministic",
 
 test("boundary samples, reverse calls, and large direct jumps are deterministic", () => {
   const samples = [
-    ...SHOTS.slice(1, 10).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
+    ...STORY_SCENES.slice(1, 5).flatMap(({ start }) => [start - 0.002, start, start + 0.002]),
     0.02,
     0.58,
   ];

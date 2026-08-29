@@ -7,12 +7,15 @@ import { STORY_CANVAS, STORY_CANVAS_LAYOUT } from "./storyAssets";
 import { readReloadStoryProgress } from "./storyHistory";
 import {
   CHAPTERS,
+  STORY_COPY_CUES,
+  STORY_SCENES,
+  getStoryProgressAnnouncement,
+} from "./storyNarrative";
+import {
   LAYER_TRACKS,
-  SHOTS,
   assertStoryTimeline,
   buildStoryLayerTree,
   getStoryMotionPresentation,
-  getStoryProgressAnnouncement,
   type StoryMotionMode,
   type StoryLayerNode,
 } from "./storyTimeline";
@@ -184,12 +187,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
       <a className={styles.skip} href={`#${contentTargetId}`}>이야기 건너뛰기</a>
 
       <ol className={styles.transcript} aria-label="결혼 이야기 전체 대본">
-        {SHOTS.map((shot) => (
-          <li key={shot.id}>
-            {shot.eyebrow && <span>{shot.eyebrow}. </span>}
-            {shot.copy}
-          </li>
-        ))}
+        {STORY_SCENES.map((scene) => <li key={scene.id}>{scene.narration}</li>)}
       </ol>
 
       <div ref={stageShellRef} className={styles.stageShell} aria-hidden={!presentation.showStage}>
@@ -198,8 +196,8 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
           className={styles.stage}
           style={storyCanvasLayoutStyle}
           data-story-canvas
-          data-shot="island-opens"
-          data-chapter="beginning"
+          data-shot={initialAnnouncement.sceneId}
+          data-chapter={CHAPTERS[0].id}
         >
           <div className={styles.canvasPlane}>
             <div className={styles.layers} aria-hidden="true">
@@ -207,19 +205,16 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
             </div>
 
             <div className={styles.storyCopy} aria-hidden="true">
-              {SHOTS.map((shot, index) => (
+              {STORY_COPY_CUES.map((copyCue, index) => (
                 <article
-                  key={shot.id}
+                  key={copyCue.id}
                   className={styles.copyCard}
-                  data-story-copy={shot.id}
-                  data-copy-start={shot.copyStart}
-                  data-copy-end={shot.copyEnd}
+                  data-story-copy={copyCue.id}
+                  data-copy-start={copyCue.start}
+                  data-copy-end={copyCue.end}
                   style={{ opacity: index === 0 ? 1 : 0, visibility: index === 0 ? "visible" : "hidden" }}
                 >
-                  {shot.eyebrow && <p className={styles.eyebrow}>{shot.eyebrow}</p>}
-                  {index === 0
-                    ? <h1>{shot.copy}</h1>
-                    : <p className={styles.copyLine}>{shot.copy}</p>}
+                  <p className={styles.copyLine}>{copyCue.copy}</p>
                 </article>
               ))}
             </div>
@@ -241,7 +236,7 @@ export function WeddingStory({ contentTargetId }: { contentTargetId: string }) {
               role="progressbar"
               aria-label="결혼 이야기 진행률"
               aria-valuemin={1}
-              aria-valuemax={SHOTS.length}
+              aria-valuemax={STORY_SCENES.length}
               aria-valuenow={initialAnnouncement.value}
               aria-valuetext={initialAnnouncement.text}
             ><span /></div>

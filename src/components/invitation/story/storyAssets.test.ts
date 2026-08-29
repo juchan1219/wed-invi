@@ -4,7 +4,24 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import sharp from "sharp";
 
-import { STORY_ASSETS } from "./storyAssets";
+import { STORY_ASSETS, STORY_FALLBACK_PANELS } from "./storyAssets";
+import { STORY_SCENES } from "./storyNarrative";
+
+test("fallback assets cover each approved story scene exactly once", () => {
+  assert.deepEqual(
+    STORY_FALLBACK_PANELS.map(({ sceneId }) => sceneId),
+    [
+      "jeju-opening",
+      "same-direction",
+      "office-coworkers",
+      "joke-and-laughter",
+      "lifelong-partners",
+      "seoul-venue",
+      "wedding-finale",
+    ],
+  );
+  assert.deepEqual(STORY_FALLBACK_PANELS.map(({ sceneId }) => sceneId), STORY_SCENES.map(({ id }) => id));
+});
 
 function expectedSprite(
   src: "/story/doodle-v2/characters-casual.webp" | "/story/doodle-v2/characters-wedding.webp",
