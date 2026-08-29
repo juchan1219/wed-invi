@@ -100,6 +100,26 @@ function numberFrames(
   return frames.map(({ at, ease, [field]: value }) => ({ at, value: value * factor, ease }));
 }
 
+const LEGACY_TO_SEVEN_SCENE = [
+  [0, 0], [0.05, 0.08], [0.15, 0.18], [0.33, 0.34],
+  [0.52, 0.5], [0.7, 0.72], [0.86, 0.84], [1, 1],
+] as const;
+
+export function retimeLegacyStoryProgress(at: number) {
+  const clamped = Math.min(1, Math.max(0, at));
+  const upper = LEGACY_TO_SEVEN_SCENE.findIndex(([legacy]) => legacy >= clamped);
+  if (upper <= 0) return 0;
+  const [fromLegacy, fromNext] = LEGACY_TO_SEVEN_SCENE[upper - 1];
+  const [toLegacy, toNext] = LEGACY_TO_SEVEN_SCENE[upper];
+  const local = (clamped - fromLegacy) / (toLegacy - fromLegacy);
+  return fromNext + (toNext - fromNext) * local;
+}
+
+const retimeNumberFrames = (frames?: readonly NumberFrame[]) =>
+  frames?.map((frame) => ({ ...frame, at: retimeLegacyStoryProgress(frame.at) }));
+const retimeClipFrames = (frames?: readonly ClipFrame[]) =>
+  frames?.map((frame) => ({ ...frame, at: retimeLegacyStoryProgress(frame.at) }));
+
 function toLogicalTrack({
   id,
   kind,
@@ -120,15 +140,15 @@ function toLogicalTrack({
     id,
     kind,
     parentId,
-    x: xFrames ?? numberFrames(frames, "x", LOGICAL_WIDTH / 100),
-    y: yFrames ?? numberFrames(frames, "y", LOGICAL_HEIGHT / 100),
-    scaleX: scaleXFrames ?? numberFrames(frames, "size"),
-    scaleY: scaleYFrames ?? numberFrames(frames, "size"),
-    rotate: rotateFrames ?? numberFrames(frames, "rotate"),
-    opacity: opacityFrames ?? numberFrames(frames, "opacity"),
-    originX: originXFrames,
-    originY: originYFrames,
-    clip: clipFrames,
+    x: retimeNumberFrames(xFrames ?? numberFrames(frames, "x", LOGICAL_WIDTH / 100)),
+    y: retimeNumberFrames(yFrames ?? numberFrames(frames, "y", LOGICAL_HEIGHT / 100)),
+    scaleX: retimeNumberFrames(scaleXFrames ?? numberFrames(frames, "size")),
+    scaleY: retimeNumberFrames(scaleYFrames ?? numberFrames(frames, "size")),
+    rotate: retimeNumberFrames(rotateFrames ?? numberFrames(frames, "rotate")),
+    opacity: retimeNumberFrames(opacityFrames ?? numberFrames(frames, "opacity")),
+    originX: retimeNumberFrames(originXFrames),
+    originY: retimeNumberFrames(originYFrames),
+    clip: retimeClipFrames(clipFrames),
     techniques,
   };
 }

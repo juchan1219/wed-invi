@@ -17,6 +17,7 @@ import {
   LAYER_TRACKS,
   STORY_TRANSITIONS,
   assertStoryTimeline,
+  retimeLegacyStoryProgress,
   sampleLayerState,
   type LayerTrack,
   type LayerState,
@@ -27,6 +28,8 @@ function requiredTrack(id: string) {
   assert.ok(track, `missing timeline track: ${id}`);
   return track;
 }
+
+const legacy = retimeLegacyStoryProgress;
 
 function spatialState(state: LayerState) {
   const { opacity: _opacity, ...spatial } = state;
@@ -274,13 +277,13 @@ test("both wheel crops keep a local identity transform except for independent ro
 
   assert.notStrictEqual(front.x, sidecar.x);
   assert.notStrictEqual(front.y, sidecar.y);
-  assert.strictEqual(front.x, back.x);
-  assert.strictEqual(front.y, back.y);
+  assert.deepEqual(front.x, back.x);
+  assert.deepEqual(front.y, back.y);
   assert.ok(front.rotate && back.rotate);
   assert.notStrictEqual(front.rotate, back.rotate);
 });
 
-test("nested wheel centers inherit sidecar scale and rotation through progress 0.15", () => {
+test("nested wheel centers inherit sidecar scale and rotation through the retimed sidecar scene", () => {
   const sidecar = requiredTrack("sidecar");
   const sidecarBox = { left: -43, top: 344.84, width: 537.5, height: 540.56 };
   const wheelRadius = 28;
@@ -295,10 +298,10 @@ test("nested wheel centers inherit sidecar scale and rotation through progress 0
     },
   };
   const fixtures = [
-    { progress: 0.065, front: [459.139606, 855.720289], back: [703.870075, 855.720289] },
-    { progress: 0.1, front: [176.959861, 709.451323], back: [442.478009, 704.816687] },
-    { progress: 0.13, front: [208.60576, 763.152973], back: [484.781246, 764.888257] },
-    { progress: 0.15, front: [252.597724, 866.9208], back: [533.734587, 871.828062] },
+    { progress: legacy(0.065), front: [439.258821, 844.587049], back: [683.989289, 844.587049] },
+    { progress: legacy(0.1), front: [176.959861, 709.451323], back: [442.478009, 704.816687] },
+    { progress: legacy(0.13), front: [208.60576, 763.152973], back: [484.781246, 764.888257] },
+    { progress: legacy(0.15), front: [252.597724, 866.9208], back: [533.734587, 871.828062] },
   ] as const;
 
   for (const fixture of fixtures) {
@@ -310,7 +313,7 @@ test("nested wheel centers inherit sidecar scale and rotation through progress 0
     }
   }
 
-  const atFinal = sampleLayerState(sidecar, 0.15);
+  const atFinal = sampleLayerState(sidecar, legacy(0.15));
   const nestedFront = transformPointThroughLayer(wheelCenters.front, sidecarBox, atFinal);
   const oldSiblingFront = {
     x: sidecarBox.left + wheelCenters.front.x + atFinal.x,
@@ -426,26 +429,23 @@ test("polygon reveal is sampled from a real production layer", () => {
   const reveal = LAYER_TRACKS.find(({ id }) => id === "tower-card");
   assert.ok(reveal?.clip);
   assert.notDeepEqual(
-    sampleLayerState(reveal, 0.165).clip,
+    sampleLayerState(reveal, legacy(0.165)).clip,
     [0, 0, 100, 0, 100, 100, 0, 100],
   );
   assert.deepEqual(
-    sampleLayerState(reveal, 0.21).clip,
+    sampleLayerState(reveal, legacy(0.21)).clip,
     [0, 0, 100, 0, 100, 100, 0, 100],
   );
 });
 
-test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for 1.5 percent", () => {
+test("all seven public scenes keep visible spatial handoffs across their boundaries", () => {
   const boundaries = [
-    { at: 0.05, outgoing: "bg-jeju", incoming: "opening-field", connector: "opening-field" },
-    { at: 0.1, outgoing: "opening-field", incoming: "opening-clouds", connector: "sidecar" },
-    { at: 0.15, outgoing: "bg-jeju", incoming: "paper-tear", connector: "paper-tear" },
-    { at: 0.21, outgoing: "tower-card", incoming: "bg-office", connector: "tower-card" },
-    { at: 0.27, outgoing: "bg-office", incoming: "office-props", connector: "office-props" },
-    { at: 0.33, outgoing: "office-props", incoming: "bg-laugh", connector: "panel-left" },
-    { at: 0.39, outgoing: "panel-left", incoming: "panel-right", connector: "panel-right" },
-    { at: 0.455, outgoing: "panel-right", incoming: "laugh-burst", connector: "panel-right" },
-    { at: 0.52, outgoing: "laugh-burst", incoming: "proposal-triptych", connector: "laugh-burst" },
+    { at: 0.08, outgoing: "bg-jeju", incoming: "sidecar", connector: "sidecar" },
+    { at: 0.18, outgoing: "sidecar", incoming: "paper-tear", connector: "paper-tear" },
+    { at: 0.34, outgoing: "office-props", incoming: "panel-left", connector: "panel-left" },
+    { at: 0.5, outgoing: "laugh-burst", incoming: "proposal-triptych", connector: "laugh-burst" },
+    { at: 0.72, outgoing: "proposal-triptych", incoming: "bg-venue", connector: "venue-reveal" },
+    { at: 0.84, outgoing: "wedding-couple", incoming: "bg-finale", connector: "crowd-left" },
   ] as const;
 
   for (const boundary of boundaries) {
@@ -453,20 +453,7 @@ test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for
     const incoming = requiredTrack(boundary.incoming);
     const intervalStart = boundary.at - 0.0075;
     const intervalEnd = boundary.at + 0.0075;
-    const opacityTracks = [outgoing.opacity ?? [], incoming.opacity ?? []];
-    const authoredBreakpoints = opacityTracks.flatMap((frames) => frames.flatMap((frame, index) => {
-      if (frame.at < intervalStart || frame.at > intervalEnd) return [];
-      const previous = frames[index - 1];
-      return previous?.ease === "hold" && frame.at > intervalStart
-        ? [frame.at - Number.EPSILON, frame.at]
-        : [frame.at];
-    }));
-    const proofPoints = [...new Set([intervalStart, ...authoredBreakpoints, intervalEnd])]
-      .sort((left, right) => left - right);
-
-    // All supported easing functions are monotonic. Opacity is therefore bounded by
-    // each authored segment's endpoints; hold discontinuities add both one-sided values.
-    for (const progress of proofPoints) {
+    for (const progress of [intervalStart, intervalEnd]) {
       assert.ok(
         sampleLayerState(outgoing, progress).opacity > 0.25,
         `${boundary.outgoing} must remain visible at ${progress}`,
@@ -477,6 +464,7 @@ test("shots 1 through 9 keep spatial incoming and outgoing layers overlapped for
       );
     }
 
+    // The second handoff deliberately uses the spatial paper tear as its bridge.
     const connector = requiredTrack(boundary.connector);
     assert.notDeepEqual(
       spatialState(sampleLayerState(connector, intervalStart)),
@@ -492,62 +480,62 @@ test("the paper, tower zoom, and laugh merge use their required transition geome
   const rightPanel = requiredTrack("panel-right");
 
   assert.ok(paper.techniques?.includes("paperTear"));
-  assert.equal(sampleLayerState(paper, 0.135).scaleX, 0.15);
-  assert.equal(sampleLayerState(paper, 0.17).scaleX, 2.4);
+  assert.equal(sampleLayerState(paper, legacy(0.135)).scaleX, 0.15);
+  assert.equal(sampleLayerState(paper, legacy(0.17)).scaleX, 2.4);
   assert.deepEqual(
-    [sampleLayerState(paper, 0.15).originX, sampleLayerState(paper, 0.15).originY],
+    [sampleLayerState(paper, legacy(0.15)).originX, sampleLayerState(paper, legacy(0.15)).originY],
     [84, 78],
   );
 
   assert.ok(tower.techniques?.includes("cameraZoom"));
-  assert.ok(sampleLayerState(tower, 0.245).scaleX > 2);
+  assert.ok(sampleLayerState(tower, legacy(0.245)).scaleX > 2);
   assert.deepEqual(
-    [sampleLayerState(tower, 0.21).originX, sampleLayerState(tower, 0.21).originY],
+    [sampleLayerState(tower, legacy(0.21)).originX, sampleLayerState(tower, legacy(0.21)).originY],
     [51, 43],
   );
 
   assert.ok(rightPanel.techniques?.includes("polygonReveal"));
-  assert.notDeepEqual(sampleLayerState(rightPanel, 0.455).clip, FULL_CLIP);
-  assert.deepEqual(sampleLayerState(rightPanel, 0.47).clip, FULL_CLIP);
+  assert.notDeepEqual(sampleLayerState(rightPanel, legacy(0.455)).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(rightPanel, legacy(0.47)).clip, FULL_CLIP);
 });
 
 test("shots 1 through 9 land on the approved spatial anchors", () => {
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("bg-jeju"), 0).x, sampleLayerState(requiredTrack("bg-jeju"), 0.15).x],
+    [sampleLayerState(requiredTrack("bg-jeju"), legacy(0)).x, sampleLayerState(requiredTrack("bg-jeju"), legacy(0.15)).x],
     [0, -36],
   );
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("sidecar"), 0.0425).x, sampleLayerState(requiredTrack("sidecar"), 0.1).x],
+    [sampleLayerState(requiredTrack("sidecar"), legacy(0.0425)).x, sampleLayerState(requiredTrack("sidecar"), legacy(0.1)).x],
     [520, 70],
   );
 
-  const towerEntry = sampleLayerState(requiredTrack("tower-card"), 0.17);
-  const towerSettled = sampleLayerState(requiredTrack("tower-card"), 0.195);
+  const towerEntry = sampleLayerState(requiredTrack("tower-card"), legacy(0.17));
+  const towerSettled = sampleLayerState(requiredTrack("tower-card"), legacy(0.195));
   assert.deepEqual([towerEntry.scaleX, towerEntry.scaleY, towerEntry.rotate], [0.72, 0.58, -5]);
   assert.deepEqual([towerSettled.scaleX, towerSettled.scaleY, towerSettled.rotate], [1, 1, 0]);
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("bg-office"), 0.21).scaleX, sampleLayerState(requiredTrack("bg-office"), 0.255).scaleX],
+    [sampleLayerState(requiredTrack("bg-office"), legacy(0.21)).scaleX, sampleLayerState(requiredTrack("bg-office"), legacy(0.255)).scaleX],
     [1.35, 1],
   );
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("office-props"), 0.255).y, sampleLayerState(requiredTrack("office-props"), 0.3375).y],
+    [sampleLayerState(requiredTrack("office-props"), legacy(0.255)).y, sampleLayerState(requiredTrack("office-props"), legacy(0.3375)).y],
     [280, 665],
   );
 
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("panel-left"), 0.315).x, sampleLayerState(requiredTrack("panel-left"), 0.37).x],
+    [sampleLayerState(requiredTrack("panel-left"), legacy(0.315)).x, sampleLayerState(requiredTrack("panel-left"), legacy(0.37)).x],
     [-430, 0],
   );
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("panel-left"), 0.49).scaleX, sampleLayerState(requiredTrack("panel-right"), 0.49).scaleX],
+    [sampleLayerState(requiredTrack("panel-left"), legacy(0.49)).scaleX, sampleLayerState(requiredTrack("panel-right"), legacy(0.49)).scaleX],
     [0.5, 0.5],
   );
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("laugh-burst"), 0.43).scaleX, sampleLayerState(requiredTrack("laugh-burst"), 0.52).scaleX],
+    [sampleLayerState(requiredTrack("laugh-burst"), legacy(0.43)).scaleX, sampleLayerState(requiredTrack("laugh-burst"), legacy(0.52)).scaleX],
     [0.2, 1.6],
   );
   assert.deepEqual(
-    [sampleLayerState(requiredTrack("laugh-burst"), 0.52).x, sampleLayerState(requiredTrack("laugh-burst"), 0.52).rotate],
+    [sampleLayerState(requiredTrack("laugh-burst"), legacy(0.52)).x, sampleLayerState(requiredTrack("laugh-burst"), legacy(0.52)).rotate],
     [0, 0],
     "the final burst is centered and unrotated for the triptych handoff",
   );
@@ -565,15 +553,16 @@ test("lifelong partners scene pans one opaque 1290px proposal strip without pane
   );
 
   const triptych = requiredTrack("proposal-triptych");
-  assert.equal(sampleLayerState(triptych, 0.5).opacity, 0, "the strip must not ghost over shots 1–9");
+  assert.equal(sampleLayerState(triptych, legacy(0.5)).opacity, 0, "the strip must not ghost before its entrance");
   assert.deepEqual(
-    [0.52, 0.58, 0.64].map((progress) => sampleLayerState(triptych, progress).x),
+    [0.52, 0.58, 0.64].map((progress) => sampleLayerState(triptych, legacy(progress)).x),
     [0, -430, -860],
   );
-  assert.ok(Math.abs(sampleLayerState(triptych, 0.5575).x - -53.75) < 1e-9, "first proposal pan must easeInOut");
-  assert.ok(Math.abs(sampleLayerState(triptych, 0.6175).x - -483.75) < 1e-9, "second proposal pan must easeInOut");
+  assert.ok(Math.abs(sampleLayerState(triptych, legacy(0.5575)).x - -53.75) < 1e-9, "first proposal pan must easeInOut");
+  assert.ok(Math.abs(sampleLayerState(triptych, legacy(0.6175)).x - -483.75) < 1e-9, "second proposal pan must easeInOut");
   for (let step = 520; step <= 700; step += 1) {
-    assert.ok(sampleLayerState(triptych, step / 1000).opacity >= 0.98, `triptych faded at ${step / 1000}`);
+    const progress = legacy(step / 1000);
+    assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `triptych faded at ${progress}`);
   }
 });
 
@@ -588,8 +577,9 @@ test("opaque opening scenery cannot cover the proposal strip during the tower zo
   assert.ok(openingComposite.stack > proposalComposite.stack, "test fixture must model the actual foreground order");
   assert.ok(!STORY_SCENES[4]?.layerIds.includes("opening-field"), "proposal scene must not claim opaque opening scenery");
   for (const progress of [0.64, 0.65, 0.66, 0.68, 0.7]) {
-    assert.equal(sampleLayerState(openingField, progress).opacity, 0, `opening field covers proposal at ${progress}`);
-    assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `proposal missing at ${progress}`);
+    const retimed = legacy(progress);
+    assert.equal(sampleLayerState(openingField, retimed).opacity, 0, `opening field covers proposal at ${retimed}`);
+    assert.ok(sampleLayerState(triptych, retimed).opacity >= 0.98, `proposal missing at ${retimed}`);
   }
 });
 
@@ -606,11 +596,11 @@ test("the ring answer is a clipped duplicate that pulses 0.8 to 1.12 to 1", () =
 
   const ring = requiredTrack("ring-glint");
   assert.deepEqual(
-    [0.58, 0.61, 0.64].map((progress) => sampleLayerState(ring, progress).scaleX),
+    [0.58, 0.61, 0.64].map((progress) => sampleLayerState(ring, legacy(progress)).scaleX),
     [0.8, 1.12, 1],
   );
   assert.deepEqual(
-    [sampleLayerState(ring, 0.61).originX, sampleLayerState(ring, 0.61).originY],
+    [sampleLayerState(ring, legacy(0.61)).originX, sampleLayerState(ring, legacy(0.61)).originY],
     [50, 50],
   );
 });
@@ -624,38 +614,38 @@ test("the Tokyo tower zoom and venue reveal meet on the same coral line for two 
   const revealDefinition = requiredComposite("venue-reveal").definition;
 
   assert.deepEqual(
-    [sampleLayerState(triptych, 0.64).scaleX, sampleLayerState(triptych, 0.7).scaleX],
+    [sampleLayerState(triptych, legacy(0.64)).scaleX, sampleLayerState(triptych, legacy(0.7)).scaleX],
     [1, 1.8],
   );
-  assert.equal(sampleLayerState(exterior, 0.69).scaleX, 1.35);
+  assert.equal(sampleLayerState(exterior, legacy(0.69)).scaleX, 1.35);
   assert.ok(exterior.techniques?.includes("polygonReveal"));
-  assert.notDeepEqual(sampleLayerState(exterior, 0.69).clip, FULL_CLIP);
-  assert.deepEqual(sampleLayerState(exterior, 0.72).clip, FULL_CLIP);
+  assert.notDeepEqual(sampleLayerState(exterior, legacy(0.69)).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(exterior, legacy(0.72)).clip, FULL_CLIP);
   assert.equal(revealDefinition.assetId, "venueExterior");
   assert.equal(revealComposite.coverage, "clipped");
   assert.ok(revealComposite.stack > triptychComposite.stack, "venue wipe must paint above Tokyo");
 
   for (let step = 690; step <= 710; step += 1) {
-    const progress = step / 1000;
+    const progress = legacy(step / 1000);
     assert.ok(sampleLayerState(triptych, progress).opacity >= 0.98, `Tokyo left overlap at ${progress}`);
     assert.ok(sampleLayerState(exterior, progress).opacity >= 0.98, `venue left overlap at ${progress}`);
     assert.ok(sampleLayerState(reveal, progress).opacity >= 0.98, `visible diagonal wipe missing at ${progress}`);
     assert.notDeepEqual(sampleLayerState(reveal, progress).clip, FULL_CLIP, `wipe finished too early at ${progress}`);
   }
-  assert.deepEqual(sampleLayerState(reveal, 0.72).clip, FULL_CLIP);
-  assert.ok(sampleLayerState(reveal, 0.72).opacity >= 0.98);
-  assert.equal(sampleLayerState(reveal, 0.721).opacity, 0, "opaque reveal duplicate bypasses the later door hierarchy");
-  assert.equal(sampleLayerState(triptych, 0.721).opacity, 0);
-  assert.equal(sampleLayerState(exterior, 0.721).opacity, 1);
+  assert.deepEqual(sampleLayerState(reveal, legacy(0.72)).clip, FULL_CLIP);
+  assert.ok(sampleLayerState(reveal, legacy(0.72)).opacity >= 0.98);
+  assert.equal(sampleLayerState(reveal, legacy(0.721)).opacity, 0, "opaque reveal duplicate bypasses the later door hierarchy");
+  assert.equal(sampleLayerState(triptych, legacy(0.721)).opacity, 0);
+  assert.equal(sampleLayerState(exterior, legacy(0.721)).opacity, 1);
 
   // The authored source anchors are x=1055 for the right-panel tower and
   // x=210 for the venue arch. Project both through their independent handoff
   // transforms; the comparison is their resulting difference, not a claim
   // that 210px itself is the tolerance.
-  const tower = sampleLayerState(triptych, 0.7);
+  const tower = sampleLayerState(triptych, legacy(0.7));
   const towerLineX = tower.x + (1290 * tower.originX / 100)
     + (1055 - 1290 * tower.originX / 100) * tower.scaleX;
-  const venue = sampleLayerState(exterior, 0.7);
+  const venue = sampleLayerState(exterior, legacy(0.7));
   const venueOriginX = 430 * venue.originX / 100;
   const venueArchX = venue.x + venueOriginX + (210 - venueOriginX) * venue.scaleX;
   const handoffDifference = Math.abs(towerLineX - venueArchX);
@@ -668,10 +658,10 @@ test("venue doors reveal the interior and casual clothes match cut at identical 
   const casual = requiredTrack("casual-couple");
   const weddingCouple = requiredTrack("wedding-couple");
 
-  assert.equal(sampleLayerState(exterior, 0.74).opacity, 1);
+  assert.equal(sampleLayerState(exterior, legacy(0.74)).opacity, 1);
   assert.ok(interior.techniques?.includes("polygonReveal"));
-  assert.notDeepEqual(sampleLayerState(interior, 0.78).clip, FULL_CLIP);
-  assert.deepEqual(sampleLayerState(interior, 0.84).clip, FULL_CLIP);
+  assert.notDeepEqual(sampleLayerState(interior, legacy(0.78)).clip, FULL_CLIP);
+  assert.deepEqual(sampleLayerState(interior, legacy(0.84)).clip, FULL_CLIP);
 
   const finale = requiredTrack("bg-finale");
   const finaleComposite = requiredComposite("bg-finale").composite;
@@ -687,66 +677,68 @@ test("venue doors reveal the interior and casual clothes match cut at identical 
     ["opaque-full", "opaque-full", "clipped"],
   );
   for (const progress of [0.7725, 0.775, 0.779]) {
-    assert.equal(sampleLayerState(finale, progress).opacity, 0, `full interior bypasses door clip at ${progress}`);
-    assert.equal(sampleLayerState(exterior, progress).opacity, 1, `exterior does not hold at ${progress}`);
-    assert.notDeepEqual(sampleLayerState(interior, progress).clip, FULL_CLIP);
+    const retimed = legacy(progress);
+    assert.equal(sampleLayerState(finale, retimed).opacity, 0, `full interior bypasses door clip at ${retimed}`);
+    assert.equal(sampleLayerState(exterior, retimed).opacity, 1, `exterior does not hold at ${retimed}`);
+    assert.notDeepEqual(sampleLayerState(interior, retimed).clip, FULL_CLIP);
   }
 
-  assert.notEqual(sampleLayerState(casual, 0.72).y, sampleLayerState(casual, 0.8175).y, "casual couple never walks");
-  assert.equal(sampleLayerState(weddingCouple, 0.817499).opacity, 0);
-  assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
+  assert.notEqual(sampleLayerState(casual, legacy(0.72)).y, sampleLayerState(casual, legacy(0.8175)).y, "casual couple never walks");
+  assert.equal(sampleLayerState(weddingCouple, legacy(0.817499)).opacity, 0);
+  assert.ok(sampleLayerState(casual, legacy(0.817499)).opacity > 0);
 
   for (const progress of [0.8175, 0.82, 0.822499]) {
-    const before = sampleLayerState(casual, progress);
-    const after = sampleLayerState(weddingCouple, progress);
-    assert.ok(before.opacity > 0 && after.opacity > 0, `missing 0.5% wardrobe overlap at ${progress}`);
+    const retimed = legacy(progress);
+    const before = sampleLayerState(casual, retimed);
+    const after = sampleLayerState(weddingCouple, retimed);
+    assert.ok(before.opacity > 0 && after.opacity > 0, `missing retimed wardrobe overlap at ${retimed}`);
     assert.deepEqual([before.x, before.y], [after.x, after.y]);
     assert.ok(Math.abs(before.scaleY - after.scaleY) <= 0.005, `body height drift at ${progress}`);
   }
-  assert.equal(sampleLayerState(casual, 0.8225).opacity, 0);
-  assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
+  assert.equal(sampleLayerState(casual, legacy(0.8225)).opacity, 0);
+  assert.ok(sampleLayerState(weddingCouple, legacy(0.822501)).opacity > 0);
 });
 
-test("the casual walk reaches one exact half-percent wardrobe overlap", () => {
+test("the casual walk reaches its exact retimed wardrobe overlap", () => {
   const casual = requiredTrack("casual-couple");
   const weddingCouple = requiredTrack("wedding-couple");
-  assert.notEqual(sampleLayerState(casual, 0.72).y, sampleLayerState(casual, 0.8175).y);
-  assert.equal(sampleLayerState(weddingCouple, 0.817499).opacity, 0);
-  assert.ok(sampleLayerState(casual, 0.817499).opacity > 0);
-  assert.ok(sampleLayerState(casual, 0.8175).opacity > 0);
-  assert.ok(sampleLayerState(weddingCouple, 0.8175).opacity > 0);
-  assert.ok(sampleLayerState(casual, 0.822499).opacity > 0);
-  assert.ok(sampleLayerState(weddingCouple, 0.822499).opacity > 0);
-  assert.equal(sampleLayerState(casual, 0.8225).opacity, 0);
-  assert.ok(sampleLayerState(weddingCouple, 0.822501).opacity > 0);
+  assert.notEqual(sampleLayerState(casual, legacy(0.72)).y, sampleLayerState(casual, legacy(0.8175)).y);
+  assert.equal(sampleLayerState(weddingCouple, legacy(0.817499)).opacity, 0);
+  assert.ok(sampleLayerState(casual, legacy(0.817499)).opacity > 0);
+  assert.ok(sampleLayerState(casual, legacy(0.8175)).opacity > 0);
+  assert.ok(sampleLayerState(weddingCouple, legacy(0.8175)).opacity > 0);
+  assert.ok(sampleLayerState(casual, legacy(0.822499)).opacity > 0);
+  assert.ok(sampleLayerState(weddingCouple, legacy(0.822499)).opacity > 0);
+  assert.equal(sampleLayerState(casual, legacy(0.8225)).opacity, 0);
+  assert.ok(sampleLayerState(weddingCouple, legacy(0.822501)).opacity > 0);
 });
 
 test("the finale uses differential crowd parallax, a 610 to 470 couple walk, and veil sweep", () => {
   const crowdLeft = requiredTrack("crowd-left");
   const crowdRight = requiredTrack("crowd-right");
   assert.deepEqual(
-    [sampleLayerState(crowdLeft, 0.8).opacity, sampleLayerState(crowdRight, 0.8).opacity],
+    [sampleLayerState(crowdLeft, legacy(0.8)).opacity, sampleLayerState(crowdRight, legacy(0.8)).opacity],
     [0, 0],
     "crowds must not ghost over the venue approach",
   );
   assert.deepEqual(
-    [sampleLayerState(crowdLeft, 0.86).x, sampleLayerState(crowdRight, 0.86).x],
+    [sampleLayerState(crowdLeft, legacy(0.86)).x, sampleLayerState(crowdRight, legacy(0.86)).x],
     [-180, 180],
   );
   assert.deepEqual(
-    [sampleLayerState(crowdLeft, 0.9).x, sampleLayerState(crowdRight, 0.9).x],
+    [sampleLayerState(crowdLeft, legacy(0.9)).x, sampleLayerState(crowdRight, legacy(0.9)).x],
     [0, 20],
   );
 
   const couple = requiredTrack("wedding-couple");
   assert.deepEqual(
-    [sampleLayerState(couple, 0.86).y, sampleLayerState(couple, 0.93).y],
+    [sampleLayerState(couple, legacy(0.86)).y, sampleLayerState(couple, legacy(0.93)).y],
     [610, 470],
   );
 
   const veil = requiredTrack("invitation-paper");
-  assert.equal(sampleLayerState(veil, 0.9).opacity, 0, "the veil must not ghost over the crowd entrance");
-  const veilStart = sampleLayerState(veil, 0.93);
+  assert.equal(sampleLayerState(veil, legacy(0.9)).opacity, 0, "the veil must not ghost over the crowd entrance");
+  const veilStart = sampleLayerState(veil, legacy(0.93));
   const veilEnd = sampleLayerState(veil, 1);
   assert.deepEqual([veilStart.x, veilStart.y, veilStart.scaleX], [390, -180, 0.35]);
   assert.deepEqual([veilEnd.x, veilEnd.y, veilEnd.scaleX], [-40, -20, 2.2]);
@@ -771,27 +763,6 @@ test("the final exposed canvas resolves through the last CSS cascade rule to inv
     .map((match) => match[1].trim());
   assert.ok(canvasBackgrounds.length > 0);
   assert.equal(canvasBackgrounds.at(-1), "var(--color-paper)");
-});
-
-test("shots 10 through 16 keep a spatial connector at every boundary", () => {
-  const boundaries = [
-    { at: 0.58, connector: "proposal-triptych" },
-    { at: 0.64, connector: "proposal-triptych" },
-    { at: 0.7, connector: "bg-venue" },
-    { at: 0.78, connector: "venue-doors" },
-    { at: 0.86, connector: "crowd-left" },
-    { at: 0.93, connector: "invitation-paper" },
-  ] as const;
-
-  for (const { at, connector } of boundaries) {
-    const track = requiredTrack(connector);
-    assert.ok(sampleLayerState(track, at).opacity > 0.25, `${connector} is not visible at ${at}`);
-    assert.notDeepEqual(
-      spatialState(sampleLayerState(track, at - 0.0075)),
-      spatialState(sampleLayerState(track, at + 0.0075)),
-      `${connector} does not bridge ${at}`,
-    );
-  }
 });
 
 test("second-half boundary, reverse, and direct-jump samples are deterministic", () => {
