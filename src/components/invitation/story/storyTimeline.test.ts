@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
+import sharp from "sharp";
 
 import {
   STORY_ASSETS,
@@ -108,6 +110,76 @@ function transformPointThroughLayer(
   };
 }
 
+type Bounds = { left: number; top: number; right: number; bottom: number };
+
+function boundsFromPoints(points: readonly { x: number; y: number }[]): Bounds {
+  return {
+    left: Math.min(...points.map(({ x }) => x)),
+    top: Math.min(...points.map(({ y }) => y)),
+    right: Math.max(...points.map(({ x }) => x)),
+    bottom: Math.max(...points.map(({ y }) => y)),
+  };
+}
+
+function boundsCorners(bounds: Bounds) {
+  return [
+    { x: bounds.left, y: bounds.top },
+    { x: bounds.right, y: bounds.top },
+    { x: bounds.right, y: bounds.bottom },
+    { x: bounds.left, y: bounds.bottom },
+  ] as const;
+}
+
+function transformBoundsThroughLayer(bounds: Bounds, box: { left: number; top: number; width: number; height: number }, state: LayerState) {
+  return boundsFromPoints(boundsCorners(bounds).map((point) => transformPointThroughLayer(point, box, state)));
+}
+
+function transformBoundsWithinBox(bounds: Bounds, box: Bounds, state: LayerState) {
+  const origin = {
+    x: box.left + (box.right - box.left) * state.originX / 100,
+    y: box.top + (box.bottom - box.top) * state.originY / 100,
+  };
+  const radians = state.rotate * Math.PI / 180;
+  return boundsFromPoints(boundsCorners(bounds).map((point) => {
+    const x = (point.x - origin.x) * state.scaleX;
+    const y = (point.y - origin.y) * state.scaleY;
+    return {
+      x: origin.x + state.x + x * Math.cos(radians) - y * Math.sin(radians),
+      y: origin.y + state.y + x * Math.sin(radians) + y * Math.cos(radians),
+    };
+  }));
+}
+
+async function opaqueBounds(
+  src: string,
+  region?: { left: number; top: number; width: number; height: number },
+) {
+  const { data, info } = await sharp(join(process.cwd(), "public", src.slice(1)))
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const left = region?.left ?? 0;
+  const top = region?.top ?? 0;
+  const width = region?.width ?? info.width;
+  const height = region?.height ?? info.height;
+  let minX = left;
+  let minY = top;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = top; y < top + height; y += 1) {
+    for (let x = left; x < left + width; x += 1) {
+      if (data[(y * info.width + x) * info.channels + 3] === 0) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + 1);
+      maxY = Math.max(maxY, y + 1);
+    }
+  }
+  assert.ok(maxX >= minX && maxY >= minY, `${src} has no opaque pixels in the rendered region`);
+  return { left: minX, top: minY, right: maxX, bottom: maxY };
+}
+
 test("the contained story canvas keeps the 430 by 932 logical layer contract", () => {
   assert.deepEqual(STORY_CANVAS, { width: 430, height: 932 });
 
@@ -200,6 +272,98 @@ test("scene 2 keeps the two-rider sidecar visible above the opaque road at its m
     "the renderer must paint the sidecar composition above the opaque road",
   );
   assert.equal(compositedVisibleOpacity("sidecar", sceneTwoMidpoint), 1);
+});
+
+test("scene 2 keeps the complete sidecar composition inside the logical canvas at its midpoint", async () => {
+  const progress = 0.13;
+  const sidecar = requiredTrack("sidecar");
+  const sidecarDefinition = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "sidecar");
+  const sidecarBox = {
+    left: -STORY_CANVAS.width * 0.1,
+    top: STORY_CANVAS.height * 0.37,
+    width: STORY_CANVAS.width * 1.25,
+    height: STORY_CANVAS.height * 0.58,
+  };
+  const sidecarState = sampleLayerState(sidecar, progress);
+  const vehicleAsset = STORY_ASSETS.sidecar;
+  const vehicleAlpha = await opaqueBounds(vehicleAsset.src);
+  const vehicleScale = Math.min(sidecarBox.width / vehicleAsset.width, sidecarBox.height / vehicleAsset.height);
+  const vehicleLocalBounds = {
+    left: (sidecarBox.width - vehicleAsset.width * vehicleScale) / 2 + vehicleAlpha.left * vehicleScale,
+    top: (sidecarBox.height - vehicleAsset.height * vehicleScale) / 2 + vehicleAlpha.top * vehicleScale,
+    right: (sidecarBox.width - vehicleAsset.width * vehicleScale) / 2 + vehicleAlpha.right * vehicleScale,
+    bottom: (sidecarBox.height - vehicleAsset.height * vehicleScale) / 2 + vehicleAlpha.bottom * vehicleScale,
+  };
+
+  const riderBounds = await Promise.all(([
+    "casualYechanDriving",
+    "casualJueunSidecarPassenger",
+  ] as const).map(async (assetId): Promise<readonly [string, Bounds]> => {
+    const asset = STORY_ASSETS[assetId];
+    assert.equal(asset.kind, "sprite");
+    const part = sidecarDefinition?.parts?.find((candidate) => candidate.assetId === assetId);
+    assert.ok(part, `${assetId} is missing from the sidecar composition`);
+    const crop = getStorySpriteCrop(asset);
+    const cellLeft = asset.cell.column * crop.intrinsicCellWidth;
+    const cellTop = asset.cell.row * crop.intrinsicCellHeight;
+    const alpha = await opaqueBounds(asset.src, {
+      left: cellLeft,
+      top: cellTop,
+      width: crop.intrinsicCellWidth,
+      height: crop.intrinsicCellHeight,
+    });
+    const scale = crop.viewportWidth / crop.intrinsicCellWidth;
+    return [assetId, {
+      left: sidecarBox.width / 2 + part.x - crop.viewportWidth / 2 + (alpha.left - cellLeft) * scale,
+      top: sidecarBox.height / 2 + part.y - crop.viewportHeight / 2 + (alpha.top - cellTop) * scale,
+      right: sidecarBox.width / 2 + part.x - crop.viewportWidth / 2 + (alpha.right - cellLeft) * scale,
+      bottom: sidecarBox.height / 2 + part.y - crop.viewportHeight / 2 + (alpha.bottom - cellTop) * scale,
+    }];
+  }));
+
+  const wheelBounds = await Promise.all((["wheel-front", "wheel-back"] as const).map(async (id): Promise<readonly [string, Bounds]> => {
+    const definition = STORY_LAYER_DEFINITIONS.find((candidate) => candidate.id === id);
+    assert.ok(definition?.crop, `${id} needs its renderer crop`);
+    const alpha = await opaqueBounds(vehicleAsset.src, {
+      left: definition.crop.x,
+      top: definition.crop.y,
+      width: definition.crop.width,
+      height: definition.crop.height,
+    });
+    const crop = getStoryImageCrop(vehicleAsset, definition.crop);
+    const scaleX = crop.sourceWidth / vehicleAsset.width;
+    const scaleY = crop.sourceHeight / vehicleAsset.height;
+    const position = id === "wheel-front"
+      ? storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelFront
+      : storyAssets.STORY_CANVAS_LAYOUT.sidecar.wheelBack;
+    const wheelLocalBounds = {
+      left: position.left + alpha.left * scaleX + crop.translateX,
+      top: position.top + alpha.top * scaleY + crop.translateY,
+      right: position.left + alpha.right * scaleX + crop.translateX,
+      bottom: position.top + alpha.bottom * scaleY + crop.translateY,
+    };
+    const wheelViewport = {
+      left: position.left,
+      top: position.top,
+      right: position.left + crop.viewportWidth,
+      bottom: position.top + crop.viewportHeight,
+    };
+    const rotated = transformBoundsWithinBox(wheelLocalBounds, wheelViewport, sampleLayerState(requiredTrack(id), progress));
+    return [id, rotated];
+  }));
+
+  const compositionBounds = new Map<string, Bounds>([
+    ["sidecar", vehicleLocalBounds] as const,
+    ...riderBounds,
+    ...wheelBounds,
+  ].map(([id, bounds]) => [id, transformBoundsThroughLayer(bounds, sidecarBox, sidecarState)]));
+
+  for (const [id, bounds] of compositionBounds) {
+    assert.ok(bounds.left >= 0, `${id} left edge ${bounds.left} leaves the canvas`);
+    assert.ok(bounds.top >= 0, `${id} top edge ${bounds.top} leaves the canvas`);
+    assert.ok(bounds.right <= STORY_CANVAS.width, `${id} right edge ${bounds.right} leaves the canvas`);
+    assert.ok(bounds.bottom <= STORY_CANVAS.height, `${id} bottom edge ${bounds.bottom} leaves the canvas`);
+  }
 });
 
 test("the laugh panel is revealed only by its polygon-clipped panel layer", () => {
@@ -343,9 +507,9 @@ test("nested wheel centers inherit sidecar scale and rotation through the retime
     },
   };
   const fixtures = [
-    { progress: legacy(0.065), front: [439.258821, 844.587049], back: [683.989289, 844.587049] },
-    { progress: legacy(0.1), front: [176.959861, 709.451323], back: [442.478009, 704.816687] },
-    { progress: legacy(0.13), front: [208.60576, 763.152973], back: [484.781246, 764.888257] },
+    { progress: legacy(0.065), front: [421.839466, 844.587049], back: [666.569934, 844.587049] },
+    { progress: legacy(0.1), front: [149.770563, 702.297945], back: [386.6544, 698.163122] },
+    { progress: legacy(0.13), front: [212.758359, 760.961834], back: [479.769651, 762.639537] },
     { progress: legacy(0.15), front: [252.597724, 866.9208], back: [533.734587, 871.828062] },
   ] as const;
 
@@ -555,7 +719,7 @@ test("shots 1 through 9 land on the approved spatial anchors", () => {
   );
   assert.deepEqual(
     [sampleLayerState(requiredTrack("sidecar"), legacy(0.0425)).x, sampleLayerState(requiredTrack("sidecar"), legacy(0.1)).x],
-    [520, 70],
+    [520, 30],
   );
 
   const towerEntry = sampleLayerState(requiredTrack("tower-card"), legacy(0.17));

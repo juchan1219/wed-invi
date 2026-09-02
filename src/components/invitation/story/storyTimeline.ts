@@ -156,7 +156,7 @@ function toLogicalTrack({
 const SIDECAR_X_FRAMES = [
   { at: 0, value: 520 },
   { at: 0.0425, value: 520 },
-  { at: 0.1, value: 70 },
+  { at: 0.1, value: 30 },
   { at: 0.13, value: 108 },
   { at: 0.15, value: 155 },
   { at: 0.165, value: 240 },
@@ -233,7 +233,7 @@ const SOURCE_LAYERS: readonly SourceLayer[] = [
   {
     id: "sidecar",
     kind: "character",
-    frames: [f(0, 0, 0, 32, 0.72), f(0.0425, 0.3, 0, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.1, 1, 0, 3, 1.02, -1), f(0.15, 1, 0, 20, 1.08, 1), f(0.165, 0, 0, 30, 1.16)],
+    frames: [f(0, 0, 0, 32, 0.72), f(0.0425, 0.3, 0, 30, 0.75), f(0.065, 1, 0, 8, 0.94), f(0.1, 1, 0, 3, 0.91, -1), f(0.15, 1, 0, 20, 1.08, 1), f(0.165, 0, 0, 30, 1.16)],
     xFrames: SIDECAR_X_FRAMES,
     yFrames: SIDECAR_Y_FRAMES,
   },
