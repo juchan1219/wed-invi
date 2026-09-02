@@ -80,7 +80,7 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
 - **연락처** — 신랑·신부·혼주 전화/문자 바로가기, 고인은 자동 제외
 - **영화적 스크롤 웨딩 스토리** — 레퍼런스의 71개 고유 자산·197개 트랙·538개 키프레임 구조를
   공개 번들과 브라우저에서 조사한 뒤, 기존 8개 합성 이미지의 줌·크로스페이드 방식을 전면 교체했다.
-  `storyTimeline.ts`에 6챕터·16숏·41개 분리 레이어·100개 이상 키프레임을 선언하고,
+  `storyTimeline.ts`에 7개 공개 장면·7개 transcript 항목·41개 분리 레이어·100개 이상 키프레임을 선언하고,
   `useStoryTimeline.ts`가 네이티브 스크롤을 감쇠 재생 헤드로 샘플링해 transform·opacity를 직접 갱신한다.
   종이 찢김, polygon reveal, 패널 확대, 카메라 이동, 의상 매치컷, 위/아래 역재생과 큰 점프 보정을 포함한다.
   스토리는 430×932 단일 논리 모바일 좌표를 px로 샘플링하고, 레이어별 독립 `scaleX`·`scaleY`와
@@ -92,14 +92,14 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   프로포즈 3단 장면은 좌/중/우 크롭을 사용한다.
   꽃가루는 서로 다른 속도와 크기의 전·중·후경으로 나누고, 타이틀 글자와 웃음 표정도 장면별 독립 상태로 구성했다. 함부르크 프로포즈, 반지, 도쿄타워 사진은 원본을
   공개 경로에 복사하지 않고 동일 화풍의 355KB WebP 장면을 만드는 참고로만 썼다. reduced-motion에서는
-  sticky를 제거하고 최종 레지스트리의 오프닝·오피스·웃음·프로포즈·예식장·피날레 원화 6장을 읽기 순서대로
+  sticky를 제거하고 최종 레지스트리의 오프닝·사이드카·오피스·웃음·프로포즈·예식장·피날레 원화 7장을 읽기 순서대로
   보여준다. 서버 HTML과 첫 client render는 모두 `data-motion="pending"`인 같은 비스티키 fallback이므로 hydration
   불일치나 빈 첫 프레임이 없고, layout effect가 모션 허용을 확인한 뒤에만 430×932 sticky stage·`ResizeObserver`·
   rAF timeline을 활성화한다. reduced motion이면 `height:auto`와 fallback을 계속 유지해 tall scroll/rAF를 만들지 않는다.
-  JavaScript 실행 전에도 대체 화면과 건너뛰기 링크가 DOM에 존재하며, 스크린리더에는 16숏 전체 대본을 제공한다.
+  JavaScript 실행 전에도 대체 화면과 건너뛰기 링크가 DOM에 존재하며, 스크린리더에는 7개 장면 전체 대본을 제공한다.
   모든 애니메이션 래스터는 `alt=""`, `aria-hidden="true"`, `tabIndex={-1}`인 장식물이고, skip link가 청첩장 본문의
   첫 interactive control보다 앞선다. 진행률의 `aria-valuenow`·`aria-valuetext`·live text는 매 프레임이 아니라
-  숏 id가 바뀌는 16개 경계에서만 갱신된다. Next.js 16의 `preload`/`loading` 동시 사용 금지에 맞춰 오프닝 배경과
+  장면 id가 바뀌는 7개 경계에서만 갱신된다. Next.js 16의 `preload`/`loading` 동시 사용 금지에 맞춰 오프닝 배경과
   첫 sidecar 캐릭터 합성만 preload하고 다른 애니메이션·fallback 이미지는 native lazy loading한다.
 
   `codex/doodle-wedding-story` 변형의 rough checkpoint는 같은 타임라인을 유지하면서 사진풍 배경과
@@ -149,8 +149,8 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   양쪽 하객은 `-180/+180px`에서 20px 차등 parallax로 들어오고 웨딩 커플은 y `610→470px`로 전진한다.
   마지막 veil/paper는 `(390,-180,.35)→(-40,-20,2.2)`로 쓸며 예식장 배경 clip을 중앙으로 닫아 cream canvas와
   일반 청첩장 본문 사이를 공간적으로 연결한다. 노출되는 canvas의 마지막 CSS cascade는 본문과 같은
-  `var(--color-paper)`(`#fdfbf7`)를 사용한다. 390×844·430×932·1280×720 브라우저 합성 검수는 후속 통합 작업에
-  남아 있다. 렌더러 자체는 모든 장면을
+  `var(--color-paper)`(`#fdfbf7`)를 사용한다. 390×844·430×932·1280×720 브라우저 합성 검수는
+  [`2026-08-28-seven-scene-story-qa.md`](superpowers/evidence/2026-08-28-seven-scene-story-qa.md)에 기록했다. 렌더러 자체는 모든 장면을
   `next/image` 기반 장식 이미지, 정확한 sprite crop, 스크린리더 중복을 피하는 HTML text로만 구성하며 기존
   CSS 사람·건물·사이드카·군중·예식장 placeholder 분기를 제거했다.
 
@@ -165,12 +165,12 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   정방향·역방향·`0.521↔0.999` 직접 점프 destination 동등성을 고정한다. proposal pan의 두 quarter-point는
   명시적 `easeInOut` 보간값을 검증한다. fallback registry/order, loading policy, pending/reduced presentation,
   shot-boundary announcement throttling, 실제 Next Image 장식/비포커스 SSR markup도 회귀 테스트로 고정한다.
-  실제 `WeddingStory` SSR/mount 테스트는 pending fallback·skip target·16숏 transcript와 reduced-motion에서
+  실제 `WeddingStory` SSR/mount 테스트는 pending fallback·skip target·7개 장면 transcript와 reduced-motion에서
   rAF/IntersectionObserver/ResizeObserver/scroll listener 0회, full-motion에서 containment/timeline observer 활성화를
   대조한다. SSR 테스트는 실제 CSS module 원문을 jsdom에 주입해 pending fallback의 계산된 `display:grid`와 stage의
   `display:none`까지 확인한다. 테스트 DOM은 README의 Node 20.9+ 계약을 지키는 `jsdom@26.1.0`에 exact pin했다.
-  `npm run test:story` 72개,
-  `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수는 아직 수행하지 않았다.
+  `npm run test:story` 86개,
+  `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수와 브라우저 back/forward 복원은 같은 QA 증적에 기록했다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,
   `npm run build`, 1440×900·390×844의 주요 진행률
@@ -179,6 +179,19 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   조사 근거는 `docs/scroll-story-reference-analysis.md`, 구현 계약은
   `docs/superpowers/specs/2026-08-14-scroll-wedding-story-rebuild-design.md`에 있다.
   낙서 테마의 규칙은 `docs/superpowers/specs/2026-08-14-doodle-wedding-story-theme.md`에 있다.
+
+#### 현재 공개 스토리 계약과 검증
+
+| 요구 | 현재 구현·검증 |
+|---|---|
+| 공개 서사 | 정확히 7개 장면(`jeju-opening`부터 `wedding-finale`)과 7개 transcript 항목. 장면 5는 두 순차 cue 사이의 의도된 무문구 구간을 가진다. |
+| 장면 엔진 | 기존 41개 레이어 선언형 renderer와 100개 이상 keyframe이 430×932 논리 canvas를 구동한다. 종이 찢김·polygon reveal·카메라 줌·패널 확대·매치컷을 포함한다. |
+| 정적 대체 | `STORY_FALLBACK_PANELS`의 7개 카드가 pending/reduced motion에서 같은 장면 순서로 렌더된다. reduced motion은 sticky·rAF·observer를 만들지 않는 자동 component/jsdom 검증으로 확인했다. 데스크톱 브라우저의 reduced-motion media emulation은 사용할 수 없었다. |
+| 장소 문구 | 장면 6 문구는 `src/config/wedding.ts`의 예식 일시와 `wedding.venue.name`에서 서버·브라우저 동일하게 파생된다. |
+| 복원 | 정상 scroll은 현재 history/session 기록을 보존하며, reload와 `back_forward`는 layout 완료 뒤 저장 진행률로 복원하고 늦은 browser drift 동안 persistence를 suspend한다. 42%·82% reload와 `/admin → back → forward` 0px 복원을 브라우저에서 확인했다. |
+| 낙서 자산 | 기존 sidecar·두 rider·wheel crop, sprite 얼굴/비율, thick uneven ink와 colored-pencil/crayon 원화는 유지한다. scene 2 sidecar는 opaque road 위 stack으로 합성된다. |
+| 검증 | 390×844·430×932·1280×720의 21개 장면 표본, 경계 역방향·직접 jump·route fallback·콘솔을 QA 증적에 기록했다. 개발 모드의 Next LCP advisory는 비차단 경고이며 애플리케이션 오류는 관찰되지 않았다. |
+| 실기기 보류 | 데스크톱에서는 iOS/KakaoTalk in-app sticky 체감, 지도 앱 deep link, 클립보드, `navigator.share`, Kakao 공유·미리보기, `.ics` handoff를 검증하지 않았다. |
 
 ### 제안했으나 제외한 것
 
