@@ -76,7 +76,7 @@ export function writeStoryProgress(target: Window, progress: number | null) {
 
 export function readReloadStoryProgress(target: Window) {
   const navigation = target.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-  if (navigation?.type !== "reload") return null;
+  if (navigation?.type !== "reload" && navigation?.type !== "back_forward") return null;
 
   const storedProgress = readStoredProgress(target);
   if (storedProgress !== null) return storedProgress;

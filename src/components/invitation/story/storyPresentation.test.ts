@@ -495,7 +495,6 @@ test("reload restores saved story progress only after the full-height layout mou
 
   for (const ignored of [
     { navigationType: "navigate" as const, path: "/" },
-    { navigationType: "back_forward" as const, path: "/" },
     { navigationType: "reload" as const, path: "/another-route" },
   ]) {
     const environment = installDomEnvironment(false, {
@@ -528,6 +527,51 @@ test("reload restores saved story progress only after the full-height layout mou
   assert.deepEqual(reduced.scrollPositions, []);
   await act(async () => reducedRoot?.unmount());
   reduced.dom.window.close();
+});
+
+test("back-forward restores saved story progress through layout clamping and late browser drift", async () => {
+  installCssModuleHook();
+  const { WeddingStory } = await import("./WeddingStory");
+  const storyHeight = 932 * 18.5;
+  const travel = storyHeight - 932;
+  const savedProgress = 0.82;
+  const environment = installDomEnvironment(false, {
+    navigationType: "back_forward",
+    historyState: {
+      __NA: true,
+      __wedInviStory: { version: 1, path: "/", progress: savedProgress },
+    },
+    initialScrollY: 0,
+    storyHeight,
+  });
+  let root: Root | undefined;
+
+  await act(async () => {
+    root = createRoot(environment.container);
+    root.render(createElement(WeddingStory, { contentTargetId: "invitation-content" }));
+  });
+
+  assert.equal(environment.dom.window.history.scrollRestoration, "manual");
+  environment.setScrollY(8367.5);
+  await act(async () => {
+    environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
+    environment.dom.window.dispatchEvent(new environment.dom.window.Event("pageshow"));
+    for (let frame = 0; frame < 8; frame += 1) environment.runAnimationFrame(frame * 16);
+  });
+  assert.equal(environment.currentScrollY(), travel * savedProgress);
+  assert.equal(environment.dom.window.history.state.__wedInviStory.progress, savedProgress);
+
+  environment.setScrollY(3048.5);
+  await act(async () => {
+    environment.dom.window.dispatchEvent(new environment.dom.window.Event("scroll"));
+    for (let frame = 0; frame < 4; frame += 1) environment.runAnimationFrame(160 + frame * 16);
+  });
+  assert.equal(environment.currentScrollY(), travel * savedProgress);
+  assert.equal(environment.dom.window.history.state.__wedInviStory.progress, savedProgress);
+
+  await act(async () => root?.unmount());
+  assert.equal(environment.dom.window.history.scrollRestoration, "auto");
+  environment.dom.window.close();
 });
 
 test("normal story scroll merges and clears namespaced progress in the current history entry", async () => {
