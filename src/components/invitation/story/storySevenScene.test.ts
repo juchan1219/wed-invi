@@ -158,8 +158,8 @@ test("seven public scenes remain contiguous and meet at visible spatial handoffs
   for (const progress of [0.0725, 0.0875]) {
     assert.equal(
       compositedVisibleOpacity("sidecar", progress),
-      0,
-      "the opaque road must prevent a covered sidecar from qualifying as the 0.08 bridge",
+      sampleLayerState(track("sidecar"), progress).opacity,
+      "the opaque road must not cover the sidecar at the scene 2 handoff",
     );
   }
 });

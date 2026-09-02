@@ -277,6 +277,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   {
     id: "sidecar",
     className: "character",
+    composite: { stack: 19, coverage: "transparent" },
     parts: [
       { assetId: "sidecar", x: 0, y: 0 },
       { assetId: "casualYechanDriving", x: 20, y: -145 },

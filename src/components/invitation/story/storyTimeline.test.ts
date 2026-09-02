@@ -189,6 +189,19 @@ test("the opening sidecar composes the vehicle with both casual riders above it"
   ]);
 });
 
+test("scene 2 keeps the two-rider sidecar visible above the opaque road at its midpoint", () => {
+  const sidecar = requiredComposite("sidecar");
+  const road = requiredComposite("opening-field");
+  const sceneTwoMidpoint = 0.13;
+
+  assert.equal(road.composite.coverage, "opaque-full");
+  assert.ok(
+    sidecar.composite.stack > road.composite.stack,
+    "the renderer must paint the sidecar composition above the opaque road",
+  );
+  assert.equal(compositedVisibleOpacity("sidecar", sceneTwoMidpoint), 1);
+});
+
 test("the laugh panel is revealed only by its polygon-clipped panel layer", () => {
   const laughBackground = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "bg-laugh");
   const rightPanel = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "panel-right");
