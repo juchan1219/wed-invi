@@ -189,8 +189,8 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
 | 정적 대체 | `STORY_FALLBACK_PANELS`의 7개 카드가 pending/reduced motion에서 같은 장면 순서로 렌더된다. reduced motion은 sticky·rAF·observer를 만들지 않는 자동 component/jsdom 검증으로 확인했다. 데스크톱 브라우저의 reduced-motion media emulation은 사용할 수 없었다. |
 | 장소 문구 | 장면 6 문구는 `src/config/wedding.ts`의 예식 일시와 `wedding.venue.name`에서 서버·브라우저 동일하게 파생된다. |
 | 복원 | 정상 scroll은 현재 history/session 기록을 보존하며, reload와 `back_forward`는 layout 완료 뒤 저장 진행률로 복원하고 늦은 browser drift 동안 persistence를 suspend한다. 42%·82% reload와 `/admin → back → forward` 0px 복원을 브라우저에서 확인했다. |
-| 낙서 자산 | 기존 sidecar·두 rider·wheel crop, sprite 얼굴/비율, thick uneven ink와 colored-pencil/crayon 원화는 유지한다. scene 2 sidecar는 opaque road 위 stack으로 합성된다. |
-| 검증 | 390×844·430×932·1280×720의 21개 장면 표본, 경계 역방향·직접 jump·route fallback·콘솔을 QA 증적에 기록했다. 개발 모드의 Next LCP advisory는 비차단 경고이며 애플리케이션 오류는 관찰되지 않았다. |
+| 낙서 자산 | 기존 sidecar·두 rider·wheel crop, sprite 얼굴/비율, thick uneven ink와 colored-pencil/crayon 원화는 유지한다. scene 2 sidecar는 opaque road 위 stack으로 합성되며, `316dc3b`에서 midpoint canvas clipping을 수정해 두 인물과 두 바퀴가 논리 canvas 안에 들어온다. |
+| 검증 | 390×844·430×932·1280×720의 21개 장면 표본, 경계 역방향·직접 jump·route fallback·콘솔을 QA 증적에 기록했다. scene 2 fixed recapture는 세 viewport 모두 p≈.13에서 opacity 1/z19 및 focal content 전체 노출을 확인했다. 개발 모드의 Next LCP advisory는 비차단 경고이며 애플리케이션 오류는 관찰되지 않았다. |
 | 실기기 보류 | 데스크톱에서는 iOS/KakaoTalk in-app sticky 체감, 지도 앱 deep link, 클립보드, `navigator.share`, Kakao 공유·미리보기, `.ics` handoff를 검증하지 않았다. |
 
 ### 제안했으나 제외한 것
