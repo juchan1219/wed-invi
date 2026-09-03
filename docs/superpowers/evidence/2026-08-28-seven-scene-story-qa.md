@@ -85,3 +85,8 @@ The review confirms the midpoint transform correction preserves the existing
 sidecar source crops, rider relationship, and wheel layering while removing the
 previous right-edge clipping. The prior unfixed scene-2 paths above are retained
 only in repository history, not as current QA evidence.
+
+### Task 4 minor follow-up
+
+The requirements choreography note was corrected to match the implemented and
+tested sidecar entry transform: `520→30px` (not the stale `520→70px` value).

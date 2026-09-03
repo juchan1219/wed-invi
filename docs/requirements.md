@@ -120,7 +120,7 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   `data-story-layer`와 timeline query 계약을 유지한다. wheel CSS 기준점은 sidecar contain box 안의 source crop center에서
   계산한 parent-relative 전륜 `(123.171875, 305.26828125)`와 후륜 `(383.5234375, 305.26828125)`이다. 두 wheel의
   local x/y는 0, local scale은 1이고 각 rotate track과 crop만 독립적으로 유지하므로 sidecar가 이동·확대·기울기를 단독으로
-  소유한다. shots 1–6의 세부 안무는 오프닝 배경의 36px 이동, sidecar의 520→70px 진입과 두 casual sprite
+  소유한다. shots 1–6의 세부 안무는 오프닝 배경의 36px 이동, sidecar의 520→30px 진입과 두 casual sprite
   합성, 우하단 coral paper corner를 원점으로 한 0.15→2.4배 종이 확대, 0.72×0.58→1 tower card 진입,
   51%/43% 창 원점의 1→4.8배 camera zoom, 그 아래 1.35→1배 office background와 desk 연결로 구현했다.
 
