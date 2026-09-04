@@ -6,7 +6,7 @@ import { readReloadStoryProgress, writeStoryProgress } from "./storyHistory";
 
 const STORAGE_KEY = "__wedInviStoryProgress";
 
-test("reload progress uses session storage without trusting stale router history state", () => {
+test("reload progress prefers the current history entry and falls back to session storage", () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost/" });
   dom.window.history.replaceState({
     __NA: true,
@@ -22,6 +22,9 @@ test("reload progress uses session storage without trusting stale router history
     value: (type: string) => type === "navigation" ? [{ type: "reload" }] : [],
   });
 
+  assert.equal(readReloadStoryProgress(dom.window as unknown as Window), 0.24614);
+
+  dom.window.history.replaceState({ __NA: true }, "", dom.window.location.href);
   assert.equal(readReloadStoryProgress(dom.window as unknown as Window), 0.42);
 
   writeStoryProgress(dom.window as unknown as Window, 0.82);

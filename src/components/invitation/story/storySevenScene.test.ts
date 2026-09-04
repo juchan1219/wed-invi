@@ -30,15 +30,10 @@ const DEFAULT_RENDERER_STACK = {
   type: 24,
 } as const;
 
-const CSS_STACK_OVERRIDES = new Map<string, number>([
-  ["title-shards", 28],
-]);
-
 function rendererStack(id: string) {
   const definition = STORY_LAYER_DEFINITIONS.find((candidate) => candidate.id === id);
   assert.ok(definition, `missing layer definition: ${id}`);
   return definition.composite?.stack
-    ?? CSS_STACK_OVERRIDES.get(id)
     ?? DEFAULT_RENDERER_STACK[track(id).kind];
 }
 

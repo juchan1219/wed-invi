@@ -78,9 +78,8 @@ export function readReloadStoryProgress(target: Window) {
   const navigation = target.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
   if (navigation?.type !== "reload" && navigation?.type !== "back_forward") return null;
 
-  const storedProgress = readStoredProgress(target);
-  if (storedProgress !== null) return storedProgress;
-
   const entry = historyRecord(target)[STORY_HISTORY_KEY] as StoryHistoryEntry | undefined;
-  return isCurrentStoryEntry(target, entry) ? entry.progress : null;
+  if (isCurrentStoryEntry(target, entry)) return entry.progress;
+
+  return readStoredProgress(target);
 }

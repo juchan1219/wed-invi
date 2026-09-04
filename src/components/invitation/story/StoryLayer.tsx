@@ -47,6 +47,11 @@ type CompositionPartCSSProperties = CSSProperties & {
   "--story-part-y": `${number}px`;
 };
 
+type StoryImageLoadingOverride = {
+  loading: "eager" | "lazy";
+  fetchPriority?: "low";
+};
+
 const STORY_LAYER_DEFINITION_BY_ID = new Map<string, StoryLayerDefinition>(
   STORY_LAYER_DEFINITIONS.map((definition) => [definition.id, definition]),
 );
@@ -82,17 +87,46 @@ export function StoryLayer({ track, children }: { track: LayerTrack; children?: 
   );
 }
 
-function StoryLayerContent({ definition }: { definition: StoryLayerDefinition }) {
+export function StoryStaticLayer({ layerId, eager = false }: { layerId: string; eager?: boolean }) {
+  const definition = STORY_LAYER_DEFINITION_BY_ID.get(layerId);
+  if (!definition) throw new Error(`${layerId} has no story layer definition`);
+  const layerClassName = styles[`layer_${layerId.replaceAll("-", "_")}`] ?? "";
+  const roleClassName = definition.className ? styles[`asset_${definition.className}`] ?? "" : "";
+
+  return (
+    <div
+      className={`${styles.layer} ${layerClassName} ${roleClassName}`}
+      data-static-story-layer={layerId}
+      data-coverage={definition.composite?.coverage}
+      aria-hidden="true"
+      style={{ zIndex: definition.composite?.stack }}
+    >
+      <StoryLayerContent
+        definition={definition}
+        loadingOverride={eager ? { loading: "eager", fetchPriority: "low" } : { loading: "lazy" }}
+      />
+    </div>
+  );
+}
+
+function StoryLayerContent({
+  definition,
+  loadingOverride,
+}: {
+  definition: StoryLayerDefinition;
+  loadingOverride?: StoryImageLoadingOverride;
+}) {
   if (definition.assetId) {
     const asset = STORY_ASSETS[definition.assetId];
-    return <AssetLayer asset={asset} crop={definition.crop} layerId={definition.id} />;
+    return <AssetLayer asset={asset} crop={definition.crop} layerId={definition.id} loadingOverride={loadingOverride} />;
   }
 
   if (definition.parts) {
-    return <CompositionLayer parts={definition.parts} layerId={definition.id} />;
+    return <CompositionLayer parts={definition.parts} layerId={definition.id} loadingOverride={loadingOverride} />;
   }
 
   if (definition.text) {
+    if (!definition.text.value) return null;
     return (
       <span className={`${styles.layerText} ${styles[`layerText_${definition.text.kind}`]}`}>
         {definition.text.value}
@@ -107,22 +141,24 @@ function AssetLayer({
   asset,
   crop,
   layerId,
+  loadingOverride,
 }: {
   asset: StoryImageAsset | StorySpriteAsset;
   crop?: StoryImageCrop;
   layerId: string;
+  loadingOverride?: StoryImageLoadingOverride;
 }) {
   if (asset.kind === "sprite") {
     if (crop) throw new Error("sprite assets cannot use an image crop");
-    return <SpriteLayer asset={asset} layerId={layerId} />;
+    return <SpriteLayer asset={asset} layerId={layerId} loadingOverride={loadingOverride} />;
   }
 
   return crop
-    ? <CroppedImageLayer asset={asset} crop={crop} layerId={layerId} />
-    : <ImageLayer asset={asset} layerId={layerId} />;
+    ? <CroppedImageLayer asset={asset} crop={crop} layerId={layerId} loadingOverride={loadingOverride} />
+    : <ImageLayer asset={asset} layerId={layerId} loadingOverride={loadingOverride} />;
 }
 
-function CompositionLayer({ parts, layerId }: { parts: readonly StoryLayerPart[]; layerId: string }) {
+function CompositionLayer({ parts, layerId, loadingOverride }: { parts: readonly StoryLayerPart[]; layerId: string; loadingOverride?: StoryImageLoadingOverride }) {
   return (
     <span className={styles.layerComposition} aria-hidden="true">
       {parts.map((part) => {
@@ -138,7 +174,7 @@ function CompositionLayer({ parts, layerId }: { parts: readonly StoryLayerPart[]
             style={style as CSSProperties}
             aria-hidden="true"
           >
-            <AssetLayer asset={STORY_ASSETS[part.assetId]} layerId={layerId} />
+            <AssetLayer asset={STORY_ASSETS[part.assetId]} layerId={layerId} loadingOverride={loadingOverride} />
           </span>
         );
       })}
@@ -146,7 +182,7 @@ function CompositionLayer({ parts, layerId }: { parts: readonly StoryLayerPart[]
   );
 }
 
-function ImageLayer({ asset, layerId }: { asset: StoryImageAsset; layerId: string }) {
+function ImageLayer({ asset, layerId, loadingOverride }: { asset: StoryImageAsset; layerId: string; loadingOverride?: StoryImageLoadingOverride }) {
   const focalPoint = asset.focalPoint ?? { x: 0.5, y: 0.5 };
   const style = {
     "--story-asset-width": `${asset.width}px`,
@@ -169,12 +205,12 @@ function ImageLayer({ asset, layerId }: { asset: StoryImageAsset; layerId: strin
       aria-hidden="true"
       tabIndex={-1}
       draggable={false}
-      {...(loading.preload ? { preload: true } : { loading: loading.loading })}
+      {...(loadingOverride ?? (loading.preload ? { preload: true } : { loading: loading.loading }))}
     />
   );
 }
 
-function SpriteLayer({ asset, layerId }: { asset: StorySpriteAsset; layerId: string }) {
+function SpriteLayer({ asset, layerId, loadingOverride }: { asset: StorySpriteAsset; layerId: string; loadingOverride?: StoryImageLoadingOverride }) {
   const crop = getStorySpriteCrop(asset);
   const style = {
     "--story-sprite-viewport-width": `${crop.viewportWidth}px`,
@@ -198,7 +234,7 @@ function SpriteLayer({ asset, layerId }: { asset: StorySpriteAsset; layerId: str
         aria-hidden="true"
         tabIndex={-1}
         draggable={false}
-        {...(loading.preload ? { preload: true } : { loading: loading.loading })}
+        {...(loadingOverride ?? (loading.preload ? { preload: true } : { loading: loading.loading }))}
       />
     </span>
   );
@@ -208,10 +244,12 @@ function CroppedImageLayer({
   asset,
   crop,
   layerId,
+  loadingOverride,
 }: {
   asset: StoryImageAsset;
   crop: StoryImageCrop;
   layerId: string;
+  loadingOverride?: StoryImageLoadingOverride;
 }) {
   const layout = getStoryImageCrop(asset, crop);
   const style = {
@@ -236,7 +274,7 @@ function CroppedImageLayer({
         aria-hidden="true"
         tabIndex={-1}
         draggable={false}
-        {...(loading.preload ? { preload: true } : { loading: loading.loading })}
+        {...(loadingOverride ?? (loading.preload ? { preload: true } : { loading: loading.loading }))}
       />
     </span>
   );

@@ -30,4 +30,12 @@ test("approved copy and configured ceremony details remain exact", () => {
   assert.equal(STORY_COPY_CUES.some(({ copy }) => copy.includes("되기도")), false);
   assert.equal(getStoryProgressAnnouncement(0.83).sceneId, "seoul-venue");
   assert.equal(getStoryProgressAnnouncement(1).value, 7);
+  assert.equal(
+    STORY_SCENES.at(-1)?.narration,
+    "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
+  );
+  assert.equal(
+    getStoryProgressAnnouncement(1).text,
+    "7/7. 예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
+  );
 });

@@ -241,15 +241,15 @@ export const STORY_ASSETS = {
 } satisfies Record<string, StoryImageAsset | StorySpriteAsset>;
 
 export const STORY_FALLBACK_PANELS = [
-  { assetId: "openingBackground", sceneId: "jeju-opening" },
-  { assetId: "sidecarRoad", sceneId: "same-direction" },
-  { assetId: "officeBackground", sceneId: "office-coworkers" },
-  { assetId: "laughPanel", sceneId: "joke-and-laughter" },
-  { assetId: "proposalTriptych", sceneId: "lifelong-partners" },
-  { assetId: "venueExterior", sceneId: "seoul-venue" },
-  { assetId: "paperVeil", sceneId: "wedding-finale" },
+  { layerIds: ["bg-jeju"], sceneId: "jeju-opening" },
+  { layerIds: ["opening-field", "sidecar"], sceneId: "same-direction" },
+  { layerIds: ["bg-office", "office-yechan", "office-jueun", "office-props"], sceneId: "office-coworkers" },
+  { layerIds: ["bg-laugh", "joke-yechan", "jueun-expression", "laugh-burst"], sceneId: "joke-and-laughter" },
+  { layerIds: ["proposal-triptych", "ring-glint"], sceneId: "lifelong-partners" },
+  { layerIds: ["bg-venue", "casual-couple"], sceneId: "seoul-venue" },
+  { layerIds: ["bg-finale", "crowd-left", "crowd-right", "wedding-couple", "confetti"], sceneId: "wedding-finale" },
 ] as const satisfies readonly {
-  assetId: keyof typeof STORY_ASSETS;
+  layerIds: readonly string[];
   sceneId: string;
 }[];
 
@@ -273,7 +273,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "opening-clouds", assetId: "openingBackground", className: "midground" },
   { id: "opening-island", assetId: "openingBackground", className: "midground" },
   { id: "opening-field", assetId: "sidecarRoad", className: "foreground", composite: { stack: 18, coverage: "opaque-full" } },
-  { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은\n의 결혼 이야기" } },
+  { id: "title-shards", className: "foreground", text: { kind: "title", value: "예찬과 주은의 결혼 이야기" }, composite: { stack: 24, coverage: "transparent" } },
   {
     id: "sidecar",
     className: "character",
@@ -296,7 +296,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
     className: "foreground",
     crop: { x: 672, y: 392, width: 224, height: 224, display: { width: 56, height: 56 } },
   },
-  { id: "name-labels", className: "foreground", text: { kind: "caption", value: "예찬 ↘\n↙ 주은" } },
+  { id: "name-labels", className: "foreground", text: { kind: "caption", value: "" } },
   { id: "paper-tear", assetId: "paperTurn", className: "mask" },
   { id: "tower-card", assetId: "towerCard", className: "midground" },
   { id: "tower-wall-left", assetId: "towerCard", className: "foreground" },
@@ -304,11 +304,11 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "office-yechan", assetId: "casualYechanNeutral", className: "character" },
   { id: "office-jueun", assetId: "casualJueunNeutral", className: "character" },
   { id: "office-props", assetId: "officeDesk", className: "foreground" },
-  { id: "panel-left", assetId: "jokePanel", className: "midground" },
-  { id: "panel-right", assetId: "laughPanel", className: "midground" },
+  { id: "panel-left", assetId: "officeBackground", className: "midground" },
+  { id: "panel-right", assetId: "officeBackground", className: "midground" },
   { id: "joke-yechan", assetId: "casualYechanTalking", className: "character" },
   { id: "jueun-expression", assetId: "casualJueunLaughing", className: "character" },
-  { id: "speech-bubble", className: "foreground", text: { kind: "caption", value: "오늘 퇴근하고\n맛있는 거 어때요?" } },
+  { id: "speech-bubble", className: "foreground", text: { kind: "caption", value: "" } },
   { id: "laugh-burst", assetId: "laughBurst", className: "foreground" },
   { id: "proposal-triptych", assetId: "proposalTriptych", className: "midground", composite: { stack: 11, coverage: "opaque-full" } },
   { id: "venue-reveal", assetId: "venueExterior", className: "foreground", composite: { stack: 12, coverage: "clipped" } },
@@ -316,6 +316,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
     id: "ring-glint",
     assetId: "proposalTriptych",
     className: "foreground",
+    composite: { stack: 18, coverage: "clipped" },
     crop: { x: 464, y: 340, width: 248, height: 300, display: { width: 248, height: 300 } },
   },
   { id: "venue-doors", assetId: "venueInterior", className: "midground", composite: { stack: 2, coverage: "clipped" } },
@@ -341,7 +342,7 @@ export const STORY_LAYER_DEFINITIONS: readonly StoryLayerDefinition[] = [
   { id: "confetti-back", assetId: "laughBurst", className: "midground" },
   { id: "confetti", assetId: "laughBurst", className: "foreground" },
   { id: "confetti-front", assetId: "laughBurst", className: "foreground" },
-  { id: "final-title", className: "foreground", text: { kind: "title", value: "예찬 ♥ 주은\n우리 결혼합니다!!" } },
+  { id: "final-title", className: "foreground", text: { kind: "title", value: "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!" } },
   { id: "invitation-paper", assetId: "paperVeil", className: "mask" },
 ] as const;
 

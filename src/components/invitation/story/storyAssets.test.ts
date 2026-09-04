@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import sharp from "sharp";
 
-import { STORY_ASSETS, STORY_FALLBACK_PANELS } from "./storyAssets";
+import { STORY_ASSETS, STORY_FALLBACK_PANELS, STORY_LAYER_DEFINITIONS } from "./storyAssets";
 import { STORY_SCENES } from "./storyNarrative";
 
 test("fallback assets cover each approved story scene exactly once", () => {
@@ -21,6 +21,28 @@ test("fallback assets cover each approved story scene exactly once", () => {
     ],
   );
   assert.deepEqual(STORY_FALLBACK_PANELS.map(({ sceneId }) => sceneId), STORY_SCENES.map(({ id }) => id));
+  assert.deepEqual(STORY_FALLBACK_PANELS.map(({ layerIds }) => layerIds), [
+    ["bg-jeju"],
+    ["opening-field", "sidecar"],
+    ["bg-office", "office-yechan", "office-jueun", "office-props"],
+    ["bg-laugh", "joke-yechan", "jueun-expression", "laugh-burst"],
+    ["proposal-triptych", "ring-glint"],
+    ["bg-venue", "casual-couple"],
+    ["bg-finale", "crowd-left", "crowd-right", "wedding-couple", "confetti"],
+  ]);
+});
+
+test("rendered text layers contain only approved public copy", () => {
+  const approved = new Set([
+    ...STORY_SCENES.flatMap(({ copyCues }) => copyCues.map(({ copy }) => copy)),
+    "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
+  ]);
+  const visibleText = STORY_LAYER_DEFINITIONS
+    .flatMap((definition) => definition.text?.value ? [definition.text.value] : []);
+
+  assert.ok(visibleText.length > 0);
+  assert.ok(visibleText.every((copy) => approved.has(copy)), visibleText.join(" | "));
+  assert.ok(!visibleText.some((copy) => copy.includes("퇴근") || copy.includes("예찬 ↘")));
 });
 
 function expectedSprite(

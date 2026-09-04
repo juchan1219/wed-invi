@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { STORY_ASSETS, STORY_FALLBACK_PANELS } from "./storyAssets";
+import { StoryStaticLayer } from "./StoryLayer";
+import { STORY_FALLBACK_PANELS } from "./storyAssets";
 import { STORY_SCENES } from "./storyNarrative";
 import styles from "./WeddingStory.module.css";
 
@@ -8,24 +8,17 @@ export function StoryFallback() {
     <div className={styles.motionFallback}>
       {STORY_FALLBACK_PANELS.map((panel, index) => {
         const scene = STORY_SCENES.find(({ id }) => id === panel.sceneId)!;
-        const asset = STORY_ASSETS[panel.assetId];
-        if (asset.kind !== "image") throw new Error(`${panel.assetId} is not a fallback image`);
+        const cueCopy = scene.copyCues.map(({ copy }) => copy).join("\n");
         return (
-          <article key={scene.id} className={styles.fallbackCard}>
-            <Image
-              src={asset.src}
-              alt=""
-              width={asset.width}
-              height={asset.height}
-              sizes="(max-width: 430px) 100vw, 430px"
-              className={styles.fallbackImage}
-              loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "low" : undefined}
-            />
+          <article key={scene.id} className={styles.fallbackCard} data-fallback-scene={scene.id}>
+            <div className={styles.fallbackArtwork} aria-hidden="true">
+              {panel.layerIds.map((layerId) => (
+                <StoryStaticLayer key={layerId} layerId={layerId} eager={index === 0} />
+              ))}
+            </div>
             <div className={styles.fallbackCopy}>
               <small>{String(index + 1).padStart(2, "0")}</small>
-              <h2>{scene.title}</h2>
-              <p>{scene.narration}</p>
+              {cueCopy ? <p>{cueCopy}</p> : null}
             </div>
           </article>
         );

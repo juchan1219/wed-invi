@@ -92,15 +92,17 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   프로포즈 3단 장면은 좌/중/우 크롭을 사용한다.
   꽃가루는 서로 다른 속도와 크기의 전·중·후경으로 나누고, 타이틀 글자와 웃음 표정도 장면별 독립 상태로 구성했다. 함부르크 프로포즈, 반지, 도쿄타워 사진은 원본을
   공개 경로에 복사하지 않고 동일 화풍의 355KB WebP 장면을 만드는 참고로만 썼다. reduced-motion에서는
-  sticky를 제거하고 최종 레지스트리의 오프닝·사이드카·오피스·웃음·프로포즈·예식장·피날레 원화 7장을 읽기 순서대로
-  보여준다. 서버 HTML과 첫 client render는 모두 `data-motion="pending"`인 같은 비스티키 fallback이므로 hydration
+  sticky를 제거하고 최종 레지스트리의 오프닝·사이드카·오피스·웃음·프로포즈·예식장·피날레 배경과 캐릭터·전경을
+  장면별 정적 합성으로 읽기 순서대로 보여준다. 장면 2는 공개 cue 없이 그림만 노출하며 나머지도 승인된 cue만 표시한다.
+  서버 HTML과 첫 client render는 모두 `data-motion="pending"`인 같은 비스티키 fallback이므로 hydration
   불일치나 빈 첫 프레임이 없고, layout effect가 모션 허용을 확인한 뒤에만 430×932 sticky stage·`ResizeObserver`·
   rAF timeline을 활성화한다. reduced motion이면 `height:auto`와 fallback을 계속 유지해 tall scroll/rAF를 만들지 않는다.
   JavaScript 실행 전에도 대체 화면과 건너뛰기 링크가 DOM에 존재하며, 스크린리더에는 7개 장면 전체 대본을 제공한다.
   모든 애니메이션 래스터는 `alt=""`, `aria-hidden="true"`, `tabIndex={-1}`인 장식물이고, skip link가 청첩장 본문의
   첫 interactive control보다 앞선다. 진행률의 `aria-valuenow`·`aria-valuetext`·live text는 매 프레임이 아니라
   장면 id가 바뀌는 7개 경계에서만 갱신된다. Next.js 16의 `preload`/`loading` 동시 사용 금지에 맞춰 오프닝 배경과
-  첫 sidecar 캐릭터 합성만 preload하고 다른 애니메이션·fallback 이미지는 native lazy loading한다.
+  첫 sidecar 캐릭터 합성만 preload하고 다른 애니메이션 이미지는 native lazy loading한다. 정적 fallback에서는 화면에
+  먼저 보이는 제주 배경만 eager load하고 이후 합성 레이어는 lazy load한다.
 
   `codex/doodle-wedding-story` 변형의 rough checkpoint는 같은 타임라인을 유지하면서 사진풍 배경과
   사람형 캐릭터를 흰 종이·굵은 검은 선·점눈의 콩 캐릭터로 교체했다. 당시 제주·오피스·웃음·예식장·
@@ -169,7 +171,10 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
   rAF/IntersectionObserver/ResizeObserver/scroll listener 0회, full-motion에서 containment/timeline observer 활성화를
   대조한다. SSR 테스트는 실제 CSS module 원문을 jsdom에 주입해 pending fallback의 계산된 `display:grid`와 stage의
   `display:none`까지 확인한다. 테스트 DOM은 README의 Node 20.9+ 계약을 지키는 `jsdom@26.1.0`에 exact pin했다.
-  `npm run test:story` 86개,
+  농담 장면은 말풍선 원화를 사용하지 않고 office 배경과 두 캐릭터·웃음 선만 합성하며, 렌더 가능한 HTML text는 승인된
+  공개 cue allowlist로 고정한다. 반지 crop은 opaque proposal strip보다 높은 명시적 stack에서 합성한다. 같은 경로의
+  브라우저 back/forward 복원은 현재 `history.state` 엔트리를 우선하고 session storage는 유효한 엔트리가 없을 때만 쓴다.
+  `npm run test:story` 90개,
   `npm run typecheck`, `npm run build`를 통과했다. 최종 viewport 시각 검수와 브라우저 back/forward 복원은 같은 QA 증적에 기록했다.
 
   다음 검증은 이전 사진풍 scroll-story rebuild에 대한 결과다: `npm run test:story` 20개, `npm run typecheck`,

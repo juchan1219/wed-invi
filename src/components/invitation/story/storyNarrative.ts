@@ -91,7 +91,7 @@ export const STORY_SCENES: readonly StoryScene[] = [
     title: "하객들과 함께하는 결혼식",
     start: 0.84,
     end: 1,
-    narration: "예찬 ♥ 주은, 소중한 분들과 함께 우리 결혼합니다!!",
+    narration: "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
     copyCues: [
       {
         id: "wedding-finale-copy",

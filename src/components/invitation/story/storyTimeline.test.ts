@@ -366,12 +366,14 @@ test("scene 2 keeps the complete sidecar composition inside the logical canvas a
   }
 });
 
-test("the laugh panel is revealed only by its polygon-clipped panel layer", () => {
+test("the joke transition uses clean office panels without baked speech balloons", () => {
   const laughBackground = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "bg-laugh");
+  const leftPanel = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "panel-left");
   const rightPanel = STORY_LAYER_DEFINITIONS.find(({ id }) => id === "panel-right");
 
   assert.equal(laughBackground?.assetId, "officeBackground");
-  assert.equal(rightPanel?.assetId, "laughPanel");
+  assert.equal(leftPanel?.assetId, "officeBackground");
+  assert.equal(rightPanel?.assetId, "officeBackground");
 });
 
 test("wheel layers crop two distinct bounded sidecar regions instead of shrinking the vehicle", () => {
@@ -816,6 +818,10 @@ test("the ring answer is a clipped duplicate that pulses 0.8 to 1.12 to 1", () =
     [sampleLayerState(ring, legacy(0.61)).originX, sampleLayerState(ring, legacy(0.61)).originY],
     [50, 50],
   );
+  const proposalComposite = requiredComposite("proposal-triptych").composite;
+  const ringComposite = requiredComposite("ring-glint").composite;
+  assert.equal(ringComposite.coverage, "clipped");
+  assert.ok(ringComposite.stack > proposalComposite.stack, "ring pulse must paint above the opaque strip");
 });
 
 test("the Tokyo tower zoom and venue reveal meet on the same coral line for two percent", () => {

@@ -169,26 +169,27 @@ function installDomEnvironment(
 test("fallback panel contract selects seven scene illustrations in order", () => {
   const panels = (storyAssets as unknown as {
     STORY_FALLBACK_PANELS?: readonly {
-      assetId: keyof typeof storyAssets.STORY_ASSETS;
+      layerIds: readonly string[];
       sceneId: string;
     }[];
   }).STORY_FALLBACK_PANELS;
 
   assert.ok(panels, "storyAssets must export the fallback panel contract");
   assert.deepEqual(
-    panels.map(({ assetId, sceneId }) => ({ assetId, sceneId })),
+    panels.map(({ layerIds, sceneId }) => ({ layerIds, sceneId })),
     [
-      { assetId: "openingBackground", sceneId: "jeju-opening" },
-      { assetId: "sidecarRoad", sceneId: "same-direction" },
-      { assetId: "officeBackground", sceneId: "office-coworkers" },
-      { assetId: "laughPanel", sceneId: "joke-and-laughter" },
-      { assetId: "proposalTriptych", sceneId: "lifelong-partners" },
-      { assetId: "venueExterior", sceneId: "seoul-venue" },
-      { assetId: "paperVeil", sceneId: "wedding-finale" },
+      { layerIds: ["bg-jeju"], sceneId: "jeju-opening" },
+      { layerIds: ["opening-field", "sidecar"], sceneId: "same-direction" },
+      { layerIds: ["bg-office", "office-yechan", "office-jueun", "office-props"], sceneId: "office-coworkers" },
+      { layerIds: ["bg-laugh", "joke-yechan", "jueun-expression", "laugh-burst"], sceneId: "joke-and-laughter" },
+      { layerIds: ["proposal-triptych", "ring-glint"], sceneId: "lifelong-partners" },
+      { layerIds: ["bg-venue", "casual-couple"], sceneId: "seoul-venue" },
+      { layerIds: ["bg-finale", "crowd-left", "crowd-right", "wedding-couple", "confetti"], sceneId: "wedding-finale" },
     ],
   );
   for (const panel of panels) {
-    assert.equal(storyAssets.STORY_ASSETS[panel.assetId].kind, "image");
+    assert.ok(panel.layerIds.length > 0);
+    assert.ok(panel.layerIds.every((layerId) => storyAssets.STORY_LAYER_DEFINITIONS.some(({ id }) => id === layerId)));
     assert.ok(STORY_SCENES.some(({ id }) => id === panel.sceneId));
   }
 });
@@ -231,7 +232,7 @@ test("progress announcements change at scene boundaries, not within animation fr
   assert.deepEqual(getStoryProgressAnnouncement(1), {
     sceneId: "wedding-finale",
     value: 7,
-    text: "7/7. 예찬 ♥ 주은, 소중한 분들과 함께 우리 결혼합니다!!",
+    text: "7/7. 예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
   });
 });
 
@@ -258,6 +259,17 @@ test("real animated image markup is decorative, hidden from AT, and unfocusable"
   assert.doesNotMatch(html, /href=|role="button"/);
 });
 
+test("retired empty text layers render no visible caption box", async () => {
+  installCssModuleHook();
+  const { StoryLayer } = await import("./StoryLayer");
+  const speech = storyTimeline.LAYER_TRACKS.find(({ id }) => id === "speech-bubble");
+  assert.ok(speech);
+
+  const html = renderToStaticMarkup(createElement(StoryLayer, { track: speech }));
+  assert.doesNotMatch(html, /layerText_caption/);
+  assert.doesNotMatch(html, /오늘 퇴근|맛있는 거/);
+});
+
 test("the visible opening fallback loads eagerly without issuing a duplicate preload", async () => {
   installCssModuleHook();
   const { StoryFallback } = await import("./StoryFallback");
@@ -266,10 +278,40 @@ test("the visible opening fallback loads eagerly without issuing a duplicate pre
   const dom = new JSDOM(html);
   const images = [...dom.window.document.querySelectorAll("img")];
 
-  assert.equal(images.length, 7);
+  assert.ok(images.length > 7, "composed fallback should include character and foreground assets");
   assert.equal(images[0]?.getAttribute("loading"), "eager");
-  assert.deepEqual(images.slice(1).map((image) => image.getAttribute("loading")), Array(6).fill("lazy"));
+  assert.ok(images.slice(1).every((image) => image.getAttribute("loading") === "lazy"));
   assert.doesNotMatch(html, /rel="preload"[^>]+as="image"/);
+  assert.doesNotMatch(html, /오늘 퇴근|사이드카 오토바이를 타고 같은 방향/);
+
+  for (const sceneId of ["same-direction", "office-coworkers", "joke-and-laughter", "wedding-finale"]) {
+    const card = dom.window.document.querySelector(`[data-fallback-scene="${sceneId}"]`);
+    assert.ok(card, `${sceneId} fallback card missing`);
+    assert.ok(card.querySelectorAll("[data-static-story-layer]").length >= 2, `${sceneId} fallback is not composed`);
+  }
+});
+
+test("fallback public DOM exposes only the hard-coded approved cues and leaves scene two copy-free", async () => {
+  installCssModuleHook();
+  const { StoryFallback } = await import("./StoryFallback");
+  const html = renderToStaticMarkup(createElement(StoryFallback));
+  const dom = new JSDOM(html);
+  const approvedCues = [
+    ["jeju-opening", "예찬과 주은의 결혼 이야기"],
+    ["same-direction", null],
+    ["office-coworkers", "처음엔 회사 동기였던 두 사람"],
+    ["joke-and-laughter", "예찬의 재미난 농담에 주은은 배꼽이 빠질 뻔했던 적이 한두 번이 아니었습니다."],
+    ["lifelong-partners", "그렇게 평생 웃겨주고 웃어주는\n짝꿍이 되기로 했습니다."],
+    ["seoul-venue", "2026.12.19 오후 12시 30분,\n잠실 아펠가모에서요!"],
+    ["wedding-finale", "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!"],
+  ] as const;
+
+  for (const [sceneId, approvedCue] of approvedCues) {
+    const card = dom.window.document.querySelector(`[data-fallback-scene="${sceneId}"]`);
+    assert.ok(card, `${sceneId} fallback card missing`);
+    assert.equal(card.querySelector("h2"), null, `${sceneId} exposes a work-only scene title`);
+    assert.equal(card.querySelector("p")?.textContent ?? null, approvedCue);
+  }
 });
 
 test("WeddingStory SSR starts with a complete non-blank fallback and a valid first skip target", async () => {
@@ -311,7 +353,7 @@ test("WeddingStory SSR starts with a complete non-blank fallback and a valid fir
       "예찬의 재미난 농담에 주은은 배꼽이 빠질 뻔했던 적이 한두 번이 아니었습니다.",
       "그렇게 평생 웃겨주고 웃어주는 짝꿍이 되기로 했습니다.",
       "2026.12.19 오후 12시 30분,\n잠실 아펠가모에서요!",
-      "예찬 ♥ 주은, 소중한 분들과 함께 우리 결혼합니다!!",
+      "예찬 ♥ 주은\n소중한 분들과 함께,\n우리 결혼합니다!!",
     ],
   );
   const copyCards = [...story.querySelectorAll<HTMLElement>("[data-story-copy]")];

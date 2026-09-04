@@ -355,11 +355,16 @@
 .chapterNav i { background: rgba(23, 23, 23, 0.2); }
 
 .fallbackCard { overflow: hidden; border: 1px solid #d7bf91; border-radius: 0.4rem; background: #fffaf0; box-shadow: 0.55rem 0.65rem 0 #17384c; }
-.fallbackImage { display: block; width: 100%; height: auto; aspect-ratio: 430 / 620; object-fit: cover; }
+.fallbackArtwork { position: relative; width: 100%; aspect-ratio: 430 / 932; overflow: hidden; background: var(--color-paper); }
+.fallbackArtwork .layer { visibility: visible; opacity: 1; transform: none; }
+.fallbackArtwork [data-static-story-layer="sidecar"] { transform: translate3d(30px, 3px, 0) scale(0.91); }
+.fallbackArtwork [data-static-story-layer="casual-couple"] { transform: translate3d(0, 610px, 0); }
+.fallbackArtwork [data-static-story-layer="wedding-couple"] { transform: translate3d(0, 470px, 0); }
+.fallbackArtwork [data-static-story-layer="proposal-triptych"] { width: 430px; }
 .fallbackCopy { padding: 1.15rem 1.3rem 1.45rem; }
 .fallbackCard small { color: #d9543d; font-weight: 1000; letter-spacing: 0.18em; }
 .fallbackCard h2 { margin-top: 0.25rem; font-family: var(--font-serif); font-size: 1.35rem; }
-.fallbackCard p { margin-top: 0.4rem; font-weight: 800; line-height: 1.55; }
+.fallbackCard p { margin-top: 0.4rem; font-weight: 800; line-height: 1.55; white-space: pre-line; }
 
 .story[data-motion="pending"],
 .story[data-motion="reduce"] { left: auto; width: 100%; height: auto; margin-left: 0; padding: 1rem; background: #f7ead0; }

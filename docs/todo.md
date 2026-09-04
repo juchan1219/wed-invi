@@ -10,7 +10,7 @@
 - [x] 41개 분리 레이어와 100개 이상 키프레임 기반 타임라인 구현
 - [x] 종이 찢김·polygon reveal·카메라 줌·패널 확대·의상 매치컷 구현
 - [x] 430×932 단일 논리 모바일 좌표·비균일 scale·transform-origin 기반 구도 구현, `ResizeObserver` CSS 변수로 viewport contain 및 내부 viewport 단위 제거
-- [x] 모션 축소 설정에서 7개 장면(오프닝·사이드카·오피스·웃음·프로포즈·예식장·피날레)의 비스티키 정적 대체 콘텐츠 제공
+- [x] 모션 축소 설정에서 7개 장면의 배경·주인공·전경을 합성한 비스티키 정적 대체 콘텐츠 제공, 장면 2는 cue 없이 그림만 노출
 - [x] JavaScript 실행 전에도 `pending` 정적 대체 화면·건너뛰기와 스크린리더용 7개 장면 전체 대본 제공, 모션 허용 확인 뒤에만 sticky/rAF 활성화
 - [x] 오프닝 배경·첫 캐릭터 합성만 preload하고 나머지 애니메이션/폴백 이미지는 lazy load, 장식 레이어는 `alt=""`·`aria-hidden`·비포커스 처리
 - [x] 진행률 스크린리더 안내를 1% 프레임 갱신에서 7개 장면 경계 갱신으로 제한
@@ -28,6 +28,8 @@
 - [x] shots 10–16 프로포즈 삼연작→예식장→하객→피날레 공간형 타임라인 구현 — 1290×932 단일 스트립 pan, 반지 crop pulse, Tokyo 위로 보이는 stack/clip 기반 예식장 diagonal reveal, 정확한 half-open 0.5% 의상 match cut, 군중 parallax, veil/paper sweep 및 역방향·직접 점프 계약 포함
 - [x] 최종 아트 합성본을 390×844·430×932·1280×720 브라우저에서 아래/위/큰 점프와 장면 2 sidecar·프로포즈 cue·복원 포함 시각 검수
 - [x] 장면 2 sidecar 캔버스 clipping을 수정하고(`316dc3b`), 세 viewport에서 p≈.13의 두 인물·두 바퀴 전체 노출을 고정 캡처로 재검수
+- [x] 농담 장면의 말풍선·추가 문구 제거, 피날레 줄바꿈 고정, 반지 강조 레이어와 동일 경로 history 복원 순서 수정
+- [x] 브라우저 QA 캡처를 저장소 증적 디렉터리에 보존
 - [ ] iOS Safari와 카카오톡 인앱 브라우저에서 긴 sticky 섹션 체감 확인
 
 조사와 새 설계: [`scroll-story-reference-analysis.md`](scroll-story-reference-analysis.md),
