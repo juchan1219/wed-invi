@@ -11,6 +11,7 @@
     "photos:prep": "tsx scripts/prep-photos.ts",
     "dance:prep": "node scripts/prepare-dance-poses.mjs",
     "dance:build": "node scripts/build-dance-rive.mjs",
+    "dance:upscale": "node scripts/upscale-dance-frames.mjs",
     "dance:frames": "node scripts/prepare-dance-frames.mjs",
     "test:dance": "node --test scripts/dance/*.test.mjs",
     "db:generate": "drizzle-kit generate",

@@ -49,6 +49,9 @@ yarn-error.log*
 /photos/*
 !/photos/.gitkeep
 
+# 댄스 시트 4배 업스케일 중간 산출물(장당 ~16MB). `npm run dance:upscale`로 다시 만든다.
+/assets/dance-frames/upscaled/
+
 # 편지에 첨부한 이미지의 로컬 개발용 저장 위치.
 # 배포 환경에서는 Vercel Blob 에 올라가므로 이 폴더가 쓰이지 않는다.
 /public/uploads/

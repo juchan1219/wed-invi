@@ -1,5 +1,6 @@
 export const DANCE_FRAME_COUNT = 80;
-export const DANCE_FRAME_SIZE = 384;
+// scripts/prepare-dance-frames.mjs의 cellSize와 같아야 한다(테스트로 고정).
+export const DANCE_FRAME_SIZE = 576;
 export const DANCE_FRAMES_PER_PAGE = 16;
 
 export function sampleFrameSequence(progress: number) {

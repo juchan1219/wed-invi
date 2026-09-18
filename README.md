@@ -124,10 +124,17 @@ Rive 벡터 재작화는 원본 캐릭터와 다르다는 사용자 피드백으
 npm run dance:prep -- /absolute/path/to/2x3-reference.png
 ```
 
-이미지 시트 원본은 `assets/dance-frames/`에 보관하며 `npm run dance:frames`로
-`public/story/wedding-dance/frames/`의 WebP atlas를 재생성합니다. 첫 atlas만 우선
-로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
-현재 셀 원본은 약 300px이므로 초고해상도 최종 아트는 아닙니다.
+이미지 시트 원본은 `assets/dance-frames/`에 보관합니다. 원본 셀이 약 313px이라 그대로 쓰면
+화면에서 약 1.9배 늘어나 선이 흐려지므로, Real-ESRGAN(anime 모델)으로 4배 키운 뒤 576px 셀로
+줄여 씁니다. 그림 자체는 바꾸지 않고 선만 또렷해집니다(머리·정장의 연필 질감은 매끈해짐).
+
+```bash
+# 1회: 공식 배포본(v0.2.5.0 realesrgan-ncnn-vulkan-*-macos.zip) 압축 해제 후
+REALESRGAN=/absolute/path/to/realesrgan-ncnn-vulkan npm run dance:upscale  # → assets/dance-frames/upscaled/ (git 제외, 장당 ~16MB)
+npm run dance:frames   # → public/story/wedding-dance/frames/ WebP atlas 5장 (576px 셀, 품질 60, 합계 약 1.7MB)
+```
+
+첫 atlas만 우선 로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
 제작 조건과 품질 제한: [`assets/dance-frames/README.md`](assets/dance-frames/README.md).
 
 보관한 실험용 Rive의 안무는 `scripts/dance/choreography.mjs`, 벡터 그림/본/의상 변형은

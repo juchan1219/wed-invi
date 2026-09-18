@@ -1,8 +1,9 @@
 {
-  "cellSize": 384,
+  "cellSize": 576,
   "columns": 4,
   "rows": 4,
   "frames": 80,
+  "upscale": 4,
   "audit": [
     {
       "page": 0,
