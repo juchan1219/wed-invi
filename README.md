@@ -132,7 +132,11 @@ npm run dance:prep -- /absolute/path/to/2x3-reference.png
 # 1회: 공식 배포본(v0.2.5.0 realesrgan-ncnn-vulkan-*-macos.zip) 압축 해제 후
 REALESRGAN=/absolute/path/to/realesrgan-ncnn-vulkan npm run dance:upscale  # → assets/dance-frames/upscaled/ (git 제외, 장당 ~16MB)
 npm run dance:frames   # → public/story/wedding-dance/frames/ WebP atlas 5장 (576px 셀, 품질 60, 합계 약 1.7MB)
+npm run dance:ending   # → public/story/wedding-dance/frames/dance-6.webp 엔딩 그림 한 장 (assets/dance-frames/ending.png, 업스케일 불필요)
 ```
+
+춤이 끝나면(마지막 장면, 스크롤 91%부터) 엔딩 그림 한 장으로 바뀌어 멈춥니다. 정면을 보며 신랑은 한 팔로 신부를 안고
+다른 팔을 들고, 신부는 부케를 든 그림입니다. `dance:ending`이 신랑 키·신발 위치·선 굵기를 춤 마지막 프레임과 같게 맞춥니다.
 
 첫 atlas만 우선 로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
 제작 조건과 품질 제한: [`assets/dance-frames/README.md`](assets/dance-frames/README.md).

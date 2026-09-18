@@ -13,6 +13,7 @@
     "dance:build": "node scripts/build-dance-rive.mjs",
     "dance:upscale": "node scripts/upscale-dance-frames.mjs",
     "dance:frames": "node scripts/prepare-dance-frames.mjs",
+    "dance:ending": "node scripts/prepare-dance-ending.mjs",
     "test:dance": "node --test scripts/dance/*.test.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/db-migrate.ts",
