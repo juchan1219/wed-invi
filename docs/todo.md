@@ -4,6 +4,21 @@
 
 ## 스크롤 웨딩 스토리
 
+- [x] RML 소스·관절 안무에서 실제 wedding-dance.riv 생성 (사용자 아트 품질 피드백으로 실험안 보관)
+- [x] Rive 재작화 기본 노출 중단, 원본 참조 이미지 프레임 방식으로 전환
+- [x] 원본 참조 중간 동작 시트 생성, 위치 급변 시트 제외, 바닥 기준 정렬
+- [x] 80 프레임 위치의 canvas 시퀀스·스크롤 정방향/역방향, DPR 제한 및 lazy atlas 로딩
+- [x] 프레임 버전 361×759 브라우저 시작·중간·턴·피날레·역스크롤 확인, 가로 넘침 없음
+- [x] 프레임 버전 스토리 테스트 98개, 타입 검사·프로덕션 빌드 통과
+- [ ] 원본 대비 캐릭터 동일성·동작 부드러움 사용자 최종 시각 승인 (미완료)
+
+- [x] 기존 7장면 `WeddingStory`를 공개 청첩장에서 비활성화
+- [x] 첨부한 2×3 원화를 여섯 개 투명 pose 자산으로 분리
+- [x] 6포즈 좌우 교차 sticky dance stage와 문구 타임라인 구현
+- [x] 모션 축소 설정에서 비스티키 정적 대체 콘텐츠 제공
+- [x] Rive `danceProgress` 입력으로 교체 가능한 actor 계약과 에셋 안내 추가
+- [x] 390×844·430×932·1280×720 브라우저 검수
+
 - [x] 레퍼런스 사이트의 DOM·공개 번들·데스크톱·모바일 스크롤을 분석해 자산·트랙·키프레임 구조 기록
 - [x] 승인된 7개 공개 장면 콘티와 타임라인·자산·접근성 설계 작성
 - [x] 서버·브라우저 날짜 포맷 차이로 발생하는 hydration 오류 제거
@@ -30,7 +45,7 @@
 - [x] 장면 2 sidecar 캔버스 clipping을 수정하고(`316dc3b`), 세 viewport에서 p≈.13의 두 인물·두 바퀴 전체 노출을 고정 캡처로 재검수
 - [x] 농담 장면의 말풍선·추가 문구 제거, 피날레 줄바꿈 고정, 반지 강조 레이어와 동일 경로 history 복원 순서 수정
 - [x] 브라우저 QA 캡처를 저장소 증적 디렉터리에 보존
-- [ ] iOS Safari와 카카오톡 인앱 브라우저에서 긴 sticky 섹션 체감 확인
+- [ ] iOS Safari와 카카오톡 인앱 브라우저에서 6포즈 sticky dance 구간 체감 확인
 
 조사와 새 설계: [`scroll-story-reference-analysis.md`](scroll-story-reference-analysis.md),
 [`2026-08-14-scroll-wedding-story-rebuild-design.md`](superpowers/specs/2026-08-14-scroll-wedding-story-rebuild-design.md)

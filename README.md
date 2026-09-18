@@ -110,7 +110,44 @@ npm run photos:prep
 
 작성자 이름(예찬·주은)을 바꾸려면 [`src/config/admins.ts`](src/config/admins.ts)를 수정하세요.
 
-### 3. 환경변수
+### 3. 웨딩 댄스 자산
+
+첫 화면은 원본 참조 이미지 프레임을 canvas에 그려 GSAP ScrollTrigger로 제어합니다.
+Rive 벡터 재작화는 원본 캐릭터와 다르다는 사용자 피드백으로 기본 비활성화했습니다.
+64개 생성 그림을 사용해 80개 프레임 위치를 구성합니다(턴 복귀 16개는 역순 재사용).
+프레임마다 같은 바닥선에 정렬하며, 얼굴 잔상이 생기는 이미지 crossfade는 하지 않습니다.
+생성 이미지의 동일성·동작 품질은 최종 사용자 시각 승인 전인 시안입니다.
+`pose-1.webp`~`pose-6.webp`는 모션 축소/정적 fallback 레퍼런스로 유지합니다.
+새 2×3 원화로 정적 그림을 교체할 때만 아래 명령을 사용합니다.
+
+```bash
+npm run dance:prep -- /absolute/path/to/2x3-reference.png
+```
+
+이미지 시트 원본은 `assets/dance-frames/`에 보관하며 `npm run dance:frames`로
+`public/story/wedding-dance/frames/`의 WebP atlas를 재생성합니다. 첫 atlas만 우선
+로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
+현재 셀 원본은 약 300px이므로 초고해상도 최종 아트는 아닙니다.
+제작 조건과 품질 제한: [`assets/dance-frames/README.md`](assets/dance-frames/README.md).
+
+보관한 실험용 Rive의 안무는 `scripts/dance/choreography.mjs`, 벡터 그림/본/의상 변형은
+`scripts/build-dance-rive.mjs`에서 수정합니다. 공식 Rive CLI 1.0.4로 재생성:
+
+```bash
+RIVE_CLI=/absolute/path/to/rive npm run dance:build
+npm run test:dance
+```
+
+생성되는 `assets/rive/wedding-dance/scene.rml`과 배포용 `.riv`를 함께 보관합니다.
+Luau 스크립트를 포함하지 않아 로그인·유료 에디터·서명 없이 로컬 컴파일됩니다.
+WASM은 설치된 canvas 런타임과 같은 버전을 복사해 자체 호스팅하므로 CDN이 필요 없습니다.
+Rive 패키지 업데이트 후에는 `dance:build`를 다시 실행하세요.
+실험용 Rive를 다시 보려면 `NEXT_PUBLIC_DANCE_RIVE_SRC=/story/wedding-dance/wedding-dance.riv`를 설정합니다.
+계약은 `WeddingDance` state machine + 기본 View Model `Dance`의
+`danceProgress` Number(0–100)입니다. 구식 state machine input이 아닙니다.
+수정 방법과 QA: [`assets/rive/wedding-dance/README.md`](assets/rive/wedding-dance/README.md).
+
+### 4. 환경변수
 
 `.env.example`을 `.env.local`로 복사한 뒤 값을 채웁니다.
 
@@ -202,6 +239,7 @@ npm run dev            # 개발 서버
 npm run build          # 프로덕션 빌드
 npm run typecheck      # 타입 검사
 npm run photos:prep    # 사진 최적화 + OG 이미지 생성
+npm run dance:prep -- /path/to/reference.png # 2×3 원화를 6포즈 자산으로 분리
 npm run db:generate    # 스키마 변경 → 마이그레이션 파일 생성
 npm run db:migrate     # 마이그레이션 적용
 npm run db:studio      # DB 내용 눈으로 보기
