@@ -135,7 +135,7 @@ npm run dance:frames   # → public/story/wedding-dance/frames/ WebP atlas 5장 
 npm run dance:ending   # → public/story/wedding-dance/frames/dance-6.webp 엔딩 그림 한 장 (assets/dance-frames/ending.png, 업스케일 불필요)
 ```
 
-춤이 끝나면(마지막 장면, 스크롤 91%부터) 엔딩 그림 한 장으로 바뀌어 멈춥니다. 정면을 보며 신랑은 한 팔로 신부를 안고
+춤이 끝나면(마지막 장면이 시작되는 스크롤 84%부터) 엔딩 그림 한 장으로 바뀌어 멈춥니다. 정면을 보며 신랑은 한 팔로 신부를 안고
 다른 팔을 들고, 신부는 부케를 든 그림입니다. `dance:ending`이 신랑 키·신발 위치·선 굵기를 춤 마지막 프레임과 같게 맞춥니다.
 
 첫 atlas만 우선 로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.

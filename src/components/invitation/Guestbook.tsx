@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { wedding } from "@/config/wedding";
 import type { GuestbookView } from "@/lib/guestbook";
 import { Reveal } from "@/components/ui/Reveal";
@@ -14,8 +14,15 @@ import { useToast } from "@/components/ui/Toast";
  * 그래야 청첩장 본문이 정적 페이지로 남아 CDN에서 바로 나간다.
  * 방명록은 스크롤을 한참 내려야 나오는 자리라 조금 늦게 채워져도 괜찮다.
  */
+// 서버·hydration 때는 false, 그 뒤 브라우저에서는 true. 구독할 변화가 없어 subscribe는 아무것도 하지 않는다.
+const subscribeNothing = () => () => {};
+function useIsBrowser() {
+  return useSyncExternalStore(subscribeNothing, () => true, () => false);
+}
+
 export function Guestbook() {
   const toast = useToast();
+  const isBrowser = useIsBrowser();
   const [entries, setEntries] = useState<GuestbookView[] | null>(null);
 
   useEffect(() => {
@@ -46,7 +53,11 @@ export function Guestbook() {
   return (
     <Section label="Guestbook" title="축하 메시지">
       <Reveal>
-        <GuestbookForm onCreated={handleCreated} />
+        {/* 입력 폼은 브라우저에서만 그린다. 비밀번호 관리자·자동완성 확장이 hydration 전에 <form>·입력칸에
+            속성을 끼워 넣어 불일치 경고가 났다(입력칸, 이후 <form>에서 재현). 요소마다 경고를 끄는 대신
+            폼을 hydration 비교에서 뺀다. 페이지 맨 아래라 서버 렌더가 필요 없고, 제출은 원래 JS(fetch)로만 된다.
+            그리기 전에는 폼 높이(217px)만큼 자리를 잡아 둔다. */}
+        {isBrowser ? <GuestbookForm onCreated={handleCreated} /> : <div aria-hidden="true" className="h-[13.5625rem]" />}
 
         {entries === null ? (
           <p className="py-10 text-center text-sm text-ink-faint">불러오는 중...</p>
@@ -99,15 +110,10 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
     }
   }
 
-  // suppressHydrationWarning: 비밀번호 관리자·자동완성·맞춤법 확장이 hydration 전에 입력칸에
-  // 속성(data-1p-*, data-lastpass-*, style 등)을 끼워 넣어 개발 모드에 불일치 경고가 뜬다.
-  // 이 입력칸들의 속성은 전부 고정값이라 실제 서버/클라이언트 불일치가 생길 수 없다.
-  // 이 요소 자신의 속성만 무시하며 자식·다른 요소의 불일치는 그대로 잡힌다.
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="grid grid-cols-[1fr_6.5rem] gap-2">
         <input
-          suppressHydrationWarning
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={wedding.guestbook.maxNameLength}
@@ -116,7 +122,6 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
           className="rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
         />
         <input
-          suppressHydrationWarning
           value={password}
           onChange={(e) => setPassword(e.target.value.replace(/\D/g, "").slice(0, 4))}
           inputMode="numeric"
@@ -126,7 +131,6 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
         />
       </div>
       <textarea
-        suppressHydrationWarning
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         maxLength={wedding.guestbook.maxMessageLength}

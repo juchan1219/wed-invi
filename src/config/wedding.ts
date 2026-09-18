@@ -43,7 +43,7 @@ export const wedding = {
   },
 
   bride: {
-    name: "박주은", // PLACEHOLDER
+    name: "이주은",
     relation: "장녀",
     phone: "010-0000-0000", // PLACEHOLDER
     father: { name: "박아버지", phone: "010-0000-0000" } as Person, // PLACEHOLDER
@@ -120,10 +120,10 @@ export const wedding = {
     ] as Account[], // PLACEHOLDER
     bride: [
       {
-        label: "신부 박주은",
+        label: "신부 이주은",
         bank: "카카오뱅크",
         number: "0000-00-0000000",
-        holder: "박주은",
+        holder: "이주은",
       },
       {
         label: "아버지 박아버지",

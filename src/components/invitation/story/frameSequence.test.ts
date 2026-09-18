@@ -14,10 +14,12 @@ test('frame sampler reaches exact endpoints and reverses without state',()=>{
   assert.deepEqual(sampleFrameSequence(-2),sampleFrameSequence(0));
   assert.deepEqual(sampleFrameSequence(NaN),sampleFrameSequence(0));
 });
-test('the dance holds its last frame in the final scene, then shows the ending picture',()=>{
-  assert.equal(sampleFrameSequence(.84).first,79); // 마지막 장면 시작: 안아 들고 마주 봄
-  assert.equal(sampleFrameSequence(.9).first,79);  // 잠시 유지
-  assert.equal(sampleFrameSequence(.91).first,80); // 엔딩 그림
+test('the standing carry is brief and the ending picture appears as the final copy lands',()=>{
+  assert.equal(sampleFrameSequence(.67).first,63);  // 입맞춤 장면 시작: 포옹
+  assert.equal(sampleFrameSequence(.78).first,74);  // 들어 올리고 일어섬 (이전과 같은 속도)
+  assert.equal(sampleFrameSequence(.8).first,79);   // 일어선 채 안은 프레임은 빠르게 지나감
+  assert.equal(sampleFrameSequence(.83).first,79);  // 마지막 문구가 나타나는 동안만 유지
+  assert.equal(sampleFrameSequence(.84).first,80);  // 마지막 장면 시작과 함께 엔딩 그림
   let previous=0;
   for(let step=0;step<=100;step++){ // monotonic, so reverse scroll replays it backwards
     const frame=sampleFrameSequence(step/100).first;

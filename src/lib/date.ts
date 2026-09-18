@@ -50,6 +50,14 @@ export function formatCeremonyDateShort(): string {
   return `${year}. ${String(month).padStart(2, "0")}. ${String(day).padStart(2, "0")}`;
 }
 
+const KOREAN_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const;
+
+/** "토" — 서울 기준 예식 요일. ICU 요일 번역에 의존하지 않아 서버·브라우저가 같다. */
+export function formatCeremonyWeekdayShort(): string {
+  const { year, month, day } = seoulYMD(ceremonyDate());
+  return KOREAN_WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+}
+
 /** ICU의 dayPeriod 번역에 의존하지 않고 24시간제 숫자를 한국어 시각으로 만든다. */
 export function formatKoreanTimeParts(hour24: number, minute: number): string {
   const meridiem = hour24 < 12 ? "오전" : "오후";

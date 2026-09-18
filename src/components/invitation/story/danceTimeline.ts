@@ -1,5 +1,5 @@
 import { wedding } from "@/config/wedding";
-import { formatCeremonyDateShort, formatCeremonyTime } from "@/lib/date";
+import { formatCeremonyDateShort, formatCeremonyTime, formatCeremonyWeekdayShort } from "@/lib/date";
 
 export type DanceSide = "left" | "right" | "center";
 
@@ -15,7 +15,7 @@ export type DanceScene = {
   narration: string;
 };
 
-const date = formatCeremonyDateShort().replaceAll(" ", "");
+const date = `${formatCeremonyDateShort().replaceAll(" ", "")}(${formatCeremonyWeekdayShort()})`; // "2026.12.19(토)"
 const time = formatCeremonyTime();
 
 export const DANCE_SCENES = [
@@ -37,8 +37,8 @@ export const DANCE_SCENES = [
     end: 0.33,
     actorSide: "right",
     copySide: "left",
-    eyebrow: "OUR DAY",
-    copy: `${date}\n${time}`,
+    eyebrow: "SAVE THE DATE",
+    copy: `${date} ${time}\n${wedding.venue.name}`,
     narration: "손을 잡고 한 걸음 벌어져 춤추는 두 사람",
   },
   {
@@ -49,7 +49,7 @@ export const DANCE_SCENES = [
     actorSide: "left",
     copySide: "right",
     eyebrow: "TOGETHER",
-    copy: "서로의 가장 가까운 곳에서\n같은 마음으로",
+    copy: "바라만 봐도 웃음이 나는\n사람을 만났습니다",
     narration: "가까이 다가가 서로를 안은 두 사람",
   },
   {
@@ -59,8 +59,8 @@ export const DANCE_SCENES = [
     end: 0.67,
     actorSide: "right",
     copySide: "left",
-    eyebrow: "CELEBRATE WITH US",
-    copy: `${wedding.venue.name}\n${wedding.venue.hall}`,
+    eyebrow: "HAND IN HAND",
+    copy: "그 손을 꼭 잡고\n평생을 걸어가려 합니다",
     narration: "손을 높이 들고 빙글 도는 두 사람",
   },
   {
@@ -71,7 +71,7 @@ export const DANCE_SCENES = [
     actorSide: "left",
     copySide: "right",
     eyebrow: "WITH LOVE",
-    copy: "소중한 분들과 함께\n이 순간을 나누고 싶습니다",
+    copy: "그 첫걸음을\n따뜻하게 지켜봐 주세요",
     narration: "서로를 꼭 안고 입맞추는 두 사람",
   },
   {
@@ -81,8 +81,8 @@ export const DANCE_SCENES = [
     end: 1,
     actorSide: "center",
     copySide: "center",
-    eyebrow: "SAVE THE DATE",
-    copy: "우리, 결혼합니다",
+    eyebrow: "CELEBRATE WITH US",
+    copy: "소중한 인연에 감사드리며\n기쁜 날, 초대드리고자 합니다",
     narration: "신랑이 신부를 안아 들고 함께 웃는 두 사람",
   },
 ] as const satisfies readonly DanceScene[];

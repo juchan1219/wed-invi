@@ -63,10 +63,13 @@
 
 .copyLayer { position: absolute; z-index: 3; inset: 0; pointer-events: none; }
 
+/* 문구 상자는 무대 폭 전체(좌우 여백 제외)라 줄은 `\n`에서만 바뀐다. 좌우 정렬은 data-side가 정한다.
+   본문은 모든 장면이 같은 크기다. 가장 긴 줄("기쁜 날, 초대드리고자 합니다", 16자)이 320px 화면에서도
+   한 줄에 들어가는 크기가 상한이다. top 18%는 3줄인 2번째 장면이 캐릭터 머리와 겹치지 않게 하는 높이다. */
 .copy {
   position: absolute;
-  top: 22%;
-  width: min(42cqw, 12rem);
+  top: 18%;
+  width: calc(100cqw - 2.8rem);
   color: #171717;
   white-space: pre-line;
   will-change: transform, opacity;
@@ -74,9 +77,9 @@
 
 .copy[data-side="left"] { left: max(1.4rem, env(safe-area-inset-left)); text-align: left; }
 .copy[data-side="right"] { right: max(1.4rem, env(safe-area-inset-right)); text-align: right; }
-.copy[data-side="center"] { top: 13%; left: 50%; width: min(80cqw, 22rem); text-align: center; transform: translateX(-50%) !important; }
-.copy small { display: block; margin-bottom: 0.65rem; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.16em; }
-.copy p { font-family: var(--font-serif); font-size: clamp(1.15rem, 5cqw, 1.65rem); font-weight: 700; line-height: 1.55; letter-spacing: -0.045em; }
+.copy[data-side="center"] { top: 13%; left: 50%; text-align: center; transform: translateX(-50%) !important; }
+.copy small { display: block; margin-bottom: 0.7rem; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; white-space: nowrap; }
+.copy p { font-family: var(--font-serif); font-size: clamp(1.1rem, 5.5cqw, 1.7rem); font-weight: 700; line-height: 1.55; letter-spacing: -0.045em; }
 
 .progress {
   position: absolute;
@@ -196,6 +199,5 @@
 
 @container (max-width: 22rem) {
   .actor { width: 86cqw; }
-  .copy { top: 18%; width: 44cqw; }
-  .copy p { font-size: 1rem; }
+  .copy { top: 16%; }
 }
