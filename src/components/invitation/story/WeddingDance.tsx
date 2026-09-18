@@ -80,7 +80,7 @@ export function WeddingDance({ contentTargetId }: { contentTargetId: string }) {
         <p className={styles.announcement} data-dance-announcement aria-live="polite">
           {firstAnnouncement.text}
         </p>
-        <p className={styles.scrollHint} aria-hidden="true">SCROLL TO DANCE <i /></p>
+        <p className={styles.scrollHint} aria-hidden="true"><span>아래로 스크롤</span><i /></p>
       </div>
 
       <div className={styles.fallback} aria-label="웨딩 댄스 장면">

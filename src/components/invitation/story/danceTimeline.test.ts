@@ -7,6 +7,8 @@ import {
   getDancePoseOpacities,
   getDanceFrame,
   getDanceProgressAnnouncement,
+  getScrollHintState,
+  SCROLL_HINT_END,
 } from "./danceTimeline";
 
 test("the replacement dance story exposes six contiguous key poses", () => {
@@ -61,4 +63,15 @@ test("the public invitation renders WeddingDance instead of the retired WeddingS
   assert.match(source, /import \{ WeddingDance \} from "\.\/story\/WeddingDance"/);
   assert.match(source, /<WeddingDance contentTargetId="invitation-content" \/>/);
   assert.doesNotMatch(source, /<WeddingStory/);
+});
+
+test("the scroll hint stays until the stage is about to release, dimming only while moving", () => {
+  assert.equal(getScrollHintState(0, false), "resting");
+  assert.equal(getScrollHintState(0.3, true), "moving");
+  assert.equal(getScrollHintState(0.3, false), "resting");
+  // 마지막 장면(0.84~)에서도 아직 고정 구간이므로 안내가 남아 있어야 한다.
+  assert.equal(getScrollHintState(0.9, false), "resting");
+  assert.ok(SCROLL_HINT_END > DANCE_SCENES.at(-1)!.start);
+  assert.equal(getScrollHintState(SCROLL_HINT_END, false), "done");
+  assert.equal(getScrollHintState(1, true), "done");
 });

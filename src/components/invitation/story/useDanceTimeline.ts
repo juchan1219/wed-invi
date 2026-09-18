@@ -6,9 +6,13 @@ import {
   DANCE_SCENES,
   getDanceFrame,
   getDanceProgressAnnouncement,
+  getScrollHintState,
   sideToStagePercent,
   smoothstep,
 } from "./danceTimeline";
+
+/** 스크롤이 이만큼 멈추면 "아래로 스크롤" 안내를 다시 진하게 보여 준다. */
+const HINT_IDLE_MS = 2000;
 
 type DanceTimelineOptions = {
   root: React.RefObject<HTMLElement | null>;
@@ -38,8 +42,27 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
       const progressElement = stageElement.querySelector<HTMLElement>("[role='progressbar']");
       const announcementElement = stageElement.querySelector<HTMLElement>("[data-dance-announcement]");
       let lastSceneId = "";
+      let lastProgress = -1;
+      let scrolling = false;
+      let idleTimer = 0;
+
+      const syncHint = () => {
+        stageElement.dataset.hint = getScrollHintState(lastProgress, scrolling);
+      };
 
       const paint = (progress: number) => {
+        // 첫 paint(lastProgress < 0)는 사용자 스크롤이 아니므로 안내를 흐리게 하지 않는다.
+        if (lastProgress >= 0 && Math.abs(progress - lastProgress) > 0.0001) {
+          scrolling = true;
+          window.clearTimeout(idleTimer);
+          idleTimer = window.setTimeout(() => {
+            scrolling = false;
+            syncHint();
+          }, HINT_IDLE_MS);
+        }
+        lastProgress = progress;
+        syncHint();
+
         const { scene, sceneProgress } = getDanceFrame(progress);
         const sceneIndex = DANCE_SCENES.indexOf(scene);
         const nextScene = DANCE_SCENES[Math.min(DANCE_SCENES.length - 1, sceneIndex + 1)]!;
@@ -96,7 +119,10 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
         paint(Math.max(0, Math.min(1, -bounds.top / Math.max(1, rootElement.offsetHeight - window.innerHeight))));
       }, rootElement);
 
-      cleanup = () => context.revert();
+      cleanup = () => {
+        window.clearTimeout(idleTimer);
+        context.revert();
+      };
     });
 
     return () => {

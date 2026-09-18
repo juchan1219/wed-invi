@@ -126,6 +126,20 @@ export function getDancePoseOpacities(progress: number): number[] {
   ));
 }
 
+/**
+ * 스크롤 안내를 숨기는 진행률. 마지막 장면(0.84~)도 아직 stage가 고정된 구간이라
+ * 거기서 안내가 사라지면 "끝났다"고 오해한다. 고정이 풀리기 직전에만 숨긴다.
+ */
+export const SCROLL_HINT_END = 0.97;
+
+export type ScrollHintState = "resting" | "moving" | "done";
+
+/** 멈춰 있으면 진하게(resting), 스크롤 중엔 흐리게(moving), 끝나기 직전엔 숨김(done). */
+export function getScrollHintState(progress: number, scrolling: boolean): ScrollHintState {
+  if (progress >= SCROLL_HINT_END) return "done";
+  return scrolling ? "moving" : "resting";
+}
+
 export function sideToStagePercent(side: DanceSide) {
   if (side === "left") return 34;
   if (side === "right") return 66;
