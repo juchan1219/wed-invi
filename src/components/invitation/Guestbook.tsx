@@ -99,10 +99,15 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
     }
   }
 
+  // suppressHydrationWarning: 비밀번호 관리자·자동완성·맞춤법 확장이 hydration 전에 입력칸에
+  // 속성(data-1p-*, data-lastpass-*, style 등)을 끼워 넣어 개발 모드에 불일치 경고가 뜬다.
+  // 이 입력칸들의 속성은 전부 고정값이라 실제 서버/클라이언트 불일치가 생길 수 없다.
+  // 이 요소 자신의 속성만 무시하며 자식·다른 요소의 불일치는 그대로 잡힌다.
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="grid grid-cols-[1fr_6.5rem] gap-2">
         <input
+          suppressHydrationWarning
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={wedding.guestbook.maxNameLength}
@@ -111,6 +116,7 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
           className="rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
         />
         <input
+          suppressHydrationWarning
           value={password}
           onChange={(e) => setPassword(e.target.value.replace(/\D/g, "").slice(0, 4))}
           inputMode="numeric"
@@ -120,6 +126,7 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
         />
       </div>
       <textarea
+        suppressHydrationWarning
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         maxLength={wedding.guestbook.maxMessageLength}
