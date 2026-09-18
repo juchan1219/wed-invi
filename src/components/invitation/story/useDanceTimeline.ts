@@ -52,7 +52,8 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
 
         actor.current?.setProgress(progress);
         if (actorElement) {
-          actorElement.style.setProperty("--dance-actor-travel", `${(left - 50).toFixed(3)}vw`);
+          // cqw: stage 컨테이너 폭 기준. vw를 쓰면 데스크톱에서 시트 밖으로 벗어난다.
+          actorElement.style.setProperty("--dance-actor-travel", `${(left - 50).toFixed(3)}cqw`);
         }
 
         const copyBlend = sceneIndex === DANCE_SCENES.length - 1

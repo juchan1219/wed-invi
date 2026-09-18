@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 개발 전용. 휴대폰에서 `http://192.168.x.x:3000`으로 접속하면 Next 16이 dev 리소스(JS chunk·HMR)를
+  // cross-origin으로 보고 403을 내서 hydration이 안 되고, 댄스가 정적 fallback 목록으로 고정된다.
+  // 사설 IP 대역만 허용한다. 배포(next start/Vercel)에는 영향이 없다.
+  allowedDevOrigins: [
+    "192.168.*.*",
+    "10.*.*.*",
+    ...Array.from({ length: 16 }, (_, i) => `172.${16 + i}.*.*`),
+  ],
+
   images: {
     // 최신 포맷 우선. 브라우저가 지원하면 AVIF, 아니면 WebP, 마지막이 원본.
     formats: ["image/avif", "image/webp"],

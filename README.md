@@ -185,6 +185,10 @@ npm run dev
 
 - 청첩장: http://localhost:3000
 - 관리자: http://localhost:3000/admin
+- 휴대폰으로 확인: 같은 와이파이에서 `http://<맥의 IP>:3000` (IP는 `ipconfig getifaddr en0`).
+  Next 16은 localhost가 아닌 주소의 dev 리소스를 기본 차단하므로 `next.config.ts`의
+  `allowedDevOrigins`에 사설 IP 대역을 등록해 뒀습니다. 이게 없으면 JS가 안 붙어서
+  댄스 대신 정적 포즈 목록만 보입니다. 설정을 바꿨다면 dev 서버를 재시작하세요.
 
 ---
 

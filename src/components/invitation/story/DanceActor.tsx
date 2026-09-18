@@ -41,7 +41,7 @@ export const DanceActor = forwardRef<DanceActorHandle, { riveSrc: string }>(
             src="/story/wedding-dance/pose-1.webp"
             alt=""
             fill
-            sizes="(max-width: 480px) 86vw, 30rem"
+            sizes="(max-width: 416px) 86vw, 358px"
             priority
             draggable={false}
           />}

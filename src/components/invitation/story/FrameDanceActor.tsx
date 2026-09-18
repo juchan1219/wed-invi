@@ -77,6 +77,6 @@ export const FrameDanceActor = forwardRef<DanceActorHandle>(function FrameDanceA
 
   return <div className={styles.poseActor} data-dance-renderer={ready ? "frames" : "loading"} aria-hidden="true">
     <canvas ref={canvasRef} className={styles.riveCanvas} />
-    {!ready && <Image src="/story/wedding-dance/pose-1.webp" alt="" fill sizes="86vw" priority className={styles.poseImage} />}
+    {!ready && <Image src="/story/wedding-dance/pose-1.webp" alt="" fill sizes="(max-width: 416px) 86vw, 358px" priority className={styles.poseImage} />}
   </div>;
 });
