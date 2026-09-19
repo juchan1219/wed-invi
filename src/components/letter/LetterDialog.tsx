@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
+import { formatCeremonyDateShort } from "@/lib/date";
 import type { LetterView } from "@/lib/letters";
 import { LetterMarkdown } from "./LetterMarkdown";
 import { describeLetterSheet } from "./letterSheets";
@@ -10,11 +11,17 @@ const EASE_RISE = "cubic-bezier(.05,.7,.1,1)";
 /** y1 > 1이라 날개가 살짝 지나쳤다 제자리에 눕는다 — 종이가 안착하는 느낌. */
 const EASE_UNFOLD = "cubic-bezier(.3,1.15,.4,1)";
 const EASE_EXIT = "cubic-bezier(.3,0,.8,.15)";
+/** 소인이 쿵 찍히며 살짝 눌렸다 돌아온다. */
+const EASE_STAMP = "cubic-bezier(.3,1.35,.55,1)";
+/** 소인 기울기 — CSS `.postmark`의 transform과 같아야 한다(애니메이션이 transform을 통째로 바꾼다). */
+const POSTMARK_TILT = "rotate(-9deg)";
+/** 소인 날짜: 예식일 "2026.12.19" (서울 기준). */
+const POSTMARK_DATE = formatCeremonyDateShort().replaceAll(" ", "");
 
-/** 펼침 순서(ms): 올라오기 → 하트 봉인 사라짐 → 날개 펼침 → 글. 두 번째 편지지는 조금 빠르게. */
+/** 펼침 순서(ms): 올라오기 → 소인 찍힘 → 날개 펼침 → 글. 두 번째 편지지는 조금 빠르게. */
 const TIMING = {
-  first: { rise: 350, seal: 200, unfold: 800, text: 300 },
-  next: { rise: 250, seal: 150, unfold: 650, text: 250 },
+  first: { rise: 350, stamp: 200, unfold: 800, text: 300 },
+  next: { rise: 250, stamp: 150, unfold: 650, text: 250 },
 } as const;
 
 type Phase = "folded" | "open";
@@ -24,6 +31,8 @@ type Phase = "folded" | "open";
  *
  * - 네이티브 `<dialog>` + `showModal()`: 포커스 가두기·뒤 페이지 비활성·Esc는 브라우저가 처리한다.
  *   기본 `overflow:auto`는 3D를 평면으로 만들므로 대화상자는 투명한 전체 화면 틀로만 쓴다.
+ * - 위 절반(날개)이 아래 절반 위로 접혀 있다가 아래에서 위로 펼쳐진다. 접힌 겉면은 우편 봉투 앞면이다
+ *   (보내는 사람·우표·소인·받는 사람).
  * - 3D 시트(.sheet, preserve-3d)와 그 조상에는 opacity·overflow·filter를 두지 않는다(3D가 꺼짐).
  *   페이드는 바깥 .stack에만 준다.
  * - 펼치는 동안에는 빈 종이만 돌리고, 끝나면 같은 크기의 평평한 편지(<article>)에 글을 보여 준다.
@@ -46,7 +55,7 @@ export function LetterDialog({
   const sheetRef = useRef<HTMLDivElement>(null);
   const flapRef = useRef<HTMLDivElement>(null);
   const shadeRef = useRef<HTMLDivElement>(null);
-  const sealRef = useRef<HTMLSpanElement>(null);
+  const postmarkRef = useRef<SVGSVGElement>(null);
   const articleRef = useRef<HTMLElement>(null);
   const running = useRef<Animation[]>([]);
   const closing = useRef(false);
@@ -123,7 +132,7 @@ export function LetterDialog({
     }
 
     const t = index === 0 ? TIMING.first : TIMING.next;
-    const unfoldAt = t.rise + t.seal;
+    const unfoldAt = t.rise + t.stamp;
     const total = unfoldAt + t.unfold;
     const sheetElement = sheetRef.current!;
     const flap = flapRef.current!;
@@ -131,20 +140,25 @@ export function LetterDialog({
     flap.style.willChange = "transform";
     const animations = [
       stack.animate([{ opacity: 0 }, { opacity: 1 }], { duration: t.rise, easing: EASE_RISE, fill: "both" }),
-      // 접힌 동안엔 위 절반만 보이므로 시트를 H/4 내려 가운데에 두고, 펼치면서 제자리로 올린다.
+      // 접힌 동안엔 아래 절반만 보이므로 시트를 H/4 올려 가운데에 두고, 펼치면서 제자리로 내린다.
       sheetElement.animate([
-        { transform: "translateY(calc(25% + 24px))", offset: 0, easing: EASE_RISE },
-        { transform: "translateY(25%)", offset: t.rise / total },
-        { transform: "translateY(25%)", offset: unfoldAt / total, easing: EASE_UNFOLD },
+        { transform: "translateY(calc(-25% + 24px))", offset: 0, easing: EASE_RISE },
+        { transform: "translateY(-25%)", offset: t.rise / total },
+        { transform: "translateY(-25%)", offset: unfoldAt / total, easing: EASE_UNFOLD },
         { transform: "translateY(0)", offset: 1 },
       ], { duration: total, fill: "both" }),
-      sealRef.current!.animate(
-        [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.8)" }],
-        { delay: t.rise, duration: t.seal, easing: "ease-in", fill: "both" },
+      // 우편이 도착한 순간: 소인이 쿵 찍힌 뒤 편지가 펼쳐진다.
+      postmarkRef.current!.animate(
+        [
+          { opacity: 0, transform: `${POSTMARK_TILT} scale(1.45)` },
+          { opacity: 1, transform: `${POSTMARK_TILT} scale(1)` },
+        ],
+        { delay: t.rise, duration: t.stamp, easing: EASE_STAMP, fill: "both" },
       ),
-      // translateZ(1px): 접힌 날개와 위 절반이 같은 평면에서 깜빡이지 않게 띄운다.
+      // 위 절반이 아래에서 위로 넘어온다. -180°라야 펼치는 동안 보는 사람 쪽으로 넘어온다(+180°면 종이 뒤로 돈다).
+      // translateZ(1px): 접힌 날개와 아래 절반이 같은 평면에서 깜빡이지 않게 띄운다.
       flap.animate(
-        [{ transform: "translateZ(1px) rotateX(180deg)" }, { transform: "translateZ(0px) rotateX(0deg)" }],
+        [{ transform: "translateZ(1px) rotateX(-180deg)" }, { transform: "translateZ(0px) rotateX(0deg)" }],
         { delay: unfoldAt, duration: t.unfold, easing: EASE_UNFOLD, fill: "both" },
       ),
       shadeRef.current!.animate([{ opacity: 1 }, { opacity: 0 }], { delay: unfoldAt, duration: t.unfold, fill: "both" }),
@@ -205,19 +219,38 @@ export function LetterDialog({
         <div ref={stackRef} className={styles.stack}>
           <div className={styles.scene} data-phase={phase} onPointerDown={skip}>
             <div ref={sheetRef} className={styles.sheet} aria-hidden="true">
-              <div className={`${styles.paper} ${styles.top}`} />
+              <div className={`${styles.paper} ${styles.bottom}`} />
               <div ref={flapRef} className={styles.flap}>
                 <div className={`${styles.face} ${styles.paper} ${styles.inner}`}>
                   <div ref={shadeRef} className={styles.shade} />
                 </div>
+                {/* 우편 봉투 앞면: 보내는 사람(왼쪽 위) · 우표와 소인(오른쪽 위) · 받는 사람(오른쪽 아래) */}
                 <div className={`${styles.face} ${styles.paper} ${styles.outer}`}>
-                  <span className={styles.to}>To. {recipientName}님</span>
-                  <span ref={sealRef} className={styles.seal}>
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <p className={styles.sender}>
+                    <span className={styles.envLabel}>보내는 사람</span>
+                    <span className={styles.senderName}>{sheet.author}</span>
+                  </p>
+                  <span className={styles.stamp}>
+                    <svg viewBox="0 0 24 24">
                       <path d="M12 18.2s-5.4-3.3-5.4-7c0-1.6 1.2-2.8 2.7-2.8 1.2 0 2.1.7 2.7 1.7.6-1 1.5-1.7 2.7-1.7 1.5 0 2.7 1.2 2.7 2.8 0 3.7-5.4 7-5.4 7z" />
                     </svg>
                   </span>
-                  <span className={styles.from}>From. {sheet.author}</span>
+                  <svg ref={postmarkRef} className={styles.postmark} viewBox="0 0 124 64">
+                    <g fill="none" stroke="currentColor" strokeLinecap="round">
+                      <path d="M4 20q5-4 10 0t10 0 10 0 10 0 10 0 10 0M4 32q5-4 10 0t10 0 10 0 10 0 10 0 10 0M4 44q5-4 10 0t10 0 10 0 10 0 10 0 10 0" strokeWidth={1.3} />
+                      <circle cx="94" cy="32" r="27" strokeWidth={1.6} />
+                      <path d="M69 25h50M69 39h50" strokeWidth={1} />
+                    </g>
+                    <g fill="currentColor" textAnchor="middle">
+                      <text x="94" y="19.5" fontSize="6.5" letterSpacing="1.2">WEDDING</text>
+                      <text x="94" y="35.3" fontSize="9" fontWeight="700">{POSTMARK_DATE}</text>
+                      <text x="94" y="52" fontSize="7.5">♥</text>
+                    </g>
+                  </svg>
+                  <p className={styles.recipient}>
+                    <span className={styles.envLabel}>받는 사람</span>
+                    <span className={styles.recipientName}>{recipientName}<small> 님</small></span>
+                  </p>
                 </div>
               </div>
             </div>
