@@ -16,21 +16,11 @@
   height: 100svh;
   height: 100dvh;
   overflow: hidden;
-  background: #fdfbf7;
+  /* 본문(캘린더·사진)과 같은 바탕색 단색. 예전 종이 질감(점무늬·그라데이션)은 색이 달라 보여 없앴다(2026-09-19). */
+  background: var(--color-paper);
   isolation: isolate;
   contain: paint;
   container-type: inline-size;
-}
-
-.paperTexture {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 18% 24%, rgba(82, 72, 60, 0.055) 0 0.7px, transparent 0.9px),
-    radial-gradient(circle at 78% 68%, rgba(82, 72, 60, 0.04) 0 0.8px, transparent 1px),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.65), rgba(241, 235, 223, 0.34));
-  background-size: 17px 19px, 23px 29px, auto;
-  pointer-events: none;
 }
 
 .actor {
