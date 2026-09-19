@@ -72,6 +72,10 @@ npm run db:migrate
 npm run dev
 ```
 
+> 로컬 DB를 쓰는데 `/admin`에서 `Failed query` 에러가 나면 Docker가 꺼져 있는 것입니다(따로 띄울 백엔드 서버는 없습니다).
+> Docker Desktop을 켜고 첫 줄부터 다시 실행하세요. 끌 때는 `docker compose -f docker-compose.dev.yml stop` —
+> `down`을 쓰면 다음에 새 DB로 시작해 로컬에 쓴 편지가 사라집니다.
+
 http://localhost:3000 (청첩장) · http://localhost:3000/admin (관리자)
 
 코드를 고칠 계획이라면 [AGENTS.md](AGENTS.md)를 먼저 읽어주세요. 구조와 함정이 정리돼 있습니다.
