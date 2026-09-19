@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { LetterIcon } from "./LetterIcon";
 import { useLetter } from "./LetterProvider";
 import { letterButtonLabel } from "./letterSheets";
@@ -12,7 +11,6 @@ import styles from "./LetterButton.module.css";
  */
 export function LetterButton() {
   const letter = useLetter();
-  const [opened, setOpened] = useState(false);
   if (!letter) return null;
   const label = letterButtonLabel(letter.recipientName);
 
@@ -21,12 +19,9 @@ export function LetterButton() {
       type="button"
       className={styles.button}
       aria-haspopup="dialog"
-      onClick={(event) => {
-        setOpened(true);
-        letter.open(event.currentTarget);
-      }}
+      onClick={(event) => letter.open(event.currentTarget)}
     >
-      <span className={styles.icon}><LetterIcon open={opened} /></span>
+      <span className={styles.icon}><LetterIcon /></span>
       <span className={styles.label}>
         {label.to} <span className={styles.message}>{label.message}</span>
       </span>
