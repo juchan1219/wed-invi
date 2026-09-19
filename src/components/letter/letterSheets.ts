@@ -20,3 +20,11 @@ export function describeLetterSheet(letters: readonly { author: AdminId }[], ind
 export function letterButtonLabel(recipientName: string) {
   return { to: `${recipientName}님께`, message: "편지가 왔어요" };
 }
+
+/**
+ * "읽음" 표시에 저장하는 값: 편지 쓴 사람 목록(작성자 순서 고정).
+ * 나중에 편지가 추가되면 값이 달라져 다시 "안 읽음"(레드닷)이 된다.
+ */
+export function letterReadStamp(letters: readonly { author: AdminId }[]) {
+  return letters.map((letter) => letter.author).join(",");
+}

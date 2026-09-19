@@ -1,0 +1,66 @@
+/* 오른쪽 위 둥근 편지 버튼. 사이트 시트(26rem) 오른쪽 가장자리에 맞춰 넓은 화면에서도 시트 안에 둔다.
+   z-index 40: 사진 크게 보기·토스트(50) 아래. 편지 대화상자는 top layer라 그 위에 뜬다.
+   숨김은 visibility로 해서 초점·스크린리더에서도 빠진다. */
+.fab {
+  position: fixed;
+  z-index: 40;
+  top: max(0.8rem, env(safe-area-inset-top));
+  right: max(calc(0.8rem + env(safe-area-inset-right)), calc((100% - 26rem) / 2 + 0.8rem));
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 1px solid rgba(23, 23, 23, 0.55);
+  border-radius: 50%;
+  background: rgba(253, 251, 247, 0.94);
+  box-shadow: 0 6px 18px rgba(23, 23, 23, 0.12);
+  color: #171717;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.9);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out, visibility 0s linear 0.25s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab[data-shown="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out, visibility 0s;
+}
+.fab svg { width: 1.45rem; height: 1.45rem; }
+/* 누름 표시는 개별 scale 속성 — 흔들림(transform 애니메이션)과 서로 덮지 않는다. */
+.fab:active { scale: 0.94; }
+.fab:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
+
+/* 안 읽음 표시: 오른쪽 위 빨간 점. 바탕색 테두리로 버튼 테두리와 떼어 보이게 한다. */
+.dot {
+  position: absolute;
+  top: 0.05rem;
+  right: 0.05rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid #fdfbf7;
+  border-radius: 50%;
+  background: #e5484d;
+}
+
+/* 안 읽었으면 나타날 때 좌우로 기울며 두 번 흔들고 멈춘다(5초 안 — WCAG 2.2.2).
+   다시 올렸다 내려와 나타나면 처음부터 다시 흔들린다. */
+.fab[data-shown="true"][data-unread="true"] {
+  animation: fab-shake 1.2s ease-in-out 0.35s 2;
+}
+
+@keyframes fab-shake {
+  0%, 60%, 100% { transform: none; }
+  10% { transform: translateX(-2px) rotate(-12deg); }
+  20% { transform: translateX(2px) rotate(10deg); }
+  30% { transform: translateX(-2px) rotate(-8deg); }
+  40% { transform: translateX(1px) rotate(5deg); }
+  50% { transform: rotate(-2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab { transform: none; }
+  .fab[data-shown="true"][data-unread="true"] { animation: none; }
+}
