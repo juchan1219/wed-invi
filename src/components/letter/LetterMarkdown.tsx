@@ -14,7 +14,8 @@ import rehypeSanitize from "rehype-sanitize";
  */
 export function LetterMarkdown({ body }: { body: string }) {
   return (
-    <div className="text-[0.94rem] leading-8 text-ink-soft">
+    // 편지지에 쓴 글처럼 명조로 쓴다. 관리자 미리보기도 같은 컴포넌트라 모양이 그대로 일치한다.
+    <div className="font-serif text-[0.94rem] leading-8 text-ink-soft">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSanitize]}

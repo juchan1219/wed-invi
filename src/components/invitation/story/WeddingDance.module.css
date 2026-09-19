@@ -47,6 +47,19 @@
   pointer-events: none;
 }
 
+/* 편지 버튼이 보이는 동안(진행률 0.9~) 세로가 짧은 화면에서만 엔딩 그림이 버튼을 비켜 준다.
+   양은 useDanceTimeline이 배치가 바뀔 때 잰다(getLetterRoom). 넉넉한 화면·편지 없는 청첩장은 0px / 1.
+   .actor에는 가운데 맞춤 transform이 있어 scale 기준점이 어긋나므로 안쪽 그림 상자에 준다.
+   기준점은 발 위치 — ACTOR_SCALE_ORIGIN(danceTimeline.ts)과 같아야 한다. */
+.actor > * {
+  transform-origin: 50% 95%;
+  transition: translate 0.45s ease-out, scale 0.45s ease-out;
+}
+.stage[data-letter="shown"] .actor > * {
+  translate: 0 var(--letter-shift, 0px);
+  scale: var(--letter-scale, 1);
+}
+
 .poseActor,
 .riveCanvas {
   position: absolute;
@@ -80,6 +93,25 @@
 .copy[data-side="center"] { top: 13%; left: 50%; text-align: center; transform: translateX(-50%) !important; }
 .copy small { display: block; margin-bottom: 0.7rem; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; white-space: nowrap; }
 .copy p { font-family: var(--font-serif); font-size: clamp(1.1rem, 5.5cqw, 1.7rem); font-weight: 700; line-height: 1.55; letter-spacing: -0.045em; }
+
+/* "{이름}님께 편지가 왔어요": 마지막 장면 끝(data-letter="shown", 진행률 0.9~)에만 보인다.
+   문구 레이어는 클릭을 막으므로(pointer-events:none) 보일 때만 이 자리에 클릭을 켠다.
+   숨김은 visibility로 해서 초점·스크린리더에서도 빠진다. */
+.letterSlot {
+  margin-top: 1.1rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out, visibility 0s linear 0.45s;
+  white-space: normal;
+}
+.stage[data-letter="shown"] .letterSlot {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out, visibility 0s;
+}
 
 .progress {
   position: absolute;
@@ -170,12 +202,25 @@
   white-space: nowrap;
 }
 
+/* 편지가 있을 때 "건너뛰기"의 도착점. 윗변이 곧 무대가 마지막 장면에 멈추는 스크롤 위치(진행률 1)다. */
+.ending {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 100svh;
+  height: 100dvh;
+  pointer-events: none;
+}
+
 .fallback { display: none; }
 
 .story[data-motion="pending"],
 .story[data-motion="reduce"] { height: auto; }
 .story[data-motion="pending"] .stage,
-.story[data-motion="reduce"] .stage { display: none; }
+.story[data-motion="reduce"] .stage,
+.story[data-motion="pending"] .ending,
+.story[data-motion="reduce"] .ending { display: none; }
 .story[data-motion="pending"] .fallback,
 .story[data-motion="reduce"] .fallback {
   display: grid;
@@ -196,6 +241,8 @@
 .fallbackCard img { width: 100%; height: auto; }
 .fallbackCard small { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.12em; }
 .fallbackCard p { margin-top: 0.6rem; white-space: pre-line; font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; line-height: 1.55; }
+/* 마지막 카드의 편지 버튼: 그림·문구 아래 한 줄을 통째로 쓴다(글 칸은 버튼보다 좁다). */
+.fallbackLetter { grid-column: 1 / -1; grid-row: 2; display: flex; justify-content: center; padding-top: 1.2rem; }
 
 @container (max-width: 22rem) {
   .actor { width: 86cqw; }

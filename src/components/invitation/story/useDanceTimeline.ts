@@ -6,7 +6,10 @@ import {
   DANCE_SCENES,
   getDanceFrame,
   getDanceProgressAnnouncement,
+  getLetterRoom,
   getScrollHintState,
+  isLetterButtonShown,
+  LETTER_ROOM_FLOOR_MARGIN,
   sideToStagePercent,
   smoothstep,
 } from "./danceTimeline";
@@ -41,10 +44,40 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
       const copies = Array.from(stageElement.querySelectorAll<HTMLElement>("[data-dance-copy]"));
       const progressElement = stageElement.querySelector<HTMLElement>("[role='progressbar']");
       const announcementElement = stageElement.querySelector<HTMLElement>("[data-dance-announcement]");
+      const letterButton = stageElement.querySelector<HTMLElement>("[data-dance-letter] button");
+      const hintElement = stageElement.querySelector<HTMLElement>("[data-dance-hint]");
       let lastSceneId = "";
       let lastProgress = -1;
       let scrolling = false;
       let idleTimer = 0;
+
+      /** 무대 기준 레이아웃 위치(변형 제외): offsetParent 사슬을 무대까지 더한다. */
+      const topInStage = (element: HTMLElement) => {
+        let top = 0;
+        for (let node: HTMLElement | null = element; node && node !== stageElement; node = node.offsetParent as HTMLElement | null) {
+          top += node.offsetTop;
+        }
+        return top;
+      };
+
+      // 편지 버튼이 보일 때 엔딩 그림이 비켜 줄 양(세로가 짧은 화면만). 프레임마다 레이아웃을 읽지 않도록
+      // 무대 크기·문구 높이(글꼴 로딩)가 바뀔 때만 다시 잰다. CSS가 data-letter="shown"일 때 적용한다.
+      const measureLetterRoom = () => {
+        if (!letterButton || !actorElement) return;
+        const room = getLetterRoom({
+          buttonBottom: topInStage(letterButton) + letterButton.offsetHeight,
+          actorTop: actorElement.offsetTop - actorElement.offsetHeight / 2,
+          actorSize: actorElement.offsetHeight,
+          floor: (hintElement?.offsetTop ?? stageElement.clientHeight) - LETTER_ROOM_FLOOR_MARGIN,
+        });
+        stageElement.style.setProperty("--letter-shift", `${room.shift.toFixed(1)}px`);
+        stageElement.style.setProperty("--letter-scale", room.scale.toFixed(3));
+      };
+      const roomObserver = letterButton ? new ResizeObserver(measureLetterRoom) : null;
+      if (roomObserver && letterButton) {
+        roomObserver.observe(stageElement);
+        roomObserver.observe(letterButton.closest<HTMLElement>("[data-dance-copy]")!);
+      }
 
       const syncHint = () => {
         stageElement.dataset.hint = getScrollHintState(lastProgress, scrolling);
@@ -90,6 +123,7 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
         });
 
         stageElement.style.setProperty("--dance-progress", progress.toFixed(5));
+        stageElement.dataset.letter = isLetterButtonShown(progress) ? "shown" : "hidden";
         stageElement.dataset.scene = scene.id;
         if (scene.id !== lastSceneId) {
           const announcement = getDanceProgressAnnouncement(progress);
@@ -121,6 +155,7 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
 
       cleanup = () => {
         window.clearTimeout(idleTimer);
+        roomObserver?.disconnect();
         context.revert();
       };
     });

@@ -1,6 +1,5 @@
 import { after } from "next/server";
 import { Invitation } from "@/components/invitation/Invitation";
-import { LetterSection } from "@/components/letter/LetterSection";
 import { getRecipient, recordView } from "@/lib/letters";
 
 /**
@@ -23,11 +22,7 @@ export default async function Page(props: PageProps<"/i/[token]">) {
 
   return (
     <Invitation
-      letterSlot={
-        hasLetters ? (
-          <LetterSection recipientName={recipient.name} letters={recipient.letters} />
-        ) : undefined
-      }
+      letter={hasLetters ? { recipientName: recipient.name, letters: recipient.letters } : undefined}
     />
   );
 }
