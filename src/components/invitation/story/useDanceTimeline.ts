@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { DanceActorHandle } from "./DanceActor";
 import {
+  DANCE_EXIT_FADE,
   DANCE_SCENES,
   getDanceFrame,
   getDanceProgressAnnouncement,
@@ -148,6 +149,22 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
             invalidateOnRefresh: true,
           },
         });
+        // 무대 고정이 풀린 뒤(start = 진행률 1)부터 진행률 막대의 검은 칠을 걷는다.
+        // 고정 중에는 진행률 막대가 예전처럼 검은색이고, 춤이 끝나고 더 스크롤해야 연해진다.
+        const exit = { amount: 0 };
+        gsap.to(exit, {
+          amount: 1,
+          ease: "none",
+          onUpdate: () => stageElement.style.setProperty("--dance-exit", exit.amount.toFixed(4)),
+          scrollTrigger: {
+            trigger: rootElement,
+            start: "bottom bottom",
+            end: () => `bottom bottom-=${window.innerHeight * DANCE_EXIT_FADE}`,
+            scrub: 0.4,
+            invalidateOnRefresh: true,
+          },
+        });
+
         ScrollTrigger.refresh();
         const bounds = rootElement.getBoundingClientRect();
         paint(Math.max(0, Math.min(1, -bounds.top / Math.max(1, rootElement.offsetHeight - window.innerHeight))));

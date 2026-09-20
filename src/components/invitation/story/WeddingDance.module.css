@@ -11,6 +11,8 @@
 
 .stage {
   --dance-progress: 0;
+  /* 무대 고정이 풀린 뒤 더 스크롤한 양(0~1). useDanceTimeline이 갱신한다 — DANCE_EXIT_FADE 참고. */
+  --dance-exit: 0;
   position: sticky;
   top: 0;
   height: 100svh;
@@ -113,7 +115,15 @@
   overflow: hidden;
   background: rgba(23, 23, 23, 0.15);
 }
-.progress span { display: block; width: calc(var(--dance-progress) * 100%); height: 100%; background: #171717; }
+/* 검은 칠은 무대가 고정된 동안(진행률 막대로 읽히는 동안)만 남는다. 고정이 풀리고 아래로 스크롤하면
+   칠이 걷히고 위 배경(연한 회색)만 남아, 춤과 캘린더 사이가 검은 줄이 아니라 옅은 선이 된다. */
+.progress span {
+  display: block;
+  width: calc(var(--dance-progress) * 100%);
+  height: 100%;
+  background: #171717;
+  opacity: calc(1 - var(--dance-exit, 0));
+}
 
 /* 계속 스크롤해야 한다는 안내. 고정 stage는 페이지가 움직이지 않아 "끝났다"로 오해하기 쉬워서
    (NN/g illusion of completeness) 끝나기 직전까지 남긴다. data-hint는 useDanceTimeline이 갱신한다:
