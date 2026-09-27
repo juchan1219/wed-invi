@@ -8,11 +8,34 @@ import p_gallery_03 from "./gallery-03.jpg";
 import p_gallery_04 from "./gallery-04.jpg";
 import p_gallery_05 from "./gallery-05.jpg";
 import p_gallery_06 from "./gallery-06.jpg";
+import p_gallery_07 from "./gallery-07.jpg";
+import p_gallery_08 from "./gallery-08.jpg";
+import p_gallery_09 from "./gallery-09.jpg";
+import p_gallery_10 from "./gallery-10.jpg";
+import p_gallery_11 from "./gallery-11.jpg";
+import p_gallery_12 from "./gallery-12.jpg";
+import p_gallery_13 from "./gallery-13.jpg";
+import p_gallery_14 from "./gallery-14.jpg";
+import p_gallery_15 from "./gallery-15.jpg";
+import p_gallery_16 from "./gallery-16.jpg";
+import p_gallery_17 from "./gallery-17.jpg";
+import p_gallery_18 from "./gallery-18.jpg";
+import p_gallery_19 from "./gallery-19.jpg";
+import p_gallery_20 from "./gallery-20.jpg";
+import p_gallery_21 from "./gallery-21.jpg";
+import p_gallery_22 from "./gallery-22.jpg";
+import p_gallery_23 from "./gallery-23.jpg";
+import p_gallery_24 from "./gallery-24.jpg";
+import p_gallery_25 from "./gallery-25.jpg";
+import p_gallery_26 from "./gallery-26.jpg";
+import p_gallery_27 from "./gallery-27.jpg";
+import p_gallery_28 from "./gallery-28.jpg";
+import p_gallery_29 from "./gallery-29.jpg";
 import p_hero from "./hero.jpg";
 import p_map from "./map.jpg";
 
 /** 갤러리 사진 (gallery-*.jpg, 이름순) */
-export const galleryPhotos: StaticImageData[] = [p_gallery_01, p_gallery_02, p_gallery_03, p_gallery_04, p_gallery_05, p_gallery_06];
+export const galleryPhotos: StaticImageData[] = [p_gallery_01, p_gallery_02, p_gallery_03, p_gallery_04, p_gallery_05, p_gallery_06, p_gallery_07, p_gallery_08, p_gallery_09, p_gallery_10, p_gallery_11, p_gallery_12, p_gallery_13, p_gallery_14, p_gallery_15, p_gallery_16, p_gallery_17, p_gallery_18, p_gallery_19, p_gallery_20, p_gallery_21, p_gallery_22, p_gallery_23, p_gallery_24, p_gallery_25, p_gallery_26, p_gallery_27, p_gallery_28, p_gallery_29];
 
 /** 첫 화면 사진. hero.jpg가 없으면 갤러리 첫 장, 그것도 없으면 null. */
 export const heroPhoto: StaticImageData | null = p_hero;
