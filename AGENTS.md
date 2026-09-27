@@ -125,12 +125,15 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 |---|---|---|---|
 | Transaction pooler | 6543 | `DATABASE_URL` | 앱 런타임 |
 | Session pooler | 5432 | `DIRECT_URL` | 마이그레이션·drizzle-kit |
-| Direct | 5432 | — | **쓰지 말 것. IPv6 전용이라 Vercel 함수에서 못 붙는다** |
+| Direct | 5432 | — | **쓰지 말 것. IPv6 전용이라 Vercel 함수도 GitHub Actions 러너도 못 붙는다** |
 
 - transaction pooler는 **prepared statement를 지원하지 않는다.** `src/db/index.ts`의
   `prepare: false`를 지우면 런타임 질의가 전부 실패한다.
 - 마이그레이션을 transaction pooler로 돌리면 DDL과 advisory lock이 불안정하다.
   그래서 `scripts/db-migrate.ts`와 `drizzle.config.ts`는 `DIRECT_URL`을 쓴다.
+- Supabase 공식 문서는 마이그레이션에 **direct 연결**을 권장하지만, 위 이유로 쓸 수 없다.
+  shared pooler는 모든 플랜에서 IPv4라 session 모드가 유일하게 동작하는 선택이다.
+- 풀러 호스트는 리전 이름으로 조합할 수 없다. **대시보드에서 복사할 것.**
 - 로컬은 도커 Postgres 하나뿐이라(`docker-compose.dev.yml`) 두 URL이 같은 값이다.
   2026-09-27 이전에 있던 Neon HTTP 중계 프록시는 **제거됐다** — 이제 평범한 Postgres다.
 

@@ -71,9 +71,27 @@ Vercel + Supabase + Blob, 전부 무료. 카드 등록 필요 없습니다. 처�
 
 복사한 문자열의 `[YOUR-PASSWORD]` 자리에 2-1에서 받은 비밀번호를 채워 넣습니다.
 
+두 문자열은 **포트만 다르고 호스트·사용자·비밀번호는 같습니다.** 그래서 눈으로는 구분이 안 됩니다
+— 끝의 `:6543` / `:5432` 만 보세요.
+
+```
+postgresql://postgres.[프로젝트ref]:[비밀번호]@[풀러호스트]:6543/postgres   ← DATABASE_URL
+postgresql://postgres.[프로젝트ref]:[비밀번호]@[풀러호스트]:5432/postgres   ← DIRECT_URL
+```
+
+> ### ⚠️ 풀러 호스트는 **반드시 대시보드에서 복사**하세요
+> 이 문서의 예시에 나오는 `aws-0-ap-northeast-2.pooler.supabase.com` 같은 주소를 리전 이름으로
+> 조합해서 만들면 안 됩니다. 공식 문서가 "풀러 호스트는 조합할 수 없으니 대시보드에서 복사하라"고
+> 명시합니다. 프로젝트마다 다릅니다.
+
 > ### ⚠️ Direct connection을 쓰면 안 됩니다
-> Supabase의 direct 연결은 **IPv6 전용**이라 Vercel 함수에서 아예 붙지 못합니다.
-> 호스트가 `...pooler.supabase.com` 인 쪽(pooler)을 쓰세요.
+> Supabase의 direct 연결은 **IPv6 전용**입니다(무료 플랜에서 IPv4는 유료 애드온).
+> Vercel 함수도, GitHub Actions 러너도 IPv4라 아예 붙지 못합니다.
+> 호스트가 `...pooler.supabase.com` 인 쪽(pooler)을 쓰세요 — **shared pooler는 모든 플랜에서 IPv4**입니다.
+>
+> 참고로 Supabase 공식 문서는 **마이그레이션에 direct 연결을 권장**합니다. 이 프로젝트가 대신
+> session pooler를 쓰는 이유가 위의 IPv4 제약입니다. session 모드는 진짜 세션을 유지하므로
+> DDL은 정상 동작합니다.
 
 > ### ⚠️ 비밀번호에 `@` `#` `/` 가 있으면 URL 인코딩하세요
 > 연결 문자열은 URL이라 이 문자들이 구분자로 읽혀 접속이 실패합니다.
