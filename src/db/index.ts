@@ -1,37 +1,41 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
 /**
- * Neon HTTP 드라이버를 쓰는 이유:
+ * Supabase의 **transaction pooler**(6543)에 붙는다.
+ *
  * Vercel Functions는 요청마다 새 인스턴스가 뜨기 때문에 TCP 커넥션 풀을 유지할 수 없다.
- * HTTP 드라이버는 매 질의를 단발 요청으로 보내 커넥션 고갈이 생기지 않는다.
- * (트랜잭션이 필요 없는 이 프로젝트에는 이 방식이 맞다.)
+ * pooler가 연결을 다중화해 주므로 인스턴스가 몇 개 뜨든 DB 커넥션이 고갈되지 않는다.
+ *
+ * Supabase의 direct 연결(5432)은 IPv6 전용이라 Vercel 함수에서 아예 붙지 못한다.
+ * 마이그레이션처럼 DDL이 필요한 작업은 session pooler(`DIRECT_URL`)를 쓴다 — scripts/db-migrate.ts.
  */
-
-/** docker-compose.dev.yml 의 로컬 프록시를 가리키는 호스트 */
-const LOCAL_PROXY_HOST = "db.localtest.me";
-
-/**
- * 로컬 개발용 예외. 로컬 프록시는 평문 HTTP로 서비스하는데
- * Neon 드라이버는 기본이 HTTPS라서 그대로는 붙지 못한다.
- * 배포 환경(*.neon.tech)에서는 이 분기가 절대 타지 않는다.
- */
-function configureLocalProxy(url: string): void {
-  if (!url.includes(LOCAL_PROXY_HOST)) return;
-  neonConfig.fetchEndpoint = (host, port) =>
-    host === LOCAL_PROXY_HOST ? `http://${host}:${port}/sql` : `https://${host}/sql`;
+function createClient(url: string) {
+  return postgres(url, {
+    // transaction 모드 pooler는 prepared statement를 지원하지 않는다. 켜두면 질의가 실패한다.
+    prepare: false,
+    // 서버리스 인스턴스 하나가 커넥션을 하나만 쥐게 한다.
+    max: 1,
+    // 인스턴스가 얼어붙은(frozen) 뒤 커넥션이 서버 쪽에 남지 않도록 짧게 끊는다.
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
 }
 
-function createDb() {
+function requireUrl(): string {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
-      "DATABASE_URL이 없습니다. .env.local에 Neon 연결 문자열을 넣어주세요. (.env.example 참고)",
+      "DATABASE_URL이 없습니다. .env.local에 Supabase 연결 문자열을 넣어주세요. (.env.example 참고)",
     );
   }
-  configureLocalProxy(url);
-  return drizzle(neon(url), { schema });
+  return url;
+}
+
+function createDb() {
+  const client = createClient(requireUrl());
+  return { client, orm: drizzle(client, { schema }) };
 }
 
 /**
@@ -42,9 +46,21 @@ let cached: ReturnType<typeof createDb> | null = null;
 
 export function db() {
   cached ??= createDb();
-  return cached;
+  return cached.orm;
 }
 
 export function isDatabaseConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL);
+}
+
+/**
+ * 커넥션을 닫는다. **테스트·스크립트 전용.**
+ * postgres.js는 커넥션이 열려 있는 동안 프로세스를 끝내지 않는다.
+ * 서버리스 런타임에서는 부를 일이 없다 — 인스턴스가 통째로 사라진다.
+ */
+export async function closeDb(): Promise<void> {
+  if (!cached) return;
+  const { client } = cached;
+  cached = null;
+  await client.end();
 }
