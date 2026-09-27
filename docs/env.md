@@ -2,12 +2,13 @@
 
 새 컴퓨터에서 클론했을 때 이 문서만 보면 됩니다.
 
-환경변수를 넣는 곳은 **두 군데**입니다.
+환경변수를 넣는 곳은 **세 군데**입니다.
 
 | 곳 | 파일/위치 | 언제 쓰이나 |
 |---|---|---|
 | **내 컴퓨터** | 프로젝트 루트의 `.env.local` | `npm run dev`, `npm run db:migrate` |
 | **Vercel** | 프로젝트 → Settings → Environment Variables | 실제 배포된 사이트 |
+| **GitHub Actions** | 저장소 → Settings → Secrets and variables → Actions | 마이그레이션·keepalive 워크플로 ([아래](#github-actions-에-넣는-값)) |
 
 `.env.local` 은 `.gitignore` 에 걸려 있어 저장소에 올라가지 않습니다.
 그래서 **새 컴퓨터에서는 항상 직접 만들어야 합니다.**
@@ -29,7 +30,8 @@
 
 | 변수 | 내 컴퓨터 | Vercel | 어디서 구하나 | 없으면 |
 |---|---|---|---|---|
-| `DATABASE_URL` | 직접 입력 | **자동 주입** | Neon 연동 시 자동 / 로컬 Docker면 고정값 | `/admin`·편지·방명록이 죽음 (기본 청첩장은 정상) |
+| `DATABASE_URL` | 직접 입력 | 직접 입력 | Supabase → Connect → **Transaction pooler (6543)** / 로컬 Docker면 고정값 | `/admin`·편지·방명록이 죽음 (기본 청첩장은 정상) |
+| `DIRECT_URL` | 직접 입력 | 직접 입력 | Supabase → Connect → **Session pooler (5432)** / 로컬 Docker면 `DATABASE_URL` 과 같은 값 | 마이그레이션·drizzle-kit이 런타임 URL로 떨어짐 (로컬은 무해, 배포는 위험) |
 | `ADMIN_PASSWORD` | 직접 입력 | 직접 입력 | 본인이 정함 | 로그인 불가 |
 | `SESSION_SECRET` | 직접 입력 | 직접 입력 | `openssl rand -base64 32` | 로그인 불가 |
 | `TOKEN_SECRET` | 직접 입력 | 직접 입력 | `openssl rand -base64 32` ⚠️ **배포 후엔 기존 값 복사** | 편지 저장/조회 불가 |
@@ -37,8 +39,12 @@
 | `BLOB_READ_WRITE_TOKEN` | (선택) | **자동 주입** | Vercel Blob 스토어 생성 시 자동 | 편지에 이미지만 못 넣음 |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | (선택) | 직접 입력 | developers.kakao.com → 앱 키 | 카카오톡 버튼만 숨겨짐 |
 
-**자동 주입**은 Vercel에서 Neon/Blob을 연결하면 Vercel이 알아서 넣어준다는 뜻입니다.
+**자동 주입**은 Vercel에서 Blob 스토어를 만들면 Vercel이 알아서 넣어준다는 뜻입니다.
 직접 입력할 필요도 없고, 하면 안 됩니다.
+
+**DB는 자동 주입이 아닙니다.** Neon을 쓸 때는 Vercel 연동이 `DATABASE_URL` 을 넣어줬지만,
+Supabase 프로젝트는 콘솔에서 직접 만들어 쓰므로 `DATABASE_URL` 과 `DIRECT_URL` 을
+**손으로 등록**해야 합니다 ([deploy.md](deploy.md) 2번).
 
 ---
 
@@ -56,7 +62,8 @@ openssl rand -base64 32    # 두 번 실행해서 각각 SESSION_SECRET, TOKEN_S
 `.env.local` 을 이렇게 채웁니다.
 
 ```bash
-DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
+DATABASE_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+DIRECT_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
 ADMIN_PASSWORD="아무거나-길게"
 SESSION_SECRET="<openssl 결과 1>"
 TOKEN_SECRET="<openssl 결과 2>"
@@ -64,6 +71,8 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 BLOB_READ_WRITE_TOKEN=""
 NEXT_PUBLIC_KAKAO_JS_KEY=""
 ```
+
+로컬에서는 두 URL이 **같은 값**입니다. 도커 Postgres 하나만 띄우면 되니까요.
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
@@ -122,12 +131,16 @@ npm run dev
 vercel env pull .env.local
 ```
 
-받아온 뒤 두 줄을 고칩니다.
+받아온 뒤 세 줄을 고칩니다.
 
 ```bash
-DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
+DATABASE_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+DIRECT_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
+
+`DIRECT_URL` 을 같이 안 고치면 **마이그레이션이 배포 DB(Supabase)에 적용됩니다.**
+DB 주소 두 줄은 꼭 함께 바꾸세요.
 
 **`TOKEN_SECRET` 은 건드리지 마세요.** 그래야 로컬에서 테스트한 URL이 배포본과 같아집니다.
 
@@ -143,17 +156,47 @@ npm run dev
 
 ### `DATABASE_URL`
 
-편지·방명록이 저장되는 Postgres 주소.
+편지·방명록이 저장되는 Postgres 주소. **앱(배포된 사이트와 `npm run dev`)이 쓰는 값**입니다.
 
 | 상황 | 값 |
 |---|---|
-| 로컬 Docker | `postgres://postgres:postgres@db.localtest.me:4444/wedinvi` |
-| Neon 직접 연결 | Neon 콘솔 → Connection string (`postgresql://...neon.tech/...?sslmode=require`) |
-| Vercel | Neon 연동 시 **자동 주입** — 직접 넣지 마세요 |
+| 로컬 Docker | `postgres://postgres:postgres@localhost:55432/wedinvi` |
+| Supabase | 대시보드 → **Connect** → **Transaction pooler** (포트 **6543**) |
+| Vercel | 위 Supabase 값을 **직접 등록** (자동 주입이 아닙니다) |
 
-`db.localtest.me` 는 `127.0.0.1` 로 해석되는 공용 도메인입니다. hosts 파일을 고칠 필요 없습니다.
-포트 `4444` 는 `docker-compose.dev.yml` 이 띄우는 Neon HTTP 프록시입니다
-(자세한 이유는 [AGENTS.md](../AGENTS.md)).
+포트 `55432` 는 `docker-compose.dev.yml` 이 띄우는 Postgres 컨테이너입니다. 중계 프록시는
+없습니다 — Supabase도 평범한 Postgres 프로토콜이라 로컬은 컨테이너 하나로 충분합니다.
+
+⚠️ 런타임은 반드시 **transaction pooler(6543)** 입니다. 서버리스 함수는 요청마다 새로 뜨기 때문에
+커넥션 풀을 유지할 수 없고, pooler가 연결을 다중화해 줘야 커넥션이 고갈되지 않습니다.
+대신 이 모드는 prepared statement를 지원하지 않아서 드라이버에 `prepare: false` 를 켜 뒀습니다
+([`src/db/index.ts`](../src/db/index.ts)).
+
+⚠️ **Direct connection(IPv6 전용)은 쓸 수 없습니다.** Vercel 함수에서 아예 붙지 못합니다.
+호스트가 `...pooler.supabase.com` 인 쪽을 쓰세요.
+
+⚠️ 비밀번호에 `@` `#` `/` 가 있으면 **URL 인코딩**해야 합니다 (`%40` `%23` `%2F`).
+연결 문자열은 URL이라 이 문자들이 구분자로 읽힙니다.
+
+### `DIRECT_URL`
+
+마이그레이션(`npm run db:migrate`)과 drizzle-kit(`db:generate`·`db:studio`)이 쓰는 주소.
+**앱은 이 값을 쓰지 않습니다.**
+
+| 상황 | 값 |
+|---|---|
+| 로컬 Docker | `DATABASE_URL` 과 **같은 값** |
+| Supabase | 대시보드 → **Connect** → **Session pooler** (포트 **5432**) |
+| Vercel | 위 값을 직접 등록 (수동 마이그레이션 때 `vercel env pull` 로 받아옵니다) |
+
+경로를 나눈 이유는 **DDL과 advisory lock이 transaction 모드에서 불안정**하기 때문입니다.
+스키마를 바꾸는 작업은 session pooler로 붙어야 안전합니다.
+
+값이 없으면 `DATABASE_URL` 로 떨어집니다. 로컬 도커에서는 둘이 같은 값이라 무해하지만,
+배포 DB에 적용할 때는 transaction pooler로 마이그레이션을 돌리는 셈이 되니 꼭 채우세요.
+
+> GitHub Actions의 `Migrate` 워크플로도 같은 이름의 **저장소 시크릿**을 씁니다
+> (아래 [GitHub Actions 에 넣는 값](#github-actions-에-넣는-값)).
 
 ### `ADMIN_PASSWORD`
 
@@ -211,10 +254,30 @@ OG 태그의 절대 URL과 공유 링크를 만드는 데 쓰입니다.
 
 카카오톡 공유 버튼용. developers.kakao.com → 내 애플리케이션 → 앱 키 → **JavaScript 키**.
 
-플랫폼 → Web → **사이트 도메인 등록**을 함께 해야 동작합니다 ([deploy.md](deploy.md) 7번).
+플랫폼 → Web → **사이트 도메인 등록**을 함께 해야 동작합니다 ([deploy.md](deploy.md) 8번).
 
 비워두면 카카오톡 버튼만 숨겨지고, OS 공유·링크 복사는 그대로 동작합니다.
 로컬에서 테스트하려면 카카오 사이트 도메인에 `http://localhost:3000` 도 추가하세요.
+
+---
+
+## GitHub Actions 에 넣는 값
+
+워크플로 두 개가 값을 하나씩 씁니다.
+저장소 → **Settings** → **Secrets and variables** → **Actions**.
+
+| 종류 | 이름 | 값 | 쓰는 워크플로 |
+|---|---|---|---|
+| **Secret** | `DIRECT_URL` | Supabase **session pooler (5432)** | `migrate.yml` — 배포 DB에 마이그레이션 적용 |
+| **Variable** | `SITE_URL` | `https://<도메인>` (끝에 `/` 없이) | `keepalive.yml` — `/api/health` 호출로 Supabase 정지 방지 |
+
+- `DIRECT_URL` 에는 비밀번호가 들어 있으니 반드시 **Secret** 입니다.
+- `SITE_URL` 은 비밀이 아니고 눈으로 확인·수정할 수 있어야 하므로 **Variable** 탭입니다.
+  (Secret에 넣으면 워크플로가 값을 못 찾아 실패합니다 — `vars.SITE_URL` 로 읽습니다.)
+- `ci.yml` 은 등록할 값이 없습니다. 러너 안에 Postgres 컨테이너를 띄워 두 URL을 직접 만들어 씁니다.
+
+커스텀 도메인을 붙였다면 `SITE_URL` 도 함께 갱신하세요. 옛 주소가 아직 살아 있으면
+keepalive는 계속 green이라 빼먹은 것을 알아채기 어렵습니다.
 
 ---
 
@@ -227,7 +290,11 @@ OG 태그의 절대 URL과 공유 링크를 만드는 데 쓰입니다.
 | 로컬에서 `/admin` 이 500 | `DATABASE_URL` 이 없거나 마이그레이션(`npm run db:migrate`)을 안 했습니다 |
 | 공유 링크가 localhost로 나감 | 배포 환경의 `NEXT_PUBLIC_SITE_URL` 이 localhost로 되어 있습니다 |
 | 로컬 링크가 배포 주소로 나옴 | `vercel env pull` 후 `NEXT_PUBLIC_SITE_URL` 을 안 고쳤습니다 (정상 동작이지만 헷갈립니다) |
-| `DATABASE_URL` 을 Vercel에 직접 넣었더니 이상함 | Neon 연동이 자동 주입하므로 직접 넣으면 충돌합니다. 지우세요 |
+| 배포에서 편지·방명록만 죽음 | `DATABASE_URL` 을 Vercel에 등록하지 않았습니다. **Supabase는 자동 주입이 아니라 직접 등록**입니다 (Neon을 쓰던 시절과 반대입니다) |
+| 배포에서 DB 질의가 계속 실패 | `DATABASE_URL` 에 session pooler(5432)나 direct 연결을 넣었습니다. 런타임은 **transaction pooler(6543)** 입니다 |
+| 마이그레이션이 실패하거나 도중에 멈춤 | `DIRECT_URL` 에 transaction pooler(6543)를 넣었을 수 있습니다. **session pooler(5432)** 로 바꾸세요 |
+| 접속이 비밀번호 오류로 거부됨 | 비밀번호의 `@` `#` `/` 를 URL 인코딩하지 않았습니다 (`%40` `%23` `%2F`) |
+| 한동안 방치한 뒤 DB가 전부 에러 | Supabase 프로젝트가 **7일 무활동으로 일시정지**됐습니다. 대시보드에서 복구하고 keepalive 워크플로가 도는지 확인하세요 |
 
 ---
 
@@ -248,3 +315,6 @@ Next.js가 읽는 순서 때문에 파일 이름이 중요합니다.
 vercel env pull .env.production.local
 npm run db:migrate -- .env.production.local
 ```
+
+> 평소에는 이렇게 할 필요가 없습니다. 배포 DB 마이그레이션은 GitHub Actions의 `Migrate`
+> 워크플로가 대신합니다 ([deploy.md](deploy.md) 6번). 위 방법은 폴백입니다.

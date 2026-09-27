@@ -207,20 +207,31 @@
 
 - [ ] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
       — 환경변수가 없어도 첫 배포는 성공합니다. 청첩장 화면까지는 바로 보입니다
-- [ ] **Neon 연결** — Storage → Create Database → Neon → **Free** 플랜.
-      `DATABASE_URL` 이 자동 주입됩니다 (직접 입력할 필요 없음)
+- [ ] **Supabase 프로젝트 생성** — 리전 **Seoul (ap-northeast-2)**, Free 플랜.
+      ⚠️ Neon과 달리 **자동 주입이 없습니다.** 연결 문자열 두 개를 직접 등록해야 합니다
 - [ ] **Blob 스토어 생성** — Storage → Create Database → Blob.
       ⚠️ **Access mode를 반드시 `Public` 으로** — 생성 후에는 바꿀 수 없습니다.
       (건너뛰면 편지에 이미지만 못 넣고 나머지는 정상)
-- [ ] **환경변수 4개 직접 등록** — `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`,
-      `NEXT_PUBLIC_SITE_URL`. Production/Preview/Development 전부 체크
+- [ ] **환경변수 6개 직접 등록** — `DATABASE_URL`(transaction pooler **6543**),
+      `DIRECT_URL`(session pooler **5432**), `ADMIN_PASSWORD`, `SESSION_SECRET`,
+      `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`. Production/Preview/Development 전부 체크
+      — 포트를 바꿔 넣으면 런타임 질의나 마이그레이션 중 하나가 깨집니다
 - [ ] **재배포** — 환경변수는 다음 배포부터 적용됩니다
-- [ ] **마이그레이션 실행** — `vercel env pull .env.production.local` 후
-      `npm run db:migrate -- .env.production.local`.
-      출력의 `대상:` 이 Neon 호스트인지 확인할 것
+- [ ] **저장소 Secret `DIRECT_URL` 등록** — Settings > Secrets and variables > Actions
+- [ ] **마이그레이션 실행** — GitHub Actions의 **Migrate** 워크플로를 수동 실행(Run workflow).
+      출력의 `대상:` 이 Supabase 호스트인지 확인할 것.
+      (폴백: `vercel env pull .env.production.local` 후 `npm run db:migrate -- .env.production.local`)
+- [ ] **저장소 Variable `SITE_URL` 등록** — 배포 주소, 끝에 `/` 없이.
+      Settings > Secrets and variables > Actions > Variables
+- [ ] **Keepalive 워크플로 수동 실행** — green이어야 합니다.
+      ⚠️ 이게 돌지 않으면 **7일 뒤 Supabase가 정지되어 편지·방명록이 죽습니다**
 - [ ] **카카오 개발자 앱** — JavaScript 키를 `NEXT_PUBLIC_KAKAO_JS_KEY` 에 등록 +
       **플랫폼 > Web > 사이트 도메인 등록** (도메인 등록을 빼먹으면 공유가 동작하지 않습니다)
-- [ ] 커스텀 도메인 (선택) — 붙였다면 `NEXT_PUBLIC_SITE_URL` **과** 카카오 사이트 도메인을 함께 갱신
+- [ ] **커스텀 도메인 `주은예찬.com` 연결** (가비아 구입) — 퓨니코드는 `xn--2j5b9vb2blxf.com`.
+      ⚠️ **한글 IDN은 Vercel에서 SSL 인증서가 안 나오는 사례가 보고돼 있습니다.**
+      하객에게 링크를 보내기 한참 전에 붙여서 인증서 발급을 확인할 것
+- [ ] 도메인 연결 후 **세 곳 동시 갱신** — `NEXT_PUBLIC_SITE_URL`(한글) ·
+      저장소 Variable `SITE_URL`(퓨니코드) · 카카오 사이트 도메인(**둘 다** 등록) → 재배포
 
 ---
 
@@ -236,6 +247,10 @@
 - [ ] **주소·계좌번호 복사** — 클립보드 API는 실제 사용자 제스처가 있어야 동작합니다
 - [ ] **공유하기** (`navigator.share`) — iOS Safari / Android Chrome
 - [ ] **카카오톡 공유** — 관리자에서 실제로 메시지를 보내 제목·이미지 확인
+- [ ] **한글 도메인에서 카카오톡 공유가 되는지** — `Kakao.Share.sendDefault({url})` 의 도메인이
+      콘솔에 등록한 사이트 도메인과 맞아야 합니다. 한글(`주은예찬.com`)과 퓨니코드
+      (`xn--2j5b9vb2blxf.com`) 중 어느 쪽으로 매칭하는지 확인되지 않았습니다.
+      안 되면 `NEXT_PUBLIC_SITE_URL` 을 퓨니코드로 바꾸면 됩니다 (코드 수정 불필요)
 - [ ] **링크 미리보기** — `/` 와 `/i/<토큰>` 을 실제 카톡방에 보내 썸네일 확인.
       안 뜨면 [카카오 캐시 초기화](https://developers.kakao.com/tool/clear/og)
 - [ ] **캘린더 추가** — `.ics`가 iOS 캘린더 앱으로 넘어가는지
@@ -253,6 +268,8 @@
 | 로그인 시도 횟수 제한 없음 | 서버리스라 인스턴스가 매번 새로 떠서 메모리에 카운터를 둘 수 없습니다. **방어선은 비밀번호 길이뿐** — 20자 이상 권장 |
 | 방명록 스팸 방지가 약함 | 쿠키 기반 30초 쿨다운이라 우회 가능. 문제가 생기면 관리자 화면에서 숨기거나 `wedding.guestbook.enabled = false`로 차단 |
 | Vercel Hobby | "개인·비상업 용도" 한정. 청첩장은 해당됩니다 |
+| **Supabase 7일 정지** | 무료 플랜은 7일간 활동이 없으면 정지됩니다. `keepalive.yml` 이 주 2회 깨우는 것이 유일한 방어선입니다. 데이터는 보존되고 **정지 후 90일** 안에 대시보드에서 복구할 수 있습니다 |
+| **Actions cron 60일 만료** | 저장소에 60일간 활동이 없으면 GitHub이 keepalive cron을 자동 비활성화합니다. 사전 경고 메일이 오면 커밋 하나 또는 워크플로 수동 실행으로 되살리세요. **예식 이후 조용해지는 시기가 위험합니다** |
 | `TOKEN_SECRET` 로테이션 불가 | 바꾸면 배포된 하객 URL이 전부 죽습니다 |
 | 동명이인 + 같은 뒷자리 | 토큰이 겹칩니다. 관리자 목록에서 이름이 이미 있는지 확인하고, 겹치면 뒷자리 대신 다른 4자리(예: 생일)를 쓰세요 |
 

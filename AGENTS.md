@@ -22,10 +22,12 @@ npm run db:migrate
 npm run dev
 ```
 
-`.env.local`에 최소한 이 넷은 채워야 한다:
+`.env.local`에 최소한 이만큼은 채워야 한다:
 
 ```bash
-DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
+# 로컬 도커에서는 두 값이 같다. 배포에서는 포트가 갈린다 (6543 / 5432) — 아래 표 참고
+DATABASE_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+DIRECT_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
 ADMIN_PASSWORD="아무거나"
 SESSION_SECRET="$(openssl rand -base64 32)"
 TOKEN_SECRET="$(openssl rand -base64 32)"
@@ -115,13 +117,38 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 
 서버리스라 로그인 시도 횟수 제한을 메모리에 둘 수 없다. 방어선은 비밀번호 길이뿐이다.
 
-### 로컬 DB에 Neon 프록시를 쓰는 이유
+### DB 연결이 두 갈래인 이유 (Supabase)
 
-프로덕션은 Neon serverless 드라이버(**HTTP**)로 붙는다. 평범한 Postgres는 HTTP를 못 알아들어서
-`docker-compose.dev.yml`이 중계 프록시를 함께 띄운다. 덕분에 **로컬에서도 배포와 똑같은 코드 경로**를 탄다.
-[`src/db/index.ts`](src/db/index.ts)의 `configureLocalProxy`는 호스트가 `db.localtest.me`일 때만 동작한다.
+프로덕션은 Supabase다. 접속 경로가 셋인데 **용도가 갈리고, 섞어 쓰면 깨진다.**
 
-`drizzle-kit push`는 websocket으로 붙어서 이 프록시와 맞지 않는다. **`db:generate` + `db:migrate`를 쓸 것.**
+| 경로 | 포트 | 환경변수 | 쓰는 곳 |
+|---|---|---|---|
+| Transaction pooler | 6543 | `DATABASE_URL` | 앱 런타임 |
+| Session pooler | 5432 | `DIRECT_URL` | 마이그레이션·drizzle-kit |
+| Direct | 5432 | — | **쓰지 말 것. IPv6 전용이라 Vercel 함수에서 못 붙는다** |
+
+- transaction pooler는 **prepared statement를 지원하지 않는다.** `src/db/index.ts`의
+  `prepare: false`를 지우면 런타임 질의가 전부 실패한다.
+- 마이그레이션을 transaction pooler로 돌리면 DDL과 advisory lock이 불안정하다.
+  그래서 `scripts/db-migrate.ts`와 `drizzle.config.ts`는 `DIRECT_URL`을 쓴다.
+- 로컬은 도커 Postgres 하나뿐이라(`docker-compose.dev.yml`) 두 URL이 같은 값이다.
+  2026-09-27 이전에 있던 Neon HTTP 중계 프록시는 **제거됐다** — 이제 평범한 Postgres다.
+
+`drizzle-kit push`는 쓰지 말 것. **`db:generate` + `db:migrate`를 쓴다.** 마이그레이션 파일이
+저장소에 남아야 배포 때 무엇이 바뀌는지 확인할 수 있고, CI가 같은 명령을 그대로 돌린다.
+
+### DB가 잠들지 않게 하는 것
+
+Supabase 무료 플랜은 **7일간 활동이 없으면 프로젝트를 정지**한다. 정지되면 하객이 편지·방명록에서
+에러를 본다(데이터는 보존되고, 정지 후 90일 안에 대시보드에서 복구 가능).
+
+`.github/workflows/keepalive.yml`이 매주 월·목에 `/api/health`를 두드려 이를 막는다.
+
+- **`/api/health`를 지우거나 200 고정으로 바꾸지 말 것.** DB에 닿지 못하면 **반드시 503**이어야 한다.
+- **keepalive가 `/api/guestbook`을 두드리게 바꾸지 말 것.** 그 라우트는 DB가 죽어도 200을 돌려준다
+  (하객 보호를 위한 의도적 설계). 그러면 keepalive가 영원히 green이라 정지를 못 잡는다.
+- 저장소에 60일간 활동이 없으면 GitHub이 이 cron을 자동 비활성화한다. 경고 메일이 오면
+  커밋 하나 또는 워크플로 수동 실행으로 되살릴 것.
 
 ---
 

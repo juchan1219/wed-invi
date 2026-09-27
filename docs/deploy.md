@@ -1,20 +1,22 @@
 # 배포 가이드 — 그대로 따라 하면 됩니다
 
-Vercel + Neon + Blob, 전부 무료. 카드 등록 필요 없습니다. 처음이면 **30분쯤** 걸립니다.
+Vercel + Supabase + Blob, 전부 무료. 카드 등록 필요 없습니다. 처음이면 **30분쯤** 걸립니다.
 
-준비물: GitHub 계정, [Vercel 계정](https://vercel.com/signup), [카카오 개발자 계정](https://developers.kakao.com)
+준비물: GitHub 계정, [Vercel 계정](https://vercel.com/signup),
+[Supabase 계정](https://supabase.com/dashboard), [카카오 개발자 계정](https://developers.kakao.com)
 
 전체 순서는 이렇습니다.
 
 ```
 1. Vercel에 프로젝트 올리기        ← 환경변수 없이도 배포는 성공합니다
-2. Neon(DB) 연결                   → DATABASE_URL 자동 주입
+2. Supabase(DB) 만들어 연결        → 연결 문자열 2개를 직접 등록  ⚠️ 자동 주입이 없습니다
 3. Blob(이미지 저장소) 만들기       → BLOB_READ_WRITE_TOKEN 자동 주입  ⚠️ Public 필수
 4. 나머지 환경변수 4개 직접 등록
 5. 재배포
-6. DB 테이블 만들기 (마이그레이션)
-7. 카카오톡 공유 설정
-8. 확인
+6. DB 테이블 만들기 (마이그레이션) → GitHub Actions 워크플로
+7. Keepalive 켜기                  ⚠️ 안 하면 7일 뒤 DB가 잠듭니다
+8. 카카오톡 공유 설정
+9. 확인
 ```
 
 ---
@@ -33,38 +35,73 @@ Vercel + Neon + Blob, 전부 무료. 카드 등록 필요 없습니다. 처음�
 
 ---
 
-## 2. Neon 연결 (데이터베이스)
+## 2. Supabase 연결 (데이터베이스)
 
 편지·방명록이 저장될 곳입니다.
 
-1. Vercel 프로젝트 화면 상단 **Storage** 탭 클릭
-2. **Create Database** → **Neon** 선택 (Marketplace 항목에 있습니다)
-3. **Install** → 약관 동의
-4. 설정 화면에서:
-   - **Region**: `Singapore` 또는 `Tokyo` 등 아시아 리전 (한국에서 가장 가깝습니다)
-   - **Plan**: **Free** 선택
-   - **Database name**: 아무거나 (예: `wed-invi`)
-5. **Create** → 프로젝트에 연결(Connect)
+> ### ⚠️ 이 단계는 자동 주입이 없습니다
+> Neon을 쓸 때는 Vercel이 `DATABASE_URL` 을 알아서 넣어줬지만, Supabase는 **연결 문자열을
+> 직접 등록해야** 합니다. 그것도 용도가 다른 **두 개**입니다. 이번 절차에서 가장 손이 가는 곳이라
+> 천천히 따라 하세요.
 
-연결이 끝나면 Vercel 환경변수에 아래가 **자동으로** 들어갑니다. 직접 입력할 필요 없습니다.
+### 2-1. 프로젝트 만들기
 
-```
-DATABASE_URL            ← 이 프로젝트가 쓰는 값
-DATABASE_URL_UNPOOLED
-PGHOST / PGUSER / PGPASSWORD / PGDATABASE
-POSTGRES_* (레거시 호환용)
-```
+1. [supabase.com/dashboard](https://supabase.com/dashboard) 로그인 → **New project**
+2. 설정:
+   - **Name**: 아무거나 (예: `wed-invi`)
+   - **Database Password**: 생성 버튼을 쓰고 **어딘가에 복사해 두세요.** 나중에 다시 볼 수 없고,
+     잊으면 재설정해야 합니다
+   - **Region**: **Seoul (`ap-northeast-2`)** — 하객이 한국에서 접속합니다
+   - **Plan**: **Free**
+3. **Create new project** → 프로비저닝이 끝날 때까지 1~2분 기다립니다
 
-**Settings → Environment Variables** 에서 `DATABASE_URL` 이 보이면 성공입니다.
+> 무료 플랜은 **조직당 활성 프로젝트 2개**까지입니다. 이미 두 개를 쓰고 있다면 하나를
+> 정지하거나 조직을 새로 만들어야 합니다.
+
+### 2-2. 연결 문자열 두 개 복사
+
+프로젝트 화면 상단의 **Connect** 를 누르면 접속 경로가 여러 개 나옵니다.
+**두 개를 쓰고, 용도가 다릅니다.**
+
+| 경로 | 포트 | 넣을 환경변수 | 쓰는 곳 |
+|---|---|---|---|
+| **Transaction pooler** | **6543** | `DATABASE_URL` | 배포된 사이트(서버리스 함수) |
+| **Session pooler** | **5432** | `DIRECT_URL` | 마이그레이션·`db:generate`·`db:studio` |
+| Direct connection | 5432 | 안 씀 | — |
+
+복사한 문자열의 `[YOUR-PASSWORD]` 자리에 2-1에서 받은 비밀번호를 채워 넣습니다.
+
+> ### ⚠️ Direct connection을 쓰면 안 됩니다
+> Supabase의 direct 연결은 **IPv6 전용**이라 Vercel 함수에서 아예 붙지 못합니다.
+> 호스트가 `...pooler.supabase.com` 인 쪽(pooler)을 쓰세요.
+
+> ### ⚠️ 비밀번호에 `@` `#` `/` 가 있으면 URL 인코딩하세요
+> 연결 문자열은 URL이라 이 문자들이 구분자로 읽혀 접속이 실패합니다.
+> `@` → `%40`, `#` → `%23`, `/` → `%2F`.
+> 헷갈리면 **Settings → Database → Reset database password** 에서 특수문자 없는 비밀번호로
+> 다시 만드는 편이 빠릅니다.
+
+### 2-3. Vercel 환경변수에 등록
+
+Vercel 프로젝트 → **Settings** → **Environment Variables** → 두 개를 각각 **Add**.
+Environment는 **Production / Preview / Development 모두 체크**하세요.
+
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | Transaction pooler 문자열 (포트 **6543**) |
+| `DIRECT_URL` | Session pooler 문자열 (포트 **5432**) |
+
+**두 값의 포트를 바꿔 넣으면** 런타임 질의나 마이그레이션 중 하나가 깨집니다. 등록한 뒤
+포트 숫자를 한 번 더 확인하세요.
 
 ---
 
 ## 3. Blob 만들기 (편지에 넣을 이미지 저장소)
 
-1. 다시 **Storage** 탭 → **Create Database** → **Blob**
+1. Vercel 프로젝트 화면 상단 **Storage** 탭 → **Create Database** → **Blob**
 2. **Store Name**: 아무거나 (예: `wed-invi-images`)
 3. **Access mode**: ⚠️ **반드시 `Public` 을 선택하세요**
-4. **Region**: 2번에서 고른 것과 같은 아시아 리전
+4. **Region**: 하객이 있는 곳에 가까운 아시아 리전 (2번의 Seoul과 맞추면 됩니다)
 5. 환경 선택: **Production / Preview / Development 전부 체크**
 6. **Create** → 프로젝트에 연결
 
@@ -80,6 +117,8 @@ POSTGRES_* (레거시 호환용)
 ---
 
 ## 4. 나머지 환경변수 4개 등록
+
+2번에서 넣은 두 개까지 합해 **전부 6개**가 됩니다.
 
 터미널에서 시크릿 두 개를 먼저 만듭니다.
 
@@ -118,14 +157,50 @@ Environment는 전부 **Production / Preview / Development 모두 체크**하세
 ## 6. DB 테이블 만들기 (마이그레이션)
 
 배포된 DB는 아직 **비어 있습니다.** 테이블을 만들어야 관리자 페이지가 동작합니다.
-로컬 터미널에서 딱 한 번 실행하면 됩니다.
+**GitHub Actions의 `Migrate` 워크플로**가 이 일을 합니다. 노트북에 아무것도 설치하지 않아도 됩니다.
+
+### 6-1. 저장소 시크릿 등록 (한 번만)
+
+GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** →
+**New repository secret**
+
+| Name | Value |
+|---|---|
+| `DIRECT_URL` | 2-2에서 복사한 **session pooler (포트 5432)** 문자열 |
+
+> 런타임용 `DATABASE_URL`(6543)을 넣지 마세요. transaction 모드에서는 DDL과 advisory lock이
+> 불안정해서 마이그레이션이 실패하거나 도중에 멈출 수 있습니다.
+
+### 6-2. 워크플로 실행
+
+저장소 → **Actions** 탭 → 왼쪽 목록의 **Migrate** → 오른쪽 **Run workflow** → **Run workflow**
+
+로그가 이렇게 끝나면 성공입니다.
+
+```
+  env : (환경변수)
+  대상: aws-0-ap-northeast-2.pooler.supabase.com:5432
+✓ 마이그레이션 적용 완료
+```
+
+**`대상:` 에 표시된 호스트가 Supabase 주소이고 포트가 `5432` 인지 확인하세요.**
+
+다음부터는 **자동입니다.** `drizzle/` 아래 파일이 바뀐 커밋을 `main` 에 push하면 이 워크플로가
+알아서 돕니다. 스키마를 바꿨다면 `npm run db:generate` 로 마이그레이션 파일을 만들어 커밋하면 끝입니다.
+
+> ### ⚠️ 이 워크플로는 Vercel 배포와 병렬로 돕니다
+> 어느 쪽이 먼저 끝날지 보장되지 않습니다. 그래서 스키마 변경은 **기존 코드가 그대로 돌아가는
+> 추가(additive)** 위주로 만드세요. 컬럼 삭제·이름 변경이 필요하면 두 번에 나눠 배포합니다.
+
+### 폴백 — 노트북에서 직접 실행
+
+Actions가 막혔거나 급할 때는 손으로도 됩니다.
 
 ```bash
 # Vercel CLI 설치 (한 번만)
 npm i -g vercel
 
 # 프로젝트 폴더에서
-cd ~/IdeaProjects/wed-invi
 vercel login
 vercel link                                   # 물어보면 기존 프로젝트(wed-invi) 선택
 vercel env pull .env.production.local          # 배포 환경변수를 파일로 받아옴
@@ -133,26 +208,52 @@ vercel env pull .env.production.local          # 배포 환경변수를 파일�
 npm run db:migrate -- .env.production.local
 ```
 
-이렇게 나오면 성공입니다.
-
-```
-  env : .env.production.local
-  대상: ep-xxxx.ap-southeast-1.aws.neon.tech
-✓ 마이그레이션 적용 완료
-```
-
-**`대상:` 에 표시된 호스트가 Neon 주소인지 꼭 확인하세요.** `db.localtest.me` 가 나오면
-로컬 DB에 적용한 것이라 배포본에는 반영되지 않습니다.
+**`대상:` 이 `localhost:55432` 로 나오면** 로컬 도커 DB에 적용한 것이라 배포본에는 반영되지 않습니다.
+(`.env.production.local` 에 `DIRECT_URL` 이 제대로 들어 있는지 보세요.)
 
 > `.env.production.local` 에는 실제 비밀번호가 들어 있습니다. `.gitignore` 에 걸려 있어
 > 커밋되지 않지만, 작업이 끝나면 지워도 됩니다.
 
-> 나중에 스키마를 바꿨을 때도 같은 방법입니다.
-> `npm run db:generate` 로 마이그레이션 파일을 만들어 커밋 → 배포 → 위 명령 한 번.
+---
+
+## 7. Keepalive 켜기 (Supabase가 잠들지 않게)
+
+Supabase 무료 플랜은 **7일간 DB 활동이 없으면 프로젝트를 일시정지**합니다. 정지되면 하객이
+편지·방명록에서 에러를 보고, 사람이 대시보드에 들어가 복구해야 돌아옵니다.
+
+`Keepalive` 워크플로가 매주 **월·목 03:00 UTC**(한국 낮 12시)에 `/api/health` 를 두드려
+이 일이 일어나지 않게 막습니다. 최대 공백이 4일이라 7일 기준보다 여유가 있습니다.
+
+### 7-1. 저장소 Variable 등록
+
+시크릿이 아니라 **Variable** 입니다. 비밀이 아니고, 눈으로 확인·수정할 수 있어야 하니까요.
+
+GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** →
+**Variables** 탭 → **New repository variable**
+
+| Name | Value |
+|---|---|
+| `SITE_URL` | `https://wed-invi-xxxx.vercel.app` — 1번의 배포 주소. **끝에 `/` 없이** |
+
+### 7-2. 한 번 수동으로 돌려서 확인
+
+**Actions** 탭 → **Keepalive** → **Run workflow**. 초록색(✓)이면 끝입니다.
+
+로그 마지막에 `✓ DB가 응답했습니다.` 가 나오면 사이트를 넘어 **DB까지** 살아 있다는 뜻입니다.
+빨간색이면 `SITE_URL` 오타 · `DATABASE_URL` 미등록이나 포트 오류(2-3번) · 재배포 안 함(5번)
+중 하나입니다.
+
+이후 keepalive가 실패하면 워크플로가 red가 되고 GitHub이 메일을 보냅니다. **그 메일을 무시하지 마세요.**
+
+> ### ⚠️ 저장소에 60일간 활동이 없으면 GitHub이 이 cron을 자동으로 멈춥니다
+> 비활성화 전에 GitHub이 메일로 알려줍니다. 커밋 하나를 올리거나 **Run workflow** 를 한 번
+> 누르면 되살아납니다.
+> **예식이 끝나고 저장소가 조용해지는 시기를 특히 조심하세요** — cron이 멈추면 7일 뒤 DB가
+> 정지되고, 그때부터 방명록을 보러 온 하객이 에러를 봅니다.
 
 ---
 
-## 7. 카카오톡 공유 설정
+## 8. 카카오톡 공유 설정
 
 1. [developers.kakao.com](https://developers.kakao.com) 로그인 → 우상단 **내 애플리케이션**
 2. **애플리케이션 추가하기**
@@ -176,7 +277,7 @@ npm run db:migrate -- .env.production.local
 
 ---
 
-## 8. 확인
+## 9. 확인
 
 브라우저에서:
 
@@ -184,6 +285,7 @@ npm run db:migrate -- .env.production.local
 |---|---|
 | `https://<도메인>/` | 청첩장이 보인다 |
 | `https://<도메인>/admin` | 로그인 화면 → `ADMIN_PASSWORD` 로 들어가진다 |
+| `https://<도메인>/api/health` | `{"ok":true}` — DB까지 연결됐다는 뜻 (`ok:false` 면 `DATABASE_URL` 문제입니다. 2-3번) |
 
 그다음 **자기 자신에게 편지를 하나 써보세요.**
 
@@ -196,16 +298,56 @@ npm run db:migrate -- .env.production.local
 
 ---
 
-## 9. 커스텀 도메인 (선택)
+## 10. 커스텀 도메인 — `주은예찬.com`
 
-`wed-invi-xxxx.vercel.app` 대신 `yechan-jueun.com` 같은 주소를 쓰고 싶다면.
+가비아에서 구입한 **`주은예찬.com`** 을 붙입니다.
 
-1. 도메인 구입 (가비아, Cloudflare 등)
-2. Vercel → Settings → **Domains** → 도메인 입력 → 안내대로 DNS 레코드 추가
-3. **연결 후 두 곳을 반드시 함께 갱신:**
-   - Vercel 환경변수 `NEXT_PUBLIC_SITE_URL` → 새 도메인
-   - 카카오 개발자 → 플랫폼 → Web → **사이트 도메인에 새 도메인 추가**
-4. Redeploy
+### 한글 도메인이라 먼저 알아야 할 것
+
+DNS는 ASCII만 이해하므로 한글 도메인은 **퓨니코드**로 변환되어 처리됩니다.
+
+```
+주은예찬.com  →  xn--2j5b9vb2blxf.com
+```
+
+**Vercel과 카카오 개발자 콘솔에는 퓨니코드 형태로 입력하세요.** 가비아 DNS 화면에서도
+퓨니코드로 표시될 수 있습니다.
+
+> ### ⚠️ 이것부터 확인하세요 — 인증서가 안 나올 수 있습니다
+> Vercel에서 **한글 IDN 도메인의 SSL 인증서 발급이 `Generating SSL Cert` 상태로 멈추는**
+> 사례가 보고돼 있습니다. 하객에게 링크를 보내기 **한참 전에** 붙여서 인증서가 정상 발급되는지
+> 확인하세요. 안 되면 대안을 찾을 시간이 필요합니다.
+>
+> `*.vercel.app` 주소는 계속 살아 있으므로 최후 폴백은 있습니다.
+
+### 절차
+
+1. Vercel → 프로젝트 → Settings → **Domains** → `xn--2j5b9vb2blxf.com` 입력
+   - Vercel이 `www` 도 함께 추가할지 묻습니다. 최상위 주소를 대표로 쓰고 `www`는 리디렉트로 두세요
+2. **Vercel 화면에 뜨는 DNS 레코드 값을 그대로 복사하세요.** 프로젝트마다 다릅니다
+   - 최상위(`주은예찬.com`): **A 레코드** (보통 `76.76.21.21`)
+   - `www`: **CNAME** (프로젝트 고유값, 예: `xxxxxxxx.vercel-dns-017.com`)
+3. 가비아 → **My가비아** → **DNS 관리** → 해당 도메인 → DNS 설정 → 레코드 추가
+4. 전파 후 Vercel Domains 화면이 **Valid Configuration** 이 되고 인증서가 발급됐는지 확인
+
+### 연결 후 세 곳을 반드시 함께 갱신
+
+| 곳 | 넣을 값 | 이유 |
+|---|---|---|
+| Vercel 환경변수 `NEXT_PUBLIC_SITE_URL` | `https://주은예찬.com` (한글) | OG 태그는 코드가 자동으로 퓨니코드로 바꿔 내보내고, **공유·링크 복사에는 한글 주소가 그대로** 나갑니다 |
+| GitHub 저장소 Variable `SITE_URL` | `https://xn--2j5b9vb2blxf.com` (퓨니코드) | curl이 쓰는 값이라 확실한 쪽으로 |
+| 카카오 개발자 → 플랫폼 → Web | **퓨니코드와 한글 둘 다** 등록 | 어느 형태로 매칭하는지 확인되지 않아, 되는 쪽이 살아남게 |
+
+그리고 **Redeploy** — 환경변수는 다음 배포부터 적용됩니다.
+
+> 옛 주소(`*.vercel.app`)도 계속 살아 있으면 `SITE_URL`을 안 바꿔도 keepalive는 green이라
+> 빼먹은 걸 알아채기 어렵습니다.
+
+> ### 실기기에서 확인할 것
+> **카카오톡 공유가 한글 도메인에서 동작하는지**는 실제로 눌러봐야 압니다.
+> `Kakao.Share.sendDefault({url})` 의 도메인이 콘솔에 등록된 사이트 도메인과 맞아야 하는데,
+> 한글/퓨니코드 매칭 동작이 확인되지 않았습니다.
+> 안 되면 `NEXT_PUBLIC_SITE_URL` 만 퓨니코드로 바꾸면 됩니다 — 코드 수정은 필요 없습니다.
 
 ---
 
@@ -222,6 +364,10 @@ git push
 사진을 바꿨다면 `npm run photos:prep` 을 먼저 돌리고, 생성물까지 함께 커밋하세요
 (`src/assets/photos/` 와 `public/og.jpg` 는 커밋 대상입니다).
 
+같은 push에서 GitHub Actions도 함께 돕니다 — `CI` 가 타입 검사와 테스트를, `drizzle/` 이
+바뀌었으면 `Migrate` 가 배포 DB에 마이그레이션을 적용합니다. **배포 자체는 Actions가 아니라
+Vercel이 합니다.**
+
 ---
 
 ## 안 될 때
@@ -229,9 +375,13 @@ git push
 | 증상 | 원인과 해결 |
 |---|---|
 | `/admin` 에서 500 에러 | 마이그레이션(6번)을 안 했거나 로컬 DB에 실행했습니다. `대상:` 호스트를 확인하고 다시 실행 |
+| 한동안 방치한 뒤 편지·방명록이 전부 에러 | **Supabase 프로젝트가 일시정지**됐습니다(7일 무활동). 대시보드에서 복구(Resume) 후, keepalive 워크플로가 왜 안 돌았는지 확인하세요 — cron이 비활성화됐을 가능성이 큽니다(7번) |
+| 배포는 됐는데 편지·방명록만 죽음 | `DATABASE_URL` 이 없거나 포트가 틀렸습니다. 런타임은 **transaction pooler(6543)** 여야 합니다(2-3번). `/api/health` 가 `ok:false` 면 여기입니다 |
+| 마이그레이션이 실패하거나 도중에 멈춤 | `DIRECT_URL` 에 transaction pooler(6543)를 넣었을 수 있습니다. **session pooler(5432)** 로 바꾸세요 |
+| 연결이 비밀번호 오류로 거부됨 | 비밀번호의 `@` `#` `/` 를 URL 인코딩하지 않았습니다(`%40` `%23` `%2F`). 특수문자 없는 비밀번호로 재설정하는 게 빠릅니다 |
 | 로그인이 안 됨 | `ADMIN_PASSWORD` 등록 후 **재배포(5번)** 를 안 했을 가능성. 환경변수는 다음 배포부터 적용됩니다 |
 | 카카오톡 버튼이 안 보임 | `NEXT_PUBLIC_KAKAO_JS_KEY` 미등록. 키가 없으면 버튼을 아예 숨깁니다 |
-| 카카오톡 버튼을 눌러도 반응 없음 | 카카오 개발자 → 플랫폼 → **사이트 도메인 미등록** (7-5번) |
+| 카카오톡 버튼을 눌러도 반응 없음 | 카카오 개발자 → 플랫폼 → **사이트 도메인 미등록** (8-5번) |
 | 카톡 링크 미리보기 이미지가 안 뜸 | [캐시 초기화 도구](https://developers.kakao.com/tool/clear/og)에 URL 입력. 카카오는 미리보기를 일정 시간 캐싱합니다 |
 | 미리보기에 옛날 이미지가 뜸 | 위와 동일. `og.jpg` 를 바꿨다면 캐시 초기화가 필요합니다 |
 | 편지 이미지 업로드 실패 | Blob 스토어가 **Private** 로 만들어졌을 수 있습니다(3번). 지우고 Public으로 다시 생성 |
@@ -245,11 +395,27 @@ git push
 |---|---|---|
 | Vercel 대역폭 | 100 GB/월 | 하객 300명 기준 여유 |
 | Vercel 이미지 변환 | 5,000회/월 | 사진 40장 기준 약 500회 |
-| Vercel Blob | 1 GB 저장 | 편지 이미지는 업로드 전 1600px로 줄입니다 |
-| Neon 스토리지 | 0.5 GB | 편지는 텍스트라 거의 안 씁니다 |
-| Neon 컴퓨트 | 100 CU-h/월 | 5분 놀면 0으로 내려가 실사용 미미 |
+| Vercel Blob | 1 GB 저장 · 10 GB/월 전송 | 편지 이미지는 업로드 전 1600px로 줄입니다 |
+| Vercel 배포 | 100회/일 | push 단위라 여유 |
+| Vercel 빌드 | 6,000분/월 | 한 번에 2~3분 |
+| Supabase DB | 500 MB | 편지·방명록은 텍스트라 거의 안 씁니다 |
+| Supabase 전송(egress) | 5 GB/월 | 하객 트래픽은 Vercel이 받고, DB는 질의만 오갑니다 |
+| Supabase 파일 저장소 | 1 GB | **안 씁니다** — 이미지는 Vercel Blob에 올립니다 |
+| Supabase 활성 프로젝트 | 조직당 2개 | 청첩장 하나면 충분합니다 |
 
 Vercel Hobby 플랜은 **개인·비상업 용도** 한정입니다. 청첩장은 여기에 해당합니다.
 
-Neon 무료 플랜은 브랜치를 10개까지 만들 수 있는데, Vercel 연동이 **Preview 배포마다 브랜치를
-하나씩** 만듭니다. 한도에 걸리면 Neon 콘솔에서 오래된 브랜치를 지우면 됩니다.
+### Supabase에는 한도 말고 시간 제약이 하나 더 있습니다
+
+무료 플랜은 **7일간 DB 활동이 없으면 프로젝트를 일시정지**합니다. 삭제는 아니고 데이터는
+그대로 남지만, 사람이 대시보드에서 복구(Resume)해야 다시 열립니다.
+(정지 후 **90일** 안에 복구해야 합니다.)
+
+7번의 `Keepalive` 워크플로가 매주 두 번 `/api/health` 를 호출해 이 정지를 막습니다.
+따라서 **신경 쓸 것은 딱 하나** — keepalive가 계속 도는지입니다.
+저장소에 60일간 활동이 없으면 GitHub이 cron을 자동 비활성화하니, 경고 메일이 오면
+커밋 하나를 올리거나 워크플로를 한 번 수동 실행하세요.
+
+GitHub Actions는 **월 2,000분**입니다(이 저장소는 private입니다. public이면 무제한). 세 워크플로를 합쳐도
+회당 몇 분이라 여유가 큽니다(CI가 `npm run build` 를 돌리지 않는 이유 중 하나입니다 —
+빌드는 Vercel이 이미 합니다).

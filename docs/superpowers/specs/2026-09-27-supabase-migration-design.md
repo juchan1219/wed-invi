@@ -103,11 +103,14 @@ Actions에서 빌드까지 하면 private 저장소의 2,000분 한도를 추가
 
 - 트리거: `main` push + pull request. `docs/**`, `photos/**`, `**.md` 변경은 제외
 - 동시 실행 취소(`concurrency`)로 낭비를 줄인다
-- `check` 잡: `npm ci`(npm 캐시) → `typecheck` → `test:story` → `test:dance`
+- **잡 하나(`check`)** 로 둔다: `npm ci`(npm 캐시) → `typecheck` → `test:story` → `test:dance`
+  → `db:migrate` → `test:db`. `postgres:17-alpine` 서비스 컨테이너를 잡에 붙인다
 - **`npm run build`는 돌리지 않는다.** Vercel이 매 push마다 빌드하고 실패를 알려준다.
   Actions에서 또 빌드하면 같은 일을 두 번 하면서 한도만 먹는다
-- `db-test` 잡: `src/db/**`, `src/lib/**`, `drizzle/**` 가 바뀐 경우에만.
-  `postgres:17-alpine` 서비스 컨테이너를 띄우고 마이그레이션 적용 후 통합 테스트 실행
+
+> 잡을 `check`/`db-test` 둘로 나누려다 하나로 합쳤다. 나누면 `npm ci`가 잡마다 돌아
+> 청구 분이 두 배가 된다(분은 잡 시간의 **합**으로 계산된다). 경로별 조건부 실행도
+> 잡 단위로는 서드파티 액션이 필요해서 포기했다 — 합쳐도 회당 1.5분 안팎이라 한도에 여유가 있다.
 
 CI의 고유 가치는 **유닛 테스트**다. 그건 다른 어디에서도 돌지 않는다.
 

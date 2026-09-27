@@ -20,7 +20,7 @@
 
 ## 새 컴퓨터에서 시작하기 (5분)
 
-필요한 것: **Node 20.9+**, 그리고 DB용으로 **Docker** 또는 **Neon 계정** 중 하나.
+필요한 것: **Node 20.9+**, 그리고 DB용으로 **Docker** 또는 **Supabase 프로젝트** 중 하나.
 
 ```bash
 git clone https://github.com/juchan1219/wed-invi.git
@@ -42,12 +42,16 @@ openssl rand -base64 32     # 두 번 실행 → SESSION_SECRET, TOKEN_SECRET �
 `.env.local` 을 이렇게 채웁니다.
 
 ```bash
-DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"
+DATABASE_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+DIRECT_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
 ADMIN_PASSWORD="아무거나-길게"
 SESSION_SECRET="<openssl 결과 1>"
 TOKEN_SECRET="<openssl 결과 2>"
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```
+
+> DB 주소가 두 개인 이유: 앱은 `DATABASE_URL`, 마이그레이션·drizzle-kit은 `DIRECT_URL` 로 붙습니다.
+> 로컬 도커에서는 **같은 값**이고, 배포(Supabase)에서만 포트가 갈립니다.
 
 ### 이미 배포한 뒤라면 — 🚨 시크릿을 새로 만들지 마세요
 
@@ -180,16 +184,31 @@ openssl rand -base64 32   # SESSION_SECRET, TOKEN_SECRET 각각에 사용
 
 DB가 필요합니다. 두 가지 방법 중 하나를 고르세요.
 
-**A. Neon을 그대로 쓰기 (권장, 간단함)**
-[neon.com](https://neon.com)에서 무료 프로젝트를 만들고 connection string을 `DATABASE_URL`에 넣습니다.
-
-**B. 로컬 Docker**
+**A. 로컬 Docker (권장 — 실제 데이터를 건드리지 않습니다)**
 ```bash
 docker compose -f docker-compose.dev.yml up -d
 ```
-`.env.local`에 `DATABASE_URL="postgres://postgres:postgres@db.localtest.me:4444/wedinvi"`
+`.env.local`에 두 값을 **같게** 넣습니다.
+```bash
+DATABASE_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+DIRECT_URL="postgres://postgres:postgres@localhost:55432/wedinvi"
+```
 
-> 프로덕션은 Neon serverless 드라이버(HTTP)로 DB에 붙습니다. 평범한 Postgres는 HTTP를 못 알아듣기 때문에 compose가 중계 프록시를 함께 띄웁니다. 덕분에 로컬에서도 **배포와 똑같은 코드 경로**로 테스트됩니다.
+> 배포(Supabase)도 평범한 Postgres 프로토콜로 붙기 때문에 로컬은 Postgres 컨테이너 하나면 됩니다. 중계 프록시는 없습니다. (Neon HTTP 드라이버를 쓰던 시절에는 HTTP↔Postgres 프록시가 하나 더 있었습니다.)
+
+**B. Supabase 프로젝트를 쓰기 (배포와 같은 환경)**
+[supabase.com](https://supabase.com)에서 무료 프로젝트를 만들고(리전 **Seoul `ap-northeast-2`**),
+**Connect** 에서 연결 문자열 두 개를 가져옵니다.
+
+| 경로 | 포트 | 넣을 곳 |
+|---|---|---|
+| Transaction pooler | 6543 | `DATABASE_URL` |
+| Session pooler | 5432 | `DIRECT_URL` |
+
+> **Direct connection은 쓰지 마세요** — IPv6 전용이라 Vercel 함수에서 못 붙습니다.
+> 비밀번호에 `@` `#` `/` 가 있으면 URL 인코딩해야 합니다(`%40` `%23` `%2F`).
+>
+> 무료 플랜은 **7일간 활동이 없으면 프로젝트가 일시정지**되고(데이터는 보존), 대시보드에서 복구합니다.
 
 그다음:
 
@@ -208,20 +227,40 @@ npm run dev
 
 ---
 
-## 배포 (Vercel + Neon, 전부 무료)
+## 배포 (Vercel + Supabase, 전부 무료)
 
 전체 절차는 **[docs/deploy.md](docs/deploy.md)** 에 있습니다. 요약하면:
 
 1. GitHub 저장소를 [vercel.com/new](https://vercel.com/new)에서 import
-2. Storage → **Neon** 연결 (`DATABASE_URL` 자동 주입)
+2. [Supabase](https://supabase.com) 프로젝트 생성(리전 **Seoul**) → `DATABASE_URL`(transaction pooler **6543**)과
+   `DIRECT_URL`(session pooler **5432**)을 Vercel 환경변수에 **직접 등록** ⚠️ 자동 주입이 없습니다
 3. Storage → **Blob** 스토어 생성 (`BLOB_READ_WRITE_TOKEN` 자동 주입)
 4. 환경변수 4개 등록 — `ADMIN_PASSWORD`, `SESSION_SECRET`, `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`
-5. `npm run db:migrate` 로 테이블 생성
-6. 카카오 JavaScript 키 발급 + **플랫폼 > Web > 사이트 도메인 등록**
+5. 저장소 Secret `DIRECT_URL` 등록 → **Migrate** 워크플로를 수동 실행해 테이블 생성
+6. 저장소 Variable `SITE_URL` 등록 → **Keepalive** 워크플로를 한 번 돌려 green 확인
+7. 카카오 JavaScript 키 발급 + **플랫폼 > Web > 사이트 도메인 등록**
 
-그 뒤로는 `main`에 push하면 자동 배포됩니다.
+그 뒤로는 `main`에 push하면 자동 배포됩니다. 배포는 **Vercel이** 합니다 — GitHub Actions는 배포하지 않습니다.
 
-> ⚠️ 6번의 **도메인 등록을 빼먹으면 카카오톡 공유가 동작하지 않습니다.**
+> ⚠️ 7번의 **도메인 등록을 빼먹으면 카카오톡 공유가 동작하지 않습니다.**
+>
+> ⚠️ 6번을 빼먹으면 **7일 뒤 Supabase가 일시정지**되어 편지·방명록이 죽습니다.
+
+---
+
+## GitHub Actions (워크플로 3개)
+
+저장소에 워크플로 세 개가 있습니다. **배포는 하지 않습니다** — 배포는 Vercel이 `main` push마다 알아서 합니다.
+
+| 워크플로 | 언제 도는가 | 무엇을 하는가 | 필요한 값 |
+|---|---|---|---|
+| [`ci.yml`](.github/workflows/ci.yml) | `main` push · PR (`docs/`·`photos/`·`*.md`만 바뀐 건 제외) | 타입 검사 → 유닛 테스트 → 러너 안 Postgres에 마이그레이션 → DB 통합 테스트 | 없음 |
+| [`migrate.yml`](.github/workflows/migrate.yml) | `main` push 중 `drizzle/` 변경 · 수동 실행 | 배포 DB(Supabase)에 마이그레이션 적용 | Secret `DIRECT_URL` |
+| [`keepalive.yml`](.github/workflows/keepalive.yml) | 매주 월·목 03:00 UTC · 수동 실행 | `<SITE_URL>/api/health` 호출로 Supabase를 깨움 | Variable `SITE_URL` |
+
+- CI는 **`npm run build`를 돌리지 않습니다.** Vercel이 push마다 빌드하고 실패를 알려주므로, 같은 일을 두 번 하면 Actions 한도만 먹습니다. CI의 고유 가치는 유닛 테스트와 DB 통합 테스트입니다.
+- keepalive가 두드리는 `/api/health`는 DB에 `select 1`을 실행하고, 실패하면 **503**을 냅니다. `/api/guestbook`은 DB가 죽어도 하객에게 에러를 보이지 않으려고 200을 돌려주므로 keepalive 용도로 쓸 수 없습니다.
+- ⚠️ **저장소에 60일간 활동이 없으면 GitHub이 keepalive cron을 자동 비활성화합니다.** 사전 경고 메일이 오고, 커밋 하나나 **Run workflow** 수동 실행으로 되살아납니다. 예식이 끝나고 저장소가 조용해지는 시기를 특히 조심하세요 — cron이 멈추면 7일 뒤 DB가 정지되고 방명록을 보러 온 하객이 에러를 봅니다.
 
 ---
 
@@ -262,8 +301,9 @@ npm run typecheck      # 타입 검사
 npm run photos:prep    # 사진 최적화 + OG 이미지 생성
 npm run dance:prep -- /path/to/reference.png # 2×3 원화를 6포즈 자산으로 분리
 npm run db:generate    # 스키마 변경 → 마이그레이션 파일 생성
-npm run db:migrate     # 마이그레이션 적용
+npm run db:migrate     # 마이그레이션 적용 (DIRECT_URL 로 붙습니다)
 npm run db:studio      # DB 내용 눈으로 보기
+npm run test:db        # DB 통합 테스트 (DATABASE_URL 이 없으면 건너뜁니다)
 ```
 
 ---
