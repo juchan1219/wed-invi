@@ -1,0 +1,50 @@
+# 배포 DB에 마이그레이션을 적용한다.
+#
+# 이 워크플로가 예전 절차(노트북에서 `vercel env pull` 후 손으로 실행)를 대체한다.
+#
+# ⚠️ Vercel 배포와 **병렬로** 돈다. 순서가 보장되지 않으므로 스키마 변경은
+#    기존 코드가 그대로 돌아가는 추가(additive) 위주로 만든다.
+#    (컬럼 삭제·이름 변경이 필요하면 두 번에 나눠 배포할 것)
+#
+# 필요한 저장소 시크릿:
+#   DIRECT_URL — Supabase의 **session pooler(5432)** 연결 문자열
+#                Settings > Secrets and variables > Actions > New repository secret
+name: Migrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "drizzle/**"
+  workflow_dispatch:
+
+# 마이그레이션이 겹쳐 돌면 안 된다. 앞선 실행을 취소하지 말고 기다린다.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: 마이그레이션 적용
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          if [ -z "$DIRECT_URL" ]; then
+            echo "✗ 저장소 시크릿 DIRECT_URL 이 비어 있습니다."
+            echo "  Settings > Secrets and variables > Actions 에 등록하세요."
+            exit 1
+          fi
+          npm run db:migrate

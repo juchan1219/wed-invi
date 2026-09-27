@@ -1,0 +1,48 @@
+# Supabase 무료 플랜이 잠들지 않게 주기적으로 깨운다.
+#
+# Supabase는 **7일간 DB 활동이 없으면 프로젝트를 일시정지**한다. 정지되면 하객이
+# 편지·방명록에서 에러를 본다. 데이터는 보존되지만, 사람이 대시보드에 들어가
+# 복구 버튼을 눌러야 돌아온다(정지 후 90일 이내).
+#
+# ⚠️ 이 cron은 **저장소에 60일간 활동이 없으면 GitHub이 자동으로 비활성화**한다.
+#    비활성화 전에 GitHub이 메일로 알려주고, 커밋 하나 또는 아래 "Run workflow"
+#    수동 실행으로 되살릴 수 있다. 예식 이후 조용해지는 시기를 특히 조심할 것.
+#
+# 필요한 저장소 Variable (시크릿 아님 — 눈으로 확인·수정할 수 있게):
+#   SITE_URL — 예: https://wed-invi.vercel.app  (끝에 / 없이)
+#   Settings > Secrets and variables > Actions > Variables > New repository variable
+name: Keepalive
+
+on:
+  schedule:
+    # 매주 월·목 03:00 UTC (한국 12:00). 최대 공백 4일 — 정지 기준 7일보다 안전하다.
+    - cron: "0 3 * * 1,4"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: /api/health 호출
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "✗ 저장소 Variable SITE_URL 이 비어 있습니다."
+            echo "  Settings > Secrets and variables > Actions > Variables 에 등록하세요."
+            exit 1
+          fi
+
+          # --fail: 200이 아니면 0이 아닌 코드로 끝난다 → 워크플로 red → GitHub이 메일 발송.
+          # --retry: Vercel 함수와 Supabase 컴퓨트의 콜드 스타트를 흡수한다.
+          #
+          # /api/guestbook 을 대신 두드리면 안 된다. 그 라우트는 DB가 죽어도 200을 돌려준다.
+          curl --fail --show-error --silent \
+               --retry 3 --retry-delay 10 --retry-all-errors \
+               --max-time 30 \
+               "$SITE_URL/api/health"
+
+          echo ""
+          echo "✓ DB가 응답했습니다."
