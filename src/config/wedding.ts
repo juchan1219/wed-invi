@@ -25,8 +25,15 @@ export type Account = {
 
 export const wedding = {
   site: {
-    /** 배포 도메인. OG 절대 URL과 공유 링크 생성에 쓰인다. */
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    /**
+     * 배포 도메인. OG 절대 URL과 공유 링크 생성에 쓰인다.
+     *
+     * `??` 가 아니라 `||` 인 이유: `??` 는 빈 문자열을 그대로 통과시킨다.
+     * Vercel에서 이 변수를 **값 없이 등록**하면(import 화면이 .env.example을 읽어 만들어 준다)
+     * `new URL("")` 이 터져서 `layout.tsx`의 metadataBase에서 빌드가 통째로 실패한다.
+     * 실제로 그렇게 한 번 깨졌다 (2026-09-27).
+     */
+    url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000",
     title: "예찬 ♥ 주은 결혼합니다", // PLACEHOLDER
     description: "2026년 12월 19일 토요일 오후 12시 30분",
     /** public/ 기준 경로. 1200×630 권장. */
