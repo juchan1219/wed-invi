@@ -112,14 +112,15 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="grid grid-cols-[1fr_6.5rem] gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,6.5rem)] gap-2">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={wedding.guestbook.maxNameLength}
           placeholder="이름"
           aria-label="이름"
-          className="rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
+          className="min-w-0 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
+          style={{ minWidth: 0, width: "100%" }}
         />
         <input
           value={password}
@@ -127,7 +128,8 @@ function GuestbookForm({ onCreated }: { onCreated: (entry: GuestbookView) => voi
           inputMode="numeric"
           placeholder="비밀번호 4자리"
           aria-label="삭제용 비밀번호 4자리"
-          className="rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
+          className="min-w-0 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-base outline-none focus:border-accent"
+          style={{ minWidth: 0, width: "100%" }}
         />
       </div>
       <textarea

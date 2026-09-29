@@ -8,7 +8,6 @@ import {
   DANCE_ENDING_ID,
   DANCE_SCENES,
   getDanceProgressAnnouncement,
-  getDanceSkipTarget,
 } from "./danceTimeline";
 import { useDanceTimeline } from "./useDanceTimeline";
 import styles from "./WeddingDance.module.css";
@@ -17,7 +16,7 @@ import { useLetter } from "@/components/letter/LetterProvider";
 
 type MotionMode = "pending" | "full" | "reduce";
 
-export function WeddingDance({ contentTargetId }: { contentTargetId: string }) {
+export function WeddingDance() {
   const rootRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const actorRef = useRef<DanceActorHandle>(null);
@@ -49,16 +48,15 @@ export function WeddingDance({ contentTargetId }: { contentTargetId: string }) {
       data-motion={motionMode}
       aria-label="예찬과 주은의 웨딩 댄스"
     >
-      {/* 편지가 있으면 본문 대신 편지 버튼이 보이는 마지막 장면으로 건너뛴다(본문에는 편지 자리가 없다). */}
-      <a className={styles.skip} href={`#${getDanceSkipTarget(contentTargetId, hasLetter, motionMode === "full")}`}>
-        댄스 이야기 건너뛰기
+      <a className={styles.skip} href="#location">
+        오시는 길
       </a>
 
       <ol className={styles.transcript} aria-label="웨딩 댄스 전체 대본">
         {DANCE_SCENES.map(({ id, narration }) => <li key={id}>{narration}</li>)}
       </ol>
 
-      {/* 건너뛰기의 도착점: 무대가 끝나는 지점(진행률 1)이라 마지막 장면과 편지 버튼이 보인다.
+      {/* 플로팅 편지 버튼의 도착점: 무대가 끝나는 지점(진행률 1)이라 마지막 장면과 편지 버튼이 보인다.
           무대 바로 앞에 두어, 도착한 뒤 Tab을 누르면 편지 버튼으로 간다. */}
       {hasLetter && <span id={DANCE_ENDING_ID} className={styles.ending} />}
 

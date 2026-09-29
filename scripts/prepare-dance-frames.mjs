@@ -16,9 +16,9 @@ const upscaled = sources.map((source) => resolve('assets/dance-frames/upscaled',
 for (const file of upscaled) if (!existsSync(file)) throw new Error(`Missing ${file}. Run \`npm run dance:upscale\` first.`);
 const destination = resolve('public/story/wedding-dance/frames');
 await mkdir(destination, { recursive: true });
-// 576px = 레티나에서 358 CSS px로 그릴 때 필요한 716px에 가까우면서 용량을 억제한 값.
-// WebP 품질 60: 선화라 q70과 눈으로 구분되지 않고, 384px/q94 atlas보다 작다.
-const cellSize = 576;
+// 720px = 레티나에서 358 CSS px로 그릴 때 필요한 716px를 넘겨 브라우저 확대를 막는다.
+// 선화의 경계와 투명 알파를 보존하면서도 여섯 atlas 합계를 3MB 아래로 유지한다.
+const cellSize = 720;
 const layoutScale = cellSize / 384; // 기존 384px 셀 배치(비율·바닥 여백)를 그대로 키운다
 const groundMargin = Math.round(18 * layoutScale);
 const audit=[];
@@ -39,7 +39,7 @@ for(let page=0;page<5;page++) {
     audit.push({page,frame:row*4+col,bounds:{left,top,width,height}});
   }
   await sharp({create:{width:cellSize*4,height:cellSize*4,channels:4,background:'#00000000'}})
-    .composite(composites).webp({quality:60,alphaQuality:70,effort:6}).toFile(resolve(destination,`dance-${page+1}.webp`));
+    .composite(composites).webp({quality:50,alphaQuality:75,effort:6}).toFile(resolve(destination,`dance-${page+1}.webp`));
 }
 // 캔버스가 첫 atlas를 디코딩하기 전에도 같은 크기·투명 여백으로 보여야 한다.
 // 타이트하게 잘린 pose-1.webp를 쓰면 준비 완료 순간 두 사람이 작아지는 것처럼 보인다.

@@ -1,7 +1,7 @@
-// 춤 80프레임(atlas 5장) + 엔딩 그림 1장(프레임 80, 576px 한 칸짜리 dance-6.webp).
+// 춤 80프레임(atlas 5장) + 엔딩 그림 1장(프레임 80, 720px 한 칸짜리 dance-6.webp).
 export const DANCE_FRAME_COUNT = 81;
 // scripts/prepare-dance-frames.mjs의 cellSize와 같아야 한다(테스트로 고정).
-export const DANCE_FRAME_SIZE = 576;
+export const DANCE_FRAME_SIZE = 720;
 export const DANCE_FRAMES_PER_PAGE = 16;
 export const DANCE_ATLAS_PAGES = Math.ceil(DANCE_FRAME_COUNT / DANCE_FRAMES_PER_PAGE);
 export const DANCE_FIRST_FRAME_URL = "/story/wedding-dance/frames/first-frame.webp";
@@ -30,4 +30,13 @@ export function frameAtlasRect(frame: number) {
 
 export function danceAtlasUrl(page: number) {
   return `/story/wedding-dance/frames/dance-${page + 1}.webp`;
+}
+
+/** 현재 장만 먼저 받고, 마지막 네 프레임에서 다음 장을 미리 받아 초기 전송량을 줄인다. */
+export function danceAtlasPagesToLoad(frame: number) {
+  const safe = Math.max(0, Math.min(DANCE_FRAME_COUNT - 1, Math.floor(frame)));
+  const page = Math.floor(safe / DANCE_FRAMES_PER_PAGE);
+  const local = safe % DANCE_FRAMES_PER_PAGE;
+  if (local >= DANCE_FRAMES_PER_PAGE - 4 && page < DANCE_ATLAS_PAGES - 1) return [page, page + 1];
+  return [page];
 }

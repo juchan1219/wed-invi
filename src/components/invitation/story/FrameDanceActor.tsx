@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { DanceActorHandle } from "./DanceActor";
-import { DANCE_ATLAS_PAGES, DANCE_FIRST_FRAME_URL, DANCE_FRAME_SIZE, danceAtlasUrl, frameAtlasRect, sampleFrameSequence } from "./frameSequence";
+import { DANCE_ATLAS_PAGES, DANCE_FIRST_FRAME_URL, DANCE_FRAME_SIZE, danceAtlasPagesToLoad, danceAtlasUrl, frameAtlasRect, sampleFrameSequence } from "./frameSequence";
 import styles from "./WeddingDance.module.css";
 
 export const FrameDanceActor = forwardRef<DanceActorHandle>(function FrameDanceActor(_, ref) {
@@ -48,7 +48,7 @@ export const FrameDanceActor = forwardRef<DanceActorHandle>(function FrameDanceA
       const frame = sampleFrameSequence(progress.current);
       const selected = frame.blend < .5 ? frame.first : frame.second;
       const a = frameAtlasRect(selected);
-      load(a.page); load(Math.min(lastPage, a.page + 1));
+      for (const page of danceAtlasPagesToLoad(selected)) load(page);
       const first = pages.get(a.page);
       if (!first) return; // Keep the previous valid frame while decoding.
       for (const page of pages.keys()) if (Math.abs(page - a.page) > 1) pages.delete(page);

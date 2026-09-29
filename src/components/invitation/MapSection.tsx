@@ -13,7 +13,7 @@ export function MapSection() {
   const { name, hall, address, tel, transport } = wedding.venue;
 
   return (
-    <Section label="Location" title="오시는 길">
+    <Section id="location" label="Location" title="오시는 길">
       <Reveal>
         <div className="text-center">
           <p className="font-serif text-lg text-ink">{name}</p>

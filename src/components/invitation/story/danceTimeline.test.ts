@@ -15,7 +15,6 @@ import {
   DANCE_ENDING_CARD_ID,
   DANCE_ENDING_ID,
   DANCE_SCENES,
-  getDanceSkipTarget,
   getDancePoseOpacities,
   getDanceFrame,
   getDanceProgressAnnouncement,
@@ -83,14 +82,14 @@ test("the final pose remains fully visible at 100 percent", () => {
 test("the public invitation renders WeddingDance instead of the retired WeddingStory", () => {
   const source = readFileSync(new URL("../Invitation.tsx", import.meta.url), "utf8");
   assert.match(source, /import \{ WeddingDance \} from "\.\/story\/WeddingDance"/);
-  assert.match(source, /<WeddingDance contentTargetId="invitation-content" \/>/);
+  assert.match(source, /<WeddingDance \/>/);
   assert.doesNotMatch(source, /<WeddingStory/);
 });
 
 test("the server-rendered opening already uses the stable animated stage and matching first frame", async () => {
   installCssModuleHook();
   const { WeddingDance } = await import("./WeddingDance");
-  const html = renderToStaticMarkup(createElement(WeddingDance, { contentTargetId: "invitation-content" }));
+  const html = renderToStaticMarkup(createElement(WeddingDance));
   const css = readFileSync(new URL("./WeddingDance.module.css", import.meta.url), "utf8");
   const dom = new JSDOM(`<style>${css}</style>${html}`, { pretendToBeVisual: true });
   const story = dom.window.document.querySelector("section[data-motion='pending']");
@@ -126,12 +125,17 @@ test("the letter button appears only near the end of the final scene", () => {
   assert.equal(isLetterButtonShown(1), true);
 });
 
-test("skipping the dance still reaches the letter button when the guest has a letter", () => {
-  assert.equal(getDanceSkipTarget("invitation-content", false, true), "invitation-content");
-  assert.equal(getDanceSkipTarget("invitation-content", false, false), "invitation-content");
-  // 본문에 편지 자리가 없으므로 편지 버튼이 있는 마지막 장면으로 간다.
-  assert.equal(getDanceSkipTarget("invitation-content", true, true), DANCE_ENDING_ID);
-  assert.equal(getDanceSkipTarget("invitation-content", true, false), DANCE_ENDING_CARD_ID);
+test("the dance-only shortcut jumps directly to the location section", async () => {
+  installCssModuleHook();
+  const { WeddingDance } = await import("./WeddingDance");
+  const html = renderToStaticMarkup(createElement(WeddingDance));
+  const dom = new JSDOM(html);
+  const story = dom.window.document.querySelector("section[data-motion]");
+  const link = story?.querySelector<HTMLAnchorElement>("a[href='#location']");
+
+  assert.ok(link, "the shortcut must stay inside the dance section");
+  assert.equal(link.textContent?.trim(), "오시는 길");
+  dom.window.close();
 
   // 동작 줄이기(정적 카드)에서도 버튼이 있어야 한다: 춤 무대 + 마지막 카드, 두 곳.
   const source = readFileSync(new URL("./WeddingDance.tsx", import.meta.url), "utf8");

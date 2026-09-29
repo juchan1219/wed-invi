@@ -10,7 +10,7 @@
 import sharp from 'sharp';
 import { resolve } from 'node:path';
 
-const cellSize = 576;
+const cellSize = 720;
 const source = resolve('assets/dance-frames/ending.png');
 const lastPage = resolve('public/story/wedding-dance/frames/dance-5.webp'); // 마지막 칸 = 프레임 79
 
@@ -87,6 +87,6 @@ if (clipped) throw new Error(`Ending drawing is clipped by the cell (${clipped}p
 
 for (let i = 3; i < cell.data.length; i += 4) if (cell.data[i] <= 8) cell.data[i] = 0;
 await sharp(cell.data, { raw: cell.info })
-  .webp({ quality: 60, alphaQuality: 70, effort: 6 })
+  .webp({ quality: 50, alphaQuality: 75, effort: 6 })
   .toFile(resolve('public/story/wedding-dance/frames/dance-6.webp'));
 console.log(`Ending: scale ${scale.toFixed(4)} (groom ${groom.height}px → ${target.height}px), placed at (${left}, ${top}), wrote frames/dance-6.webp`);

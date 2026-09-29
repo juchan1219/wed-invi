@@ -152,7 +152,7 @@ export function isLetterButtonShown(progress: number) {
   return progress >= LETTER_BUTTON_START;
 }
 
-/** 엔딩 그림(마지막 프레임)에서 잉크가 차지하는 세로 범위 — 프레임 높이 대비(576px 중 79~547행). */
+/** 엔딩 그림(마지막 프레임)에서 잉크가 차지하는 세로 범위 — 프레임 높이 대비. */
 export const ENDING_INK = { top: 79 / 576, bottom: 547 / 576 } as const;
 /** 그림을 줄일 때의 기준점(그림 상자 높이 대비). `.actor`의 transform-origin(50% 95%)과 같아야 한다 — 발이 제자리에 있다. */
 export const ACTOR_SCALE_ORIGIN = 0.95;
@@ -184,18 +184,9 @@ export function getLetterRoom({ buttonBottom, actorTop, actorSize, floor }: {
   return { shift, scale };
 }
 
-/** 편지가 있을 때 "댄스 이야기 건너뛰기"의 도착점: 무대가 끝나는 지점 / 동작 줄이기의 마지막 카드. */
+/** 편지 플로팅 버튼의 도착점: 무대가 끝나는 지점 / 동작 줄이기의 마지막 카드. */
 export const DANCE_ENDING_ID = "wedding-dance-ending";
 export const DANCE_ENDING_CARD_ID = "wedding-dance-ending-card";
-
-/**
- * 건너뛰기 링크의 대상. 본문에는 편지 자리가 없으므로(2026-09-19 사용자 요청) 편지가 있는 하객은
- * 본문 대신 편지 버튼이 보이는 곳으로 보낸다 — 춤이면 끝나는 지점(진행률 1), 정적 카드면 마지막 카드.
- */
-export function getDanceSkipTarget(contentTargetId: string, hasLetter: boolean, animated: boolean) {
-  if (!hasLetter) return contentTargetId;
-  return animated ? DANCE_ENDING_ID : DANCE_ENDING_CARD_ID;
-}
 
 /** 멈춰 있으면 진하게(resting), 스크롤 중엔 흐리게(moving), 끝나기 직전엔 숨김(done). */
 export function getScrollHintState(progress: number, scrolling: boolean): ScrollHintState {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import sharp from 'sharp';
 import {
   sampleFrameSequence, frameAtlasRect, danceAtlasUrl,
@@ -27,28 +27,47 @@ test('the standing carry is brief and the ending picture appears as the final co
   }
 });
 test('atlas coordinates switch pages without addressing outside a sheet',()=>{
-  assert.deepEqual(frameAtlasRect(15),{page:0,x:1728,y:1728});
+  assert.deepEqual(frameAtlasRect(15),{page:0,x:2160,y:2160});
   assert.deepEqual(frameAtlasRect(16),{page:1,x:0,y:0});
-  assert.deepEqual(frameAtlasRect(79),{page:4,x:1728,y:1728});
+  assert.deepEqual(frameAtlasRect(79),{page:4,x:2160,y:2160});
   assert.deepEqual(frameAtlasRect(80),{page:5,x:0,y:0});
   assert.deepEqual(frameAtlasRect(95),frameAtlasRect(80)); // 범위를 넘으면 마지막 프레임
   assert.equal(DANCE_ATLAS_PAGES,6);
 });
 test('renderer cell size matches the generated atlas registration',()=>{
-  // 업스케일 atlas(576px 셀)와 코드의 셀 크기가 어긋나면 프레임이 잘리거나 이웃 셀이 섞인다.
+  // DPR 2인 358 CSS px 무대에서도 확대되지 않는 720px 셀과 코드가 어긋나면 프레임이 잘린다.
   const registration=JSON.parse(readFileSync('public/story/wedding-dance/frames/registration.json','utf8'));
-  assert.equal(DANCE_FRAME_SIZE,576);
+  assert.equal(DANCE_FRAME_SIZE,720);
   assert.equal(registration.cellSize,DANCE_FRAME_SIZE);
 });
 test('every atlas page exists, is transparent and matches the cells it holds',async()=>{
   for(let page=0;page<DANCE_ATLAS_PAGES;page++){
     const meta=await sharp(`public${danceAtlasUrl(page)}`).metadata();
-    // 마지막 장(엔딩 그림)은 칸이 하나라 576px 한 칸이다.
+    // 마지막 장(엔딩 그림)은 칸이 하나라 720px 한 칸이다.
     const frames=Math.min(DANCE_FRAMES_PER_PAGE,DANCE_FRAME_COUNT-page*DANCE_FRAMES_PER_PAGE);
     assert.equal(meta.width,DANCE_FRAME_SIZE*Math.min(4,frames));
     assert.equal(meta.height,DANCE_FRAME_SIZE*Math.ceil(frames/4));
     assert.equal(meta.hasAlpha,true);
   }
+});
+
+test('the sharper dance atlases stay within a three megabyte mobile payload budget',()=>{
+  const bytes=Array.from({length:DANCE_ATLAS_PAGES},(_,page)=>
+    statSync(`public${danceAtlasUrl(page)}`).size,
+  ).reduce((total,size)=>total+size,0);
+  assert.ok(bytes<=3_000_000,`dance atlases use ${bytes} bytes`);
+});
+
+test('atlas loading starts with one page and prefetches only near a page boundary',async()=>{
+  const module=await import('./frameSequence');
+  const planner=(module as unknown as {danceAtlasPagesToLoad?: (frame:number)=>number[]}).danceAtlasPagesToLoad;
+  assert.equal(typeof planner,'function','frame loading policy must be exported');
+  assert.deepEqual(planner!(0),[0]);
+  assert.deepEqual(planner!(11),[0]);
+  assert.deepEqual(planner!(12),[0,1]);
+  assert.deepEqual(planner!(16),[1]);
+  assert.deepEqual(planner!(79),[4,5]);
+  assert.deepEqual(planner!(80),[5]);
 });
 
 test('the loading placeholder is the exact first atlas frame, so the characters never resize',async()=>{

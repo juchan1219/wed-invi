@@ -135,20 +135,20 @@ npm run dance:prep -- /absolute/path/to/2x3-reference.png
 ```
 
 이미지 시트 원본은 `assets/dance-frames/`에 보관합니다. 원본 셀이 약 313px이라 그대로 쓰면
-화면에서 약 1.9배 늘어나 선이 흐려지므로, Real-ESRGAN(anime 모델)으로 4배 키운 뒤 576px 셀로
+화면에서 늘어나 선이 흐려지므로, Real-ESRGAN(anime 모델)으로 4배 키운 뒤 720px 셀로
 줄여 씁니다. 그림 자체는 바꾸지 않고 선만 또렷해집니다(머리·정장의 연필 질감은 매끈해짐).
 
 ```bash
 # 1회: 공식 배포본(v0.2.5.0 realesrgan-ncnn-vulkan-*-macos.zip) 압축 해제 후
 REALESRGAN=/absolute/path/to/realesrgan-ncnn-vulkan npm run dance:upscale  # → assets/dance-frames/upscaled/ (git 제외, 장당 ~16MB)
-npm run dance:frames   # → public/story/wedding-dance/frames/ WebP atlas 5장 (576px 셀, 품질 60, 합계 약 1.7MB)
+npm run dance:frames   # → public/story/wedding-dance/frames/ WebP atlas 5장 (720px 셀, q50/a75, 엔딩 포함 3MB 이하)
 npm run dance:ending   # → public/story/wedding-dance/frames/dance-6.webp 엔딩 그림 한 장 (assets/dance-frames/ending.png, 업스케일 불필요)
 ```
 
 춤이 끝나면(마지막 장면이 시작되는 스크롤 84%부터) 엔딩 그림 한 장으로 바뀌어 멈춥니다. 정면을 보며 신랑은 한 팔로 신부를 안고
 다른 팔을 들고, 신부는 부케를 든 그림입니다. `dance:ending`이 신랑 키·신발 위치·선 굵기를 춤 마지막 프레임과 같게 맞춥니다.
 
-첫 atlas만 우선 로딩하고 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
+현재 atlas 한 장만 우선 로딩하고 마지막 4프레임에서 다음 구간을 미리 읽으며 화면에서 먼 디코딩 이미지는 해제합니다.
 제작 조건과 품질 제한: [`assets/dance-frames/README.md`](assets/dance-frames/README.md).
 
 보관한 실험용 Rive의 안무는 `scripts/dance/choreography.mjs`, 벡터 그림/본/의상 변형은

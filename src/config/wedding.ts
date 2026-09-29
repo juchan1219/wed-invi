@@ -44,18 +44,18 @@ export const wedding = {
   groom: {
     name: "김예찬", // PLACEHOLDER
     /** '장남', '차남', '아들' 등 */
-    relation: "장남",
+    relation: "차남",
     phone: "010-0000-0000", // PLACEHOLDER
-    father: { name: "김아버지", phone: "010-0000-0000" } as Person, // PLACEHOLDER
-    mother: { name: "이어머니", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    father: { name: "김종웅", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    mother: { name: "권순주", phone: "010-0000-0000" } as Person, // PLACEHOLDER
   },
 
   bride: {
     name: "이주은",
     relation: "장녀",
     phone: "010-0000-0000", // PLACEHOLDER
-    father: { name: "박아버지", phone: "010-0000-0000" } as Person, // PLACEHOLDER
-    mother: { name: "최어머니", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    father: { name: "이병석", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    mother: { name: "박윤경", phone: "010-0000-0000" } as Person, // PLACEHOLDER
   },
 
   ceremony: {
@@ -120,10 +120,10 @@ export const wedding = {
         holder: "김예찬",
       },
       {
-        label: "아버지 김아버지",
+        label: "아버지 김종웅",
         bank: "신한은행",
         number: "000-000-000000",
-        holder: "김아버지",
+        holder: "김종웅",
       },
     ] as Account[], // PLACEHOLDER
     bride: [
@@ -134,10 +134,10 @@ export const wedding = {
         holder: "이주은",
       },
       {
-        label: "아버지 박아버지",
+        label: "아버지 이병석",
         bank: "우리은행",
         number: "0000-000-000000",
-        holder: "박아버지",
+        holder: "이병석",
       },
     ] as Account[], // PLACEHOLDER
   },

@@ -60,7 +60,11 @@ export function ShareFooter() {
 
         <p className="text-sm text-ink-soft">청첩장을 전달해 주세요</p>
 
-        <div className="mt-5 flex justify-center gap-2">
+        <div
+          aria-label="청첩장 공유"
+          className="mt-5 flex flex-wrap justify-center gap-2"
+          style={{ flexWrap: "wrap" }}
+        >
           {isKakaoConfigured() && (
             <button
               type="button"
@@ -88,9 +92,7 @@ export function ShareFooter() {
         </div>
 
         <p className="mt-12 font-serif text-sm text-ink-faint">
-          {wedding.groom.name}
-          <span className="mx-2 text-accent-soft">·</span>
-          {wedding.bride.name}
+          created by {wedding.groom.name} {wedding.bride.name}
         </p>
       </Reveal>
     </footer>
