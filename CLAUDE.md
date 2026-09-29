@@ -13,6 +13,8 @@
 
 - [docs/requirements.md](docs/requirements.md) — 최초 요구사항과 현재 구현 상태
 - [docs/todo.md](docs/todo.md) — 남은 작업 체크리스트
+- [docs/handoff.md](docs/handoff.md) — **배포 작업을 이어받는 경우 여기부터.**
+  지금 어디까지 왔는지, 다음에 뭘 눌러야 하는지, 무엇이 아직 검증 안 됐는지
 
 지금 하려는 작업이 **어느 요구사항에 해당하는지** 확인하고 시작하세요.
 요구사항 목록에 없는 새 작업이라면, 먼저 `docs/` 에 추가한 뒤 진행합니다.
