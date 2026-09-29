@@ -427,6 +427,11 @@ Neon은 5분 후 scale-to-zero → 다음 쿼리에 ~500ms 자동 복귀라 이 
 Supabase의 강점인 Auth·Realtime·Storage는 여전히 쓰지 않습니다(관리자 2명·공용 비밀번호).
 편지 이미지도 Vercel Blob 그대로입니다.
 
+CI의 `npm run typecheck`는 먼저 `next typegen`을 실행합니다. `next-env.d.ts`와 App Router의
+`PageProps` 타입은 Next가 생성하고 Git에는 넣지 않으므로, 이 순서가 없으면 깨끗한 GitHub Actions
+체크아웃에서 정적 이미지 import와 라우트 타입을 찾지 못합니다. 2026-09-29 실제 CI 실패와 같은
+깨끗한 체크아웃을 로컬에서 재현해, 타입 생성 전 실패·생성 후 통과를 확인했습니다.
+
 자세한 설계는 [superpowers/specs/2026-09-27-supabase-migration-design.md](superpowers/specs/2026-09-27-supabase-migration-design.md).
 
 ### 관리자 인증을 단순하게 둔 이유

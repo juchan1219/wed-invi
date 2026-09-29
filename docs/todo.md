@@ -208,6 +208,8 @@
 
 **클릭 단위 절차는 [deploy.md](deploy.md) 에 있습니다.** 여기서는 체크리스트만.
 
+- [x] **깨끗한 CI 체크아웃에서도 타입 검사 통과** — `next-env.d.ts`와 라우트 타입은 Git에
+      넣지 않으므로 `npm run typecheck`가 먼저 `next typegen`을 실행해야 합니다
 - [ ] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
       — 환경변수가 없어도 첫 배포는 성공합니다. 청첩장 화면까지는 바로 보입니다
 - [ ] **Supabase 프로젝트 생성** — 리전 **Seoul (ap-northeast-2)**, Free 플랜.

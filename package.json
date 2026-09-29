@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test:story": "tsx --test src/components/invitation/story/*.test.ts src/components/letter/*.test.ts src/lib/date.test.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "photos:prep": "tsx scripts/prep-photos.ts",
     "dance:prep": "node scripts/prepare-dance-poses.mjs",
     "dance:build": "node scripts/build-dance-rive.mjs",
