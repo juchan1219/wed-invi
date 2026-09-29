@@ -35,7 +35,8 @@ export const wedding = {
      */
     url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000",
     title: "예찬 ♥ 주은 결혼합니다", // PLACEHOLDER
-    description: "2026년 12월 19일 토요일 오후 12시 30분",
+    description:
+      "2026년 12월 19일 토요일 오후 12시 30분 · 잠실 아펠가모 2층 단독홀",
     /** public/ 기준 경로. 1200×630 권장. */
     ogImage: "/og.jpg",
   },

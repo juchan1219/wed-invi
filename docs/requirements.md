@@ -253,7 +253,9 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
 
 ### 6. 소셜 공유 미리보기 ✅
 
-- OG 1200×630 자동 생성(`photos/og.jpg` 없으면 hero를 크롭)
+- OG 1200×630 자동 생성 — 갤러리 첫 장을 1.15배 확대하고 두 사람 중심으로 크롭
+- 제목 `예찬 ♥ 주은 결혼합니다`, 설명에 예식 일시와 `잠실 아펠가모 2층 단독홀` 포함
+- 브라우저 favicon은 `💍` 이모지 64×64 PNG
 - `htmlLimitedBots: /.*/` — 카카오톡 스크래퍼가 Next의 기본 봇 목록에 없어서, 스트리밍 메타데이터를 끄고 항상 `<head>`에 태그가 박히게 함
 - **수신자 이름은 OG에 넣지 않음** — 링크가 제3자에게 전달돼도 이름이 노출되지 않도록
 
@@ -412,10 +414,9 @@ Neon은 5분 후 scale-to-zero → 다음 쿼리에 ~500ms 자동 복귀라 이 
 **뒤집은 이유 (2026-09-27)**
 
 - 일시정지는 **삭제가 아닙니다.** 데이터·스토리지가 보존되고 대시보드에서 복구됩니다.
-  (2024-06-24 정책 변경으로 **정지 후 90일** 안에 복구해야 합니다.)
 - GitHub Actions cron(`.github/workflows/keepalive.yml`)이 주기적으로 깨우면 정지 자체가
-  일어나지 않습니다. 저장소 무활동 60일이면 cron이 비활성화되지만, GitHub이 사전 경고 메일을
-  보내고 커밋 하나로 리셋됩니다.
+  일어나지 않습니다. 현재는 Supabase 권고에 맞춰 매일 호출하며, private 저장소라 GitHub의
+  public 저장소 60일 무활동 cron 비활성화 정책 대상도 아닙니다.
 - 사용자가 이 수동 관리를 감수하기로 결정했습니다.
 
 덤으로 얻은 것: **로컬 개발이 단순해졌습니다.** Neon HTTP 드라이버 때문에 있던 중계 프록시
@@ -434,6 +435,10 @@ transaction/session pooler를 각각 6543/5432로 연결했다. GitHub Actions `
 가비아의 위임 네임서버는 새 Cloudflare 계정의 `elaine.ns.cloudflare.com`과
 `sonny.ns.cloudflare.com`이며, Cloudflare DNS의 루트와 `www`는 DNS only CNAME으로 Vercel을
 가리킨다. Vercel Blob은 Seoul(`icn1`)·Public으로 생성했다.
+
+**2026-09-30 운영 보강:** keepalive를 매일 03:00 UTC(12:00 KST)로 늘렸다. 관리자 로그인은
+기존 30일 서명·HttpOnly 세션을 유지하고, 표준 `username`/`current-password` 자동완성 필드로
+브라우저 비밀번호 관리자 저장을 지원한다. 비밀번호는 애플리케이션 코드에 포함하지 않는다.
 
 CI의 `npm run typecheck`는 먼저 `next typegen`을 실행합니다. `next-env.d.ts`와 App Router의
 `PageProps` 타입은 Next가 생성하고 Git에는 넣지 않으므로, 이 순서가 없으면 깨끗한 GitHub Actions

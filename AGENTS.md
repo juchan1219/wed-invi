@@ -97,8 +97,9 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 브라우저          AVIF/WebP + srcset + blurDataURL
 ```
 
-`manifest.ts`는 **생성물이다. 직접 고치지 말 것.** 파일 이름 규칙(`hero` / `gallery-NN` / `map` / `og`)은
+`manifest.ts`는 **생성물이다. 직접 고치지 말 것.** 파일 이름 규칙(`hero` / `gallery-NN` / `map`)은
 [`scripts/prep-photos.ts`](scripts/prep-photos.ts) 상단 주석에 있다.
+OG는 갤러리 첫 장을 두 사람 중심으로 크롭하며 `npm run og:build`로 별도 재생성할 수 있다.
 
 편지에 첨부하는 이미지는 파일명에 크기를 박는다 (`letters/<uuid>-1200x900.jpg`).
 원격 이미지는 `next/image`가 크기를 모르는데, 파일명에서 읽어오면 레이아웃이 밀리지 않는다.
@@ -143,15 +144,15 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 ### DB가 잠들지 않게 하는 것
 
 Supabase 무료 플랜은 **7일간 활동이 없으면 프로젝트를 정지**한다. 정지되면 하객이 편지·방명록에서
-에러를 본다(데이터는 보존되고, 정지 후 90일 안에 대시보드에서 복구 가능).
+에러를 본다(데이터는 보존되며 대시보드에서 복구 가능).
 
-`.github/workflows/keepalive.yml`이 매주 월·목에 `/api/health`를 두드려 이를 막는다.
+`.github/workflows/keepalive.yml`이 매일 12:00 KST에 `/api/health`를 두드려 이를 막는다.
 
 - **`/api/health`를 지우거나 200 고정으로 바꾸지 말 것.** DB에 닿지 못하면 **반드시 503**이어야 한다.
 - **keepalive가 `/api/guestbook`을 두드리게 바꾸지 말 것.** 그 라우트는 DB가 죽어도 200을 돌려준다
   (하객 보호를 위한 의도적 설계). 그러면 keepalive가 영원히 green이라 정지를 못 잡는다.
-- 저장소에 60일간 활동이 없으면 GitHub이 이 cron을 자동 비활성화한다. 경고 메일이 오면
-  커밋 하나 또는 워크플로 수동 실행으로 되살릴 것.
+- 이 저장소는 private이라 public 저장소의 60일 무활동 cron 비활성화 정책 대상이 아니다.
+  그래도 실패 알림은 당일 확인하고, 매월 한 번 최근 실행이 green인지 점검할 것.
 
 ---
 

@@ -16,7 +16,8 @@
 새 Vercel 계정의 `burgund32-4178/wed-invi`가 기준 프로젝트다. 기존 `juchan0702` Supabase DB,
 서울 Public Vercel Blob, 새 Cloudflare 계정과 `주은예찬.com`을 모두 연결했다.
 공개 주소 `https://www.주은예찬.com`의 홈·관리자·DB health가 정상이고, GitHub Actions의
-마이그레이션과 keepalive도 green이다.
+마이그레이션과 keepalive도 green이다. keepalive는 매일 12:00 KST에 실행된다. 관리자 로그인은
+30일 세션과 브라우저 비밀번호 저장을 지원하며, OG는 갤러리 첫 장 중심 크롭·favicon은 `💍`이다.
 
 ---
 
@@ -45,6 +46,7 @@
 | **Vercel Blob** | `wed-invi-blob`, Seoul(`icn1`), Public. 토큰 자동 주입 후 재배포 Ready |
 | **Cloudflare** | 새 계정에서 Active. 가비아 NS `elaine`/`sonny`, 루트·`www` DNS only CNAME |
 | **GitHub Actions** | Secret `DIRECT_URL`, Variable `SITE_URL` 등록. Migrate #1·Keepalive #3 success |
+| **관리자 로그인** | 30일 HttpOnly 세션 유지. 브라우저 비밀번호 관리자가 인식하도록 표준 username/password 자동완성 필드 추가 |
 
 ### 남은 것
 
@@ -78,7 +80,7 @@
 
 | 결정 | 왜 |
 |---|---|
-| **Neon → Supabase** | 원래 Neon을 골랐던 이유(7일 정지)를 뒤집었다. 정지되어도 데이터는 보존되고 90일 내 복구 가능하며, cron으로 막을 수 있고, 사용자가 그 수동 관리를 감수하기로 했다. 전체 근거는 [requirements.md 「기술 선택 근거」](requirements.md) 와 [스펙](superpowers/specs/2026-09-27-supabase-migration-design.md) |
+| **Neon → Supabase** | 원래 Neon을 골랐던 이유(7일 정지)를 뒤집었다. 정지되어도 데이터는 보존되고 대시보드에서 복구 가능하며, cron으로 막을 수 있고, 사용자가 그 수동 관리를 감수하기로 했다. 전체 근거는 [requirements.md 「기술 선택 근거」](requirements.md) 와 [스펙](superpowers/specs/2026-09-27-supabase-migration-design.md) |
 | **배포는 Vercel 네이티브** | Actions가 배포까지 지휘하는 방안도 검토했으나, 스키마가 완성돼 있어 순서 보장의 이득이 적고 private 저장소의 Actions 2,000분을 더 먹는다 |
 | **CI에서 `npm run build` 안 함** | Vercel이 매 push마다 빌드하고 실패를 알려준다. 두 번 할 이유가 없다 |
 | **keepalive는 `/api/health`** | `/api/guestbook` 은 DB가 죽어도 200을 돌려준다(하객 보호용 의도적 설계). 그걸 두드리면 워크플로가 영원히 초록이라 정지를 못 잡는다 |

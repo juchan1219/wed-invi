@@ -11,7 +11,6 @@
  *   hero.jpg          첫 화면 사진.  없으면 갤러리 첫 장으로 대체된다.
  *   gallery-01.jpg    갤러리 사진. 이름순 정렬이라 01, 02, ... 로 번호를 매긴다.
  *   map.jpg           오시는 길 지도 썸네일 (직접 캡처한 지도 이미지).
- *   og.jpg            카카오톡/SNS 미리보기용. 없으면 hero를 1200×630으로 잘라 쓴다.
  *   그 외 이름         무시된다.
  *
  * 여기서 만든 축소본을 next/image에 **정적 import**로 넘기기 때문에
@@ -21,6 +20,7 @@
 import { readdir, mkdir, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { buildOgImage } from "./og-image";
 
 const ROOT = process.cwd();
 const SRC_DIR = path.join(ROOT, "photos");
@@ -30,10 +30,6 @@ const OG_PATH = path.join(ROOT, "public", "og.jpg");
 /** 긴 변 최대 픽셀. 레티나 모바일 전체화면에도 충분하다. */
 const MAX_EDGE = 2400;
 const JPEG_QUALITY = 82;
-
-/** OG 이미지 규격 — 페이스북/카카오 공통 권장값. */
-const OG_WIDTH = 1200;
-const OG_HEIGHT = 630;
 
 /** 사진이 하나도 없을 때 쓰는 배경색 (globals.css의 --color-accent-soft) */
 const PLACEHOLDER_COLOR = { r: 201, g: 184, b: 165 };
@@ -81,7 +77,7 @@ async function main() {
 
   for (const input of inputs) {
     const slug = path.basename(input, path.extname(input));
-    // og는 매니페스트에 넣지 않는다 — public/og.jpg로만 나간다.
+    // 예전에 쓰던 photos/og.jpg는 매니페스트에 넣지 않는다.
     if (slug === "og") continue;
 
     const outFile = `${slug}.jpg`;
@@ -101,7 +97,7 @@ async function main() {
   }
 
   await writeFile(path.join(OUT_DIR, "manifest.ts"), buildManifest(results), "utf8");
-  const ogSource = await buildOgImage(inputs, results);
+  const ogSource = await prepareOgImage(results);
 
   // ── 요약 ────────────────────────────────────────────────────
   const totalIn = results.reduce((s, r) => s + r.bytesIn, 0);
@@ -134,36 +130,28 @@ async function main() {
 }
 
 /**
- * OG 이미지. og.jpg가 있으면 그걸 쓰고, 없으면 hero(또는 갤러리 첫 장)를
- * 1200×630으로 중앙 크롭한다. 사진이 아예 없으면 단색 이미지라도 만들어 둔다
- * — 파일이 없으면 카카오톡 미리보기가 깨지기 때문.
+ * OG 이미지는 갤러리 첫 장을 두 사람 중심으로 1200×630 크롭한다.
+ * 갤러리가 없을 때만 hero를 쓰고, 사진이 아예 없으면 단색 이미지라도 만든다.
+ * 파일이 없으면 카카오톡 미리보기가 깨지기 때문이다.
  */
-async function buildOgImage(inputs: string[], results: Processed[]): Promise<string> {
-  const explicit = inputs.find((f) => path.basename(f, path.extname(f)) === "og");
-  const fallbackSlug = results.find((r) => r.slug === "hero") ?? results.find((r) => isGallery(r.slug));
-
-  const source = explicit
-    ? path.join(SRC_DIR, explicit)
-    : fallbackSlug
-      ? path.join(OUT_DIR, fallbackSlug.file)
-      : null;
+async function prepareOgImage(results: Processed[]): Promise<string> {
+  const sourcePhoto =
+    results.find((result) => isGallery(result.slug)) ??
+    results.find((result) => result.slug === "hero");
+  const source = sourcePhoto ? path.join(OUT_DIR, sourcePhoto.file) : null;
 
   if (!source) {
     await sharp({
-      create: { width: OG_WIDTH, height: OG_HEIGHT, channels: 3, background: PLACEHOLDER_COLOR },
+      create: { width: 1200, height: 630, channels: 3, background: PLACEHOLDER_COLOR },
     })
       .jpeg({ quality: 80 })
       .toFile(OG_PATH);
-    return "사진이 없어 단색 이미지로 생성 (photos/og.jpg 를 넣으면 교체됩니다)";
+    return "사진이 없어 단색 이미지로 생성";
   }
 
-  await sharp(source, { failOn: "none" })
-    .rotate()
-    .resize({ width: OG_WIDTH, height: OG_HEIGHT, fit: "cover", position: "attention" })
-    .jpeg({ quality: 85, mozjpeg: true })
-    .toFile(OG_PATH);
+  await buildOgImage(source, OG_PATH);
 
-  return explicit ? "photos/og.jpg" : `${path.basename(source)} (중앙 크롭)`;
+  return `${path.basename(source)} (두 사람 중심 크롭)`;
 }
 
 function buildManifest(results: Processed[]): string {

@@ -98,13 +98,14 @@ http://localhost:3000 (청첩장) · http://localhost:3000/admin (관리자)
 | `hero.jpg` | 첫 화면 큰 사진 (없으면 갤러리 첫 장으로 대체) |
 | `gallery-01.jpg`, `gallery-02.jpg`, … | 갤러리 (이름순 정렬) |
 | `map.jpg` | 오시는 길 지도 썸네일 (네이버/카카오 지도 캡처) |
-| `og.jpg` | 카카오톡 링크 미리보기 (없으면 `hero.jpg`를 1200×630으로 잘라 씀) |
 
 ```bash
 npm run photos:prep
 ```
 
-원본은 저장소에 올라가지 않고(`.gitignore`), 결과물인 `src/assets/photos/`와 `public/og.jpg`만 커밋됩니다. 사진을 바꿀 때마다 이 명령을 다시 실행하세요.
+원본은 저장소에 올라가지 않고(`.gitignore`), 결과물인 `src/assets/photos/`와 `public/og.jpg`만 커밋됩니다.
+OG 이미지는 갤러리 첫 장을 두 사람 중심으로 1200×630 크롭합니다. 사진을 바꿀 때마다 이 명령을
+다시 실행하고, 축소본만 있는 상태에서 OG만 다시 만들 때는 `npm run og:build`를 실행하세요.
 
 > 지금 들어 있는 사진은 레이아웃 확인용 **색 견본**입니다. `photos/`에 진짜 사진을 넣고 위 명령을 실행하면 통째로 교체됩니다. (`photos/`가 비어 있는 상태로 실행하면 사진이 전부 지워지고 "사진을 넣어주세요" 안내가 뜹니다.)
 
@@ -256,11 +257,11 @@ npm run dev
 |---|---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | `main` push · PR (`docs/`·`photos/`·`*.md`만 바뀐 건 제외) | 타입 검사 → 유닛 테스트 → 러너 안 Postgres에 마이그레이션 → DB 통합 테스트 | 없음 |
 | [`migrate.yml`](.github/workflows/migrate.yml) | `main` push 중 `drizzle/` 변경 · 수동 실행 | 배포 DB(Supabase)에 마이그레이션 적용 | Secret `DIRECT_URL` |
-| [`keepalive.yml`](.github/workflows/keepalive.yml) | 매주 월·목 03:00 UTC · 수동 실행 | `<SITE_URL>/api/health` 호출로 Supabase를 깨움 | Variable `SITE_URL` |
+| [`keepalive.yml`](.github/workflows/keepalive.yml) | 매일 03:00 UTC · 수동 실행 | `<SITE_URL>/api/health` 호출로 Supabase를 깨움 | Variable `SITE_URL` |
 
 - CI는 **`npm run build`를 돌리지 않습니다.** Vercel이 push마다 빌드하고 실패를 알려주므로, 같은 일을 두 번 하면 Actions 한도만 먹습니다. CI의 고유 가치는 유닛 테스트와 DB 통합 테스트입니다.
 - keepalive가 두드리는 `/api/health`는 DB에 `select 1`을 실행하고, 실패하면 **503**을 냅니다. `/api/guestbook`은 DB가 죽어도 하객에게 에러를 보이지 않으려고 200을 돌려주므로 keepalive 용도로 쓸 수 없습니다.
-- ⚠️ **저장소에 60일간 활동이 없으면 GitHub이 keepalive cron을 자동 비활성화합니다.** 사전 경고 메일이 오고, 커밋 하나나 **Run workflow** 수동 실행으로 되살아납니다. 예식이 끝나고 저장소가 조용해지는 시기를 특히 조심하세요 — cron이 멈추면 7일 뒤 DB가 정지되고 방명록을 보러 온 하객이 에러를 봅니다.
+- 이 저장소는 private이므로 GitHub의 "public 저장소 60일 무활동 시 schedule 비활성화" 정책 대상이 아닙니다. 그래도 매월 한 번 최근 실행이 green인지 확인하고 실패 알림은 당일 처리하세요.
 
 ---
 
@@ -299,6 +300,7 @@ npm run dev            # 개발 서버
 npm run build          # 프로덕션 빌드
 npm run typecheck      # 타입 검사
 npm run photos:prep    # 사진 최적화 + OG 이미지 생성
+npm run og:build       # 갤러리 첫 장으로 OG 이미지만 다시 생성
 npm run dance:prep -- /path/to/reference.png # 2×3 원화를 6포즈 자산으로 분리
 npm run db:generate    # 스키마 변경 → 마이그레이션 파일 생성
 npm run db:migrate     # 마이그레이션 적용 (DIRECT_URL 로 붙습니다)

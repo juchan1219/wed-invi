@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { AdminCredentialFields } from "./AdminCredentialFields";
 
 export function LoginForm() {
   // useSearchParams는 Suspense 경계가 필요하다.
@@ -50,22 +51,10 @@ function Form() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8">
-      <label htmlFor="password" className="sr-only">
-        비밀번호
-      </label>
-      <input
-        id="password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        autoComplete="current-password"
-        // 모바일에서 자동 대문자/교정이 끼면 비밀번호가 틀어진다.
-        autoCapitalize="off"
-        autoCorrect="off"
-        spellCheck={false}
-        placeholder="비밀번호"
-        className="w-full rounded-lg border border-line bg-paper px-4 py-3 text-base text-ink outline-none focus:border-accent"
+    <form onSubmit={handleSubmit} autoComplete="on" className="mt-8">
+      <AdminCredentialFields
+        password={password}
+        onPasswordChange={(event) => setPassword(event.target.value)}
       />
 
       {error && (
