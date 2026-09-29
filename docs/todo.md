@@ -210,9 +210,9 @@
 
 - [x] **깨끗한 CI 체크아웃에서도 타입 검사 통과** — `next-env.d.ts`와 라우트 타입은 Git에
       넣지 않으므로 `npm run typecheck`가 먼저 `next typegen`을 실행해야 합니다
-- [ ] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
+- [x] **GitHub → Vercel import** ([vercel.com/new](https://vercel.com/new))
       — 환경변수가 없어도 첫 배포는 성공합니다. 청첩장 화면까지는 바로 보입니다
-- [ ] **Supabase 프로젝트 생성** — 리전 **Seoul (ap-northeast-2)**, Free 플랜.
+- [x] **Supabase 프로젝트 생성** — 리전 **Seoul (ap-northeast-2)**, Free 플랜.
       ⚠️ Neon과 달리 **자동 주입이 없습니다.** 연결 문자열 두 개를 직접 등록해야 합니다
 - [ ] **Blob 스토어 생성** — Storage → Create Database → Blob.
       ⚠️ **Access mode를 반드시 `Public` 으로** — 생성 후에는 바꿀 수 없습니다.
@@ -221,7 +221,8 @@
       `DIRECT_URL`(session pooler **5432**), `ADMIN_PASSWORD`, `SESSION_SECRET`,
       `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`. Production/Preview/Development 전부 체크
       — 포트를 바꿔 넣으면 런타임 질의나 마이그레이션 중 하나가 깨집니다
-- [ ] **재배포** — 환경변수는 다음 배포부터 적용됩니다
+- [x] **재배포** — `909a7a4` 기준 Vercel 두 프로젝트 배포 성공,
+      `https://wed-invi-88b2.vercel.app/api/health` 200 확인
 - [ ] **저장소 Secret `DIRECT_URL` 등록** — Settings > Secrets and variables > Actions
 - [ ] **마이그레이션 실행** — GitHub Actions의 **Migrate** 워크플로를 수동 실행(Run workflow).
       출력의 `대상:` 이 Supabase 호스트인지 확인할 것.

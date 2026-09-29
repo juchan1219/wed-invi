@@ -14,8 +14,8 @@
 ## 한 줄 요약
 
 `main` 에 실제 사진 29장 · Supabase 드라이버 · `/api/health` · GitHub Actions 3개가 모두 들어가
-푸시된 상태. Vercel 프로젝트는 만들어졌고 첫 빌드가 한 번 실패했다가 고쳐서 다시 푸시했다.
-**그 뒤 결과를 아무도 확인하지 않았다.**
+푸시됐다. `909a7a4`에서 깨끗한 CI 체크아웃의 Next 타입 생성 순서를 고쳤고 **CI #3이 green**이다.
+Vercel 배포도 성공했으며 공개 주소 `https://wed-invi-88b2.vercel.app`의 홈과 DB health가 모두 200이다.
 
 ---
 
@@ -33,17 +33,20 @@
 | 워크플로 | `.github/workflows/` 의 `ci.yml` · `migrate.yml` · `keepalive.yml` |
 | 문서 | `deploy.md`·`env.md`·`README.md`·`AGENTS.md`·`requirements.md`·`todo.md` 전부 Supabase 기준으로 갱신 |
 
-### 상태를 모르는 것 — **여기부터 확인하고 시작할 것**
+### 2026-09-29에 실제로 확인한 외부 상태
 
-| 항목 | 확인 방법 |
+| 항목 | 확인 결과 |
 |---|---|
-| **GitHub Actions `CI` 가 통과했는가** | <https://github.com/juchan1219/wed-invi/actions> — 한 번도 초록을 못 봤다 |
-| **Vercel 재배포가 성공했는가** | Vercel → Deployments. 첫 빌드는 `Invalid URL` 로 실패했고, 고친 커밋(`1b1b60f`)의 결과는 미확인 |
-| **배포 주소가 무엇인가** | Vercel 대시보드 상단 |
-| **Supabase 프로젝트를 실제로 만들었는가** | 연결 문자열을 Vercel에 넣는 단계까지 진행했으나 완료 여부 미확인 |
+| **GitHub Actions `CI`** | `909a7a4`의 CI #3 success. 타입 검사·유닛 테스트·DB 통합 테스트까지 통과 |
+| **Vercel 배포** | 같은 커밋이 `wed-invi`와 `wed-invi-88b2` 두 프로젝트 모두 success |
+| **공개 주소** | `https://wed-invi-88b2.vercel.app` — 홈 200, 제목 정상 |
+| **Supabase 런타임 연결** | 위 주소의 `/api/health`가 `200 {"ok":true}` — transaction pooler 연결 확인 |
+| **GitHub Actions 설정** | Repository Secret 0개, Variable 0개. Keepalive #1은 `SITE_URL` 없음으로 실패 |
+| **중복 Vercel 프로젝트** | 같은 저장소에 `wed-invi`와 `wed-invi-88b2`가 연결됨. 공개·DB 정상인 `wed-invi-88b2`를 기준으로 정리 필요 |
 
 ### 아직 시작도 안 한 것
 
+- Vercel 로그인 후 `wed-invi-88b2`를 기준 프로젝트로 확정하고 중복 `wed-invi` 연결 정리
 - Vercel **Blob 스토어** 생성 (⚠️ Access mode **Public** 필수, 생성 후 변경 불가)
 - GitHub 저장소 **Secret `DIRECT_URL`** / **Variable `SITE_URL`** 등록
 - 배포 DB에 **마이그레이션 적용** (Actions의 `Migrate` 워크플로 수동 실행)
@@ -56,29 +59,19 @@
 
 ## 다음에 할 일 — 이 순서대로
 
-### 1. 지금 상태부터 확인
+### 1. Vercel 기준 프로젝트부터 정리
 
-```
-GitHub Actions 탭에서 CI 가 초록인지        ← 빨간색이면 그것부터
-Vercel Deployments 에서 최신 배포가 Ready 인지
-```
-
-배포 주소가 나오면 바로:
-
-```bash
-curl -i https://<배포주소>/api/health
-```
-
-- `200 {"ok":true}` → Supabase 연결 성공. 2번으로
-- `503 {"ok":false}` → `DATABASE_URL` 문제. **transaction pooler(포트 6543)** 인지 확인
-- `404` → 배포가 옛 커밋이다. 재배포할 것
+Vercel에 GitHub OAuth로 로그인한 뒤 프로젝트가 왜 두 개 생겼는지 확인한다.
+`wed-invi-88b2`는 공개 홈과 `/api/health`가 모두 200이므로 이쪽을 기준으로 잡는 것이 안전하다.
+환경변수·Blob·도메인을 붙이기 전에 중복 `wed-invi` 프로젝트의 Git 연결을 끊거나 프로젝트를
+정리해, 이후 push마다 두 번 빌드되는 상태를 끝낸다.
 
 ### 2. Vercel 환경변수 정리
 
 `Settings → Environment Variables` 에서 **값이 빈 변수를 삭제**한다.
 빈 값은 한 번 빌드를 죽였다(아래 "밟은 함정" 참고). 지금은 코드가 견디지만 남겨둘 이유가 없다.
 
-있어야 할 것은 이 다섯뿐이다.
+있어야 할 것은 이 여섯 개다.
 
 ```
 DATABASE_URL    Supabase transaction pooler (6543)
@@ -86,6 +79,7 @@ DIRECT_URL      Supabase session pooler (5432)
 ADMIN_PASSWORD  20자 이상
 SESSION_SECRET
 TOKEN_SECRET    ⚠️ 절대 바꾸지 말 것
+NEXT_PUBLIC_SITE_URL  https://wed-invi-88b2.vercel.app (도메인 연결 전)
 ```
 
 ### 3. Blob 스토어
@@ -157,13 +151,15 @@ test:story 113 / test:dance 5 / test:db 5       fail 0
 CI 환경 시뮬레이션(.env.local 없이 환경변수만)   마이그레이션·테스트 통과, 실패 시 종료코드 1
 빈 NEXT_PUBLIC_SITE_URL                          폴백으로 빌드 성공 (고치기 전엔 실패 재현됨)
 워크플로 YAML 3개                                 파싱 통과
+깨끗한 체크아웃의 `npm run typecheck`              생성 전 실패 → `next typegen` 포함 후 통과
+GitHub Actions CI #3 (`909a7a4`)                   success (DB 통합 테스트 포함)
+Vercel `wed-invi-88b2` 홈 · `/api/health`           200 · `200 {"ok":true}`
 ```
 
 ### 확인 못 한 것 — 사실처럼 쓰지 말 것
 
-- **Supabase transaction pooler 실제 연결.** 로컬은 평범한 Postgres라 `prepare:false` 가 필요 없는
-  환경에서 통과한 것이다. 진짜 pooler(6543)에 붙는 건 배포에서만 확인된다
-- **워크플로 3개의 실제 실행.** YAML 파싱만 봤다
+- **Migrate 워크플로 실제 성공.** 아직 Repository Secret `DIRECT_URL`이 없다
+- **Keepalive 워크플로 실제 성공.** 예약 실행은 `SITE_URL` 없음으로 실패했다
 - **한글 도메인**의 SSL 발급과 카카오 공유 매칭
 - 갤러리 29장이 실제 화면에서 어떻게 보이는지 (3열 × 10줄이 된다)
 - 지도 앱 딥링크·클립보드·`navigator.share`·`.ics`·Blob 업로드 — 전부 실기기 전용
