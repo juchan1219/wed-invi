@@ -214,30 +214,34 @@
       — 환경변수가 없어도 첫 배포는 성공합니다. 청첩장 화면까지는 바로 보입니다
 - [x] **Supabase 프로젝트 생성** — 리전 **Seoul (ap-northeast-2)**, Free 플랜.
       ⚠️ Neon과 달리 **자동 주입이 없습니다.** 연결 문자열 두 개를 직접 등록해야 합니다
-- [ ] **Blob 스토어 생성** — Storage → Create Database → Blob.
+- [x] **Blob 스토어 생성** — 2026-09-30 `wed-invi-blob`, Seoul(`icn1`), Public으로 생성.
       ⚠️ **Access mode를 반드시 `Public` 으로** — 생성 후에는 바꿀 수 없습니다.
       (건너뛰면 편지에 이미지만 못 넣고 나머지는 정상)
-- [ ] **환경변수 6개 직접 등록** — `DATABASE_URL`(transaction pooler **6543**),
+- [x] **환경변수 6개 직접 등록** — 새 Vercel 프로젝트 `burgund32-4178/wed-invi`의 Production에
+      `DATABASE_URL`(transaction pooler **6543**),
       `DIRECT_URL`(session pooler **5432**), `ADMIN_PASSWORD`, `SESSION_SECRET`,
-      `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL`. Production/Preview/Development 전부 체크
+      `TOKEN_SECRET`, `NEXT_PUBLIC_SITE_URL` 등록. Blob 변수는 Production/Preview에 자동 등록
       — 포트를 바꿔 넣으면 런타임 질의나 마이그레이션 중 하나가 깨집니다
-- [x] **재배포** — `909a7a4` 기준 Vercel 두 프로젝트 배포 성공,
-      `https://wed-invi-88b2.vercel.app/api/health` 200 확인
-- [ ] **저장소 Secret `DIRECT_URL` 등록** — Settings > Secrets and variables > Actions
-- [ ] **마이그레이션 실행** — GitHub Actions의 **Migrate** 워크플로를 수동 실행(Run workflow).
+- [x] **재배포** — 2026-09-30 새 프로젝트 Production 배포 Ready.
+      `https://www.주은예찬.com/` 200, `/api/health` `{"ok":true}`, 관리자 로그인 확인
+- [x] **저장소 Secret `DIRECT_URL` 등록** — Settings > Secrets and variables > Actions
+- [x] **마이그레이션 실행** — 2026-09-30 GitHub Actions **Migrate #1** success.
       출력의 `대상:` 이 Supabase 호스트인지 확인할 것.
       (폴백: `vercel env pull .env.production.local` 후 `npm run db:migrate -- .env.production.local`)
-- [x] **저장소 Variable `SITE_URL` 등록** — `https://wed-invi-88b2.vercel.app`.
+- [x] **저장소 Variable `SITE_URL` 등록** — `https://xn--2j5b9vb2blxf.com`.
       Settings > Secrets and variables > Actions > Variables
-- [x] **Keepalive 워크플로 수동 실행** — 2026-09-29 Keepalive #2 success, `ping` green.
+- [x] **Keepalive 워크플로 수동 실행** — 2026-09-30 Keepalive #3 success, `ping` green.
       ⚠️ 이게 돌지 않으면 **7일 뒤 Supabase가 정지되어 편지·방명록이 죽습니다**
 - [ ] **카카오 개발자 앱** — JavaScript 키를 `NEXT_PUBLIC_KAKAO_JS_KEY` 에 등록 +
       **플랫폼 > Web > 사이트 도메인 등록** (도메인 등록을 빼먹으면 공유가 동작하지 않습니다)
-- [ ] **커스텀 도메인 `주은예찬.com` 연결** (가비아 구입) — 퓨니코드는 `xn--2j5b9vb2blxf.com`.
+- [x] **커스텀 도메인 `주은예찬.com` 연결** (가비아 구입) — 퓨니코드는 `xn--2j5b9vb2blxf.com`.
+      새 Cloudflare 계정의 `elaine`/`sonny` 네임서버로 이전했고, Vercel SSL·HTTPS 200과
+      루트 → `www` 308 리디렉션을 확인했습니다.
       ⚠️ **한글 IDN은 Vercel에서 SSL 인증서가 안 나오는 사례가 보고돼 있습니다.**
       하객에게 링크를 보내기 한참 전에 붙여서 인증서 발급을 확인할 것
 - [ ] 도메인 연결 후 **세 곳 동시 갱신** — `NEXT_PUBLIC_SITE_URL`(한글) ·
       저장소 Variable `SITE_URL`(퓨니코드) · 카카오 사이트 도메인(**둘 다** 등록) → 재배포
+      — 앞의 두 곳과 재배포는 완료. 카카오 사이트 도메인만 남음
 
 ---
 

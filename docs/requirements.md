@@ -427,6 +427,14 @@ Neon은 5분 후 scale-to-zero → 다음 쿼리에 ~500ms 자동 복귀라 이 
 Supabase의 강점인 Auth·Realtime·Storage는 여전히 쓰지 않습니다(관리자 2명·공용 비밀번호).
 편지 이미지도 Vercel Blob 그대로입니다.
 
+**2026-09-30 배포 검증:** 새 Vercel 계정의 `burgund32-4178/wed-invi`를 기준 프로젝트로
+확정했다. 기존 `juchan0702` Supabase 서울 리전 프로젝트는 데이터베이스로 계속 사용하며,
+transaction/session pooler를 각각 6543/5432로 연결했다. GitHub Actions `Migrate #1`과
+`Keepalive #3`가 성공했고, `https://www.주은예찬.com/api/health`가 `{"ok":true}`를 반환했다.
+가비아의 위임 네임서버는 새 Cloudflare 계정의 `elaine.ns.cloudflare.com`과
+`sonny.ns.cloudflare.com`이며, Cloudflare DNS의 루트와 `www`는 DNS only CNAME으로 Vercel을
+가리킨다. Vercel Blob은 Seoul(`icn1`)·Public으로 생성했다.
+
 CI의 `npm run typecheck`는 먼저 `next typegen`을 실행합니다. `next-env.d.ts`와 App Router의
 `PageProps` 타입은 Next가 생성하고 Git에는 넣지 않으므로, 이 순서가 없으면 깨끗한 GitHub Actions
 체크아웃에서 정적 이미지 import와 라우트 타입을 찾지 못합니다. 2026-09-29 실제 CI 실패와 같은

@@ -340,13 +340,16 @@ DNS는 ASCII만 이해하므로 한글 도메인은 **퓨니코드**로 변환�
 
 ### 절차
 
-1. Vercel → 프로젝트 → Settings → **Domains** → `xn--2j5b9vb2blxf.com` 입력
-   - Vercel이 `www` 도 함께 추가할지 묻습니다. 최상위 주소를 대표로 쓰고 `www`는 리디렉트로 두세요
-2. **Vercel 화면에 뜨는 DNS 레코드 값을 그대로 복사하세요.** 프로젝트마다 다릅니다
-   - 최상위(`주은예찬.com`): **A 레코드** (보통 `76.76.21.21`)
-   - `www`: **CNAME** (프로젝트 고유값, 예: `xxxxxxxx.vercel-dns-017.com`)
-3. 가비아 → **My가비아** → **DNS 관리** → 해당 도메인 → DNS 설정 → 레코드 추가
-4. 전파 후 Vercel Domains 화면이 **Valid Configuration** 이 되고 인증서가 발급됐는지 확인
+1. Vercel → 프로젝트 → Settings → **Domains**에서 루트와 `www` 퓨니코드 도메인을 추가합니다.
+   이 프로젝트는 루트를 `www`로 308 리디렉션하고 `www`를 Production에 연결했습니다.
+2. Cloudflare의 사용할 계정에 `주은예찬.com`을 추가하고, **Vercel 화면에 뜨는 값을 그대로**
+   루트(`@`)와 `www` CNAME으로 등록합니다. 둘 다 **DNS only**로 둡니다.
+   - 현재 프로젝트에서 확인한 대상: `e74cec6c5b12c324.vercel-dns-017.com`
+   - 이 값은 프로젝트마다 달라질 수 있으므로 새로 연결할 때는 다시 확인합니다.
+3. 가비아 → 도메인 관리 → 네임서버 설정에서 Cloudflare가 배정한 두 네임서버로 교체합니다.
+   현재 배정값은 `elaine.ns.cloudflare.com`, `sonny.ns.cloudflare.com`입니다.
+4. Cloudflare가 **Active**가 된 뒤 Vercel Domains 화면과 실제 HTTPS 응답을 함께 확인합니다.
+   2026-09-30 `www` 200, 루트 → `www` 308, SSL 발급을 확인했습니다.
 
 ### 연결 후 세 곳을 반드시 함께 갱신
 

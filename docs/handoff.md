@@ -1,6 +1,6 @@
 # 인수인계 — 배포 진행 상황
 
-**마지막 갱신: 2026-09-29 · 예식 D-81 (2026-12-19 12:30 KST)**
+**마지막 갱신: 2026-09-30 · 예식 D-80 (2026-12-19 12:30 KST)**
 
 지금 하고 있는 일은 **배포**다. 코드는 사실상 준비돼 있고, 남은 것은 대부분
 **콘솔 클릭과 값 등록**이다. 이 문서는 "지금 어디까지 왔고 다음에 뭘 누르면 되는지"만 적는다.
@@ -13,9 +13,10 @@
 
 ## 한 줄 요약
 
-`main` 에 실제 사진 29장 · Supabase 드라이버 · `/api/health` · GitHub Actions 3개가 모두 들어가
-푸시됐다. `909a7a4`에서 깨끗한 CI 체크아웃의 Next 타입 생성 순서를 고쳤고 **CI #3이 green**이다.
-Vercel 배포도 성공했으며 공개 주소 `https://wed-invi-88b2.vercel.app`의 홈과 DB health가 모두 200이다.
+새 Vercel 계정의 `burgund32-4178/wed-invi`가 기준 프로젝트다. 기존 `juchan0702` Supabase DB,
+서울 Public Vercel Blob, 새 Cloudflare 계정과 `주은예찬.com`을 모두 연결했다.
+공개 주소 `https://www.주은예찬.com`의 홈·관리자·DB health가 정상이고, GitHub Actions의
+마이그레이션과 keepalive도 green이다.
 
 ---
 
@@ -33,97 +34,43 @@ Vercel 배포도 성공했으며 공개 주소 `https://wed-invi-88b2.vercel.app
 | 워크플로 | `.github/workflows/` 의 `ci.yml` · `migrate.yml` · `keepalive.yml` |
 | 문서 | `deploy.md`·`env.md`·`README.md`·`AGENTS.md`·`requirements.md`·`todo.md` 전부 Supabase 기준으로 갱신 |
 
-### 2026-09-29에 실제로 확인한 외부 상태
+### 2026-09-30에 실제로 확인한 외부 상태
 
 | 항목 | 확인 결과 |
 |---|---|
 | **GitHub Actions `CI`** | `909a7a4`의 CI #3 success. 타입 검사·유닛 테스트·DB 통합 테스트까지 통과 |
-| **Vercel 배포** | 같은 커밋이 `wed-invi`와 `wed-invi-88b2` 두 프로젝트 모두 success |
-| **공개 주소** | `https://wed-invi-88b2.vercel.app` — 홈 200, 제목 정상 |
-| **Supabase 런타임 연결** | 위 주소의 `/api/health`가 `200 {"ok":true}` — transaction pooler 연결 확인 |
-| **GitHub Actions 설정** | Repository Secret 0개, Variable `SITE_URL` 등록. Keepalive #2 수동 실행 success |
-| **중복 Vercel 프로젝트** | 같은 저장소에 `wed-invi`와 `wed-invi-88b2`가 연결됨. 공개·DB 정상인 `wed-invi-88b2`를 기준으로 정리 필요 |
+| **Vercel 배포** | 새 계정 `burgund32-4178/wed-invi` Production Ready. 환경변수 6개 등록 |
+| **공개 주소** | `https://www.주은예찬.com` 홈 200, 루트는 `www`로 308, SSL 정상 |
+| **Supabase 런타임 연결** | `/api/health`가 `200 {"ok":true}`, 관리자 로그인 및 3개 테이블 확인 |
+| **Vercel Blob** | `wed-invi-blob`, Seoul(`icn1`), Public. 토큰 자동 주입 후 재배포 Ready |
+| **Cloudflare** | 새 계정에서 Active. 가비아 NS `elaine`/`sonny`, 루트·`www` DNS only CNAME |
+| **GitHub Actions** | Secret `DIRECT_URL`, Variable `SITE_URL` 등록. Migrate #1·Keepalive #3 success |
 
-### 아직 시작도 안 한 것
+### 남은 것
 
-- Vercel 로그인 후 `wed-invi-88b2`를 기준 프로젝트로 확정하고 중복 `wed-invi` 연결 정리
-- Vercel **Blob 스토어** 생성 (⚠️ Access mode **Public** 필수, 생성 후 변경 불가)
-- GitHub 저장소 **Secret `DIRECT_URL`** 등록
-- 배포 DB에 **마이그레이션 적용** (Actions의 `Migrate` 워크플로 수동 실행)
-- **Keepalive** 워크플로 첫 수동 실행
-- **도메인 `주은예찬.com`** 연결 (가비아 구입)
-- **카카오 개발자 앱** 생성 + 플랫폼 Web 도메인 등록
-- 실기기 확인 전부 ([todo.md](todo.md) 3절)
+- **카카오 개발자 앱** 생성 + JavaScript 키와 플랫폼 Web 도메인 등록
+- 실제 사진으로 **Vercel Blob 업로드** 확인
+- 지도 앱·공유·카카오톡·캘린더 등 실기기 확인 ([todo.md](todo.md) 3절)
+- 접근 가능한 경우 예전 Vercel 계정의 중복 프로젝트 연결 해제 또는 삭제
 
 ---
 
 ## 다음에 할 일 — 이 순서대로
 
-### 1. Vercel 기준 프로젝트부터 정리
+### 1. 카카오 개발자 앱
 
-Vercel에 GitHub OAuth로 로그인한 뒤 프로젝트가 왜 두 개 생겼는지 확인한다.
-`wed-invi-88b2`는 공개 홈과 `/api/health`가 모두 200이므로 이쪽을 기준으로 잡는 것이 안전하다.
-환경변수·Blob·도메인을 붙이기 전에 중복 `wed-invi` 프로젝트의 Git 연결을 끊거나 프로젝트를
-정리해, 이후 push마다 두 번 빌드되는 상태를 끝낸다.
+`NEXT_PUBLIC_KAKAO_JS_KEY`를 등록하고, 플랫폼 Web 사이트 도메인에 한글과 퓨니코드 주소를
+모두 추가한 뒤 재배포한다. 자세한 절차는 [deploy.md 8번](deploy.md).
 
-### 2. Vercel 환경변수 정리
+### 2. 실기기·Blob 확인
 
-`Settings → Environment Variables` 에서 **값이 빈 변수를 삭제**한다.
-빈 값은 한 번 빌드를 죽였다(아래 "밟은 함정" 참고). 지금은 코드가 견디지만 남겨둘 이유가 없다.
+관리자에서 실제 사진 한 장을 첨부해 Blob 업로드를 확인하고, 이어서 [todo.md 3절](todo.md)의
+지도 앱·복사·공유·카카오톡·캘린더 항목을 휴대전화에서 확인한다.
 
-있어야 할 것은 이 여섯 개다.
+### 3. 예전 Vercel 프로젝트 정리
 
-```
-DATABASE_URL    Supabase transaction pooler (6543)
-DIRECT_URL      Supabase session pooler (5432)
-ADMIN_PASSWORD  20자 이상
-SESSION_SECRET
-TOKEN_SECRET    ⚠️ 절대 바꾸지 말 것
-NEXT_PUBLIC_SITE_URL  https://wed-invi-88b2.vercel.app (도메인 연결 전)
-```
-
-### 3. Blob 스토어
-
-`Storage → Create Database → Blob` · **Access mode `Public`** ·
-Production/Preview/Development 전부 체크. `BLOB_READ_WRITE_TOKEN` 이 자동 주입된다.
-
-건너뛰어도 된다 — 편지에 이미지만 못 넣고 나머지는 정상이다.
-
-### 4. GitHub에 값 두 개 등록
-
-`Settings → Secrets and variables → Actions`
-
-| 종류 | 이름 | 값 |
-|---|---|---|
-| **Secret** | `DIRECT_URL` | Supabase **session pooler (5432)** 문자열 |
-| **Variable** | `SITE_URL` | 배포 주소, 끝에 `/` 없이 |
-
-`SITE_URL` 을 Secret에 넣으면 `keepalive.yml` 의 `vars.SITE_URL` 이 못 읽어서 실패한다. **Variable이다.**
-
-### 5. 마이그레이션 + keepalive
-
-```
-Actions → Migrate → Run workflow      출력의 `대상:` 이 Supabase 호스트·포트 5432 인지 확인
-Actions → Keepalive → Run workflow    "✓ DB가 응답했습니다." 가 나오면 성공
-```
-
-마이그레이션을 해야 `/admin` 과 편지·방명록이 동작한다.
-
-### 6. 도메인 `주은예찬.com`
-
-**미루지 말 것.** 한글 IDN은 Vercel에서 SSL 인증서가 안 나오는 사례가 보고돼 있다.
-문제가 있다면 일찍 알아야 대안을 찾을 시간이 있다. 절차는 [deploy.md 10번](deploy.md).
-
-```
-퓨니코드: xn--2j5b9vb2blxf.com     ← Vercel·카카오에는 이 형태로 입력
-```
-
-붙인 뒤 **세 곳을 함께** 갱신한다 — `NEXT_PUBLIC_SITE_URL`(한글) ·
-저장소 Variable `SITE_URL`(퓨니코드) · 카카오 사이트 도메인(둘 다 등록) → 재배포.
-
-### 7. 카카오 + 실기기 확인
-
-[deploy.md 8번](deploy.md) 과 [todo.md 3절](todo.md).
+새 프로젝트가 기준이고 운영 트래픽도 모두 새 계정으로 간다. 예전 Vercel 계정에 다시 접근할 수
+있을 때 중복 프로젝트의 Git 연결을 해제하거나 프로젝트를 삭제해 불필요한 이중 빌드를 끝낸다.
 
 ---
 
