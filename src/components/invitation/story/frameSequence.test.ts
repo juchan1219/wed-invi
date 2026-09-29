@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import sharp from 'sharp';
 import {
   sampleFrameSequence, frameAtlasRect, danceAtlasUrl,
@@ -49,4 +49,25 @@ test('every atlas page exists, is transparent and matches the cells it holds',as
     assert.equal(meta.height,DANCE_FRAME_SIZE*Math.ceil(frames/4));
     assert.equal(meta.hasAlpha,true);
   }
+});
+
+test('the loading placeholder is the exact first atlas frame, so the characters never resize',async()=>{
+  const placeholder='public/story/wedding-dance/frames/first-frame.webp';
+  assert.equal(existsSync(placeholder),true,'first-frame.webp must be generated with the atlases');
+  const expected=await sharp('public/story/wedding-dance/frames/dance-1.webp')
+    .extract({left:0,top:0,width:DANCE_FRAME_SIZE,height:DANCE_FRAME_SIZE})
+    .ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const actual=await sharp(placeholder).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const alphaBounds=({data,info}:{data:Buffer;info:{width:number;height:number;channels:number}})=>{
+    let left=info.width,top=info.height,right=-1,bottom=-1;
+    for(let y=0;y<info.height;y+=1)for(let x=0;x<info.width;x+=1){
+      if(data[(y*info.width+x)*info.channels+3]>8){
+        left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);
+      }
+    }
+    return {left,top,right,bottom};
+  };
+  assert.deepEqual(actual.info.width,expected.info.width);
+  assert.deepEqual(actual.info.height,expected.info.height);
+  assert.deepEqual(alphaBounds(actual),alphaBounds(expected));
 });

@@ -64,7 +64,7 @@ export function WeddingDance({ contentTargetId }: { contentTargetId: string }) {
 
       <div ref={stageRef} className={styles.stage} aria-hidden={motionMode !== "full"}>
         <div className={styles.actor} data-dance-actor>
-          {motionMode === "full" && (riveSrc
+          {motionMode !== "reduce" && (riveSrc
             ? <DanceActor key={riveSrc} ref={actorRef} riveSrc={riveSrc} />
             : <FrameDanceActor ref={actorRef} />)}
         </div>

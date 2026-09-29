@@ -4,6 +4,7 @@ export const DANCE_FRAME_COUNT = 81;
 export const DANCE_FRAME_SIZE = 576;
 export const DANCE_FRAMES_PER_PAGE = 16;
 export const DANCE_ATLAS_PAGES = Math.ceil(DANCE_FRAME_COUNT / DANCE_FRAMES_PER_PAGE);
+export const DANCE_FIRST_FRAME_URL = "/story/wedding-dance/frames/first-frame.webp";
 
 // 스크롤 진행률(STOPS) → 프레임 번호(POSES)의 구간별 선형 대응. 같은 번호가 이어지면 그 구간은 멈춘다.
 // 입맞춤 장면(0.67~)에서 들어 올리며 일어서고(63→74, 기존과 같은 속도), 일어선 채 안은 프레임(74→79)은

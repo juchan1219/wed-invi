@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import test from "node:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { JSDOM } from "jsdom";
 
 import {
   ACTOR_SCALE_ORIGIN,
@@ -20,6 +24,14 @@ import {
   LETTER_BUTTON_START,
   SCROLL_HINT_END,
 } from "./danceTimeline";
+
+function installCssModuleHook() {
+  const require = createRequire(import.meta.url);
+  require.extensions[".css"] = (module) => {
+    const classes = new Proxy({}, { get: (_target, property) => String(property) });
+    module.exports = { __esModule: true, default: classes };
+  };
+}
 
 test("the replacement dance story exposes six contiguous key poses", () => {
   assert.equal(DANCE_SCENES.length, 6);
@@ -73,6 +85,25 @@ test("the public invitation renders WeddingDance instead of the retired WeddingS
   assert.match(source, /import \{ WeddingDance \} from "\.\/story\/WeddingDance"/);
   assert.match(source, /<WeddingDance contentTargetId="invitation-content" \/>/);
   assert.doesNotMatch(source, /<WeddingStory/);
+});
+
+test("the server-rendered opening already uses the stable animated stage and matching first frame", async () => {
+  installCssModuleHook();
+  const { WeddingDance } = await import("./WeddingDance");
+  const html = renderToStaticMarkup(createElement(WeddingDance, { contentTargetId: "invitation-content" }));
+  const css = readFileSync(new URL("./WeddingDance.module.css", import.meta.url), "utf8");
+  const dom = new JSDOM(`<style>${css}</style>${html}`, { pretendToBeVisual: true });
+  const story = dom.window.document.querySelector("section[data-motion='pending']");
+  const stage = story?.querySelector<HTMLElement>(".stage");
+  const fallback = story?.querySelector<HTMLElement>(".fallback");
+  const placeholder = stage?.querySelector<HTMLImageElement>('img[src*="first-frame.webp"]');
+
+  assert.ok(story);
+  assert.ok(stage);
+  assert.ok(placeholder, "the first paint must use the same padded frame as the canvas");
+  assert.notEqual(dom.window.getComputedStyle(stage).display, "none");
+  assert.equal(dom.window.getComputedStyle(fallback!).display, "none");
+  dom.window.close();
 });
 
 test("the scroll hint stays until the stage is about to release, dimming only while moving", () => {

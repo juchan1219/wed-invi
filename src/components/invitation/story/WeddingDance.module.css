@@ -215,19 +215,29 @@
 
 .fallback { display: none; }
 
-.story[data-motion="pending"],
 .story[data-motion="reduce"] { height: auto; }
-.story[data-motion="pending"] .stage,
 .story[data-motion="reduce"] .stage,
-.story[data-motion="pending"] .ending,
 .story[data-motion="reduce"] .ending { display: none; }
-.story[data-motion="pending"] .fallback,
 .story[data-motion="reduce"] .fallback {
   display: grid;
   gap: 1rem;
   width: min(100% - 2rem, 26rem);
   margin: 0 auto;
   padding: 3rem 0;
+}
+
+/* JS가 동작 줄이기 설정을 읽기 전 첫 페인트에서도 애니메이션 무대를 번쩍 보이지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .story[data-motion="pending"] { height: auto; }
+  .story[data-motion="pending"] .stage,
+  .story[data-motion="pending"] .ending { display: none; }
+  .story[data-motion="pending"] .fallback {
+    display: grid;
+    gap: 1rem;
+    width: min(100% - 2rem, 26rem);
+    margin: 0 auto;
+    padding: 3rem 0;
+  }
 }
 .fallbackCard {
   display: grid;

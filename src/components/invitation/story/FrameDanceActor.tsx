@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { DanceActorHandle } from "./DanceActor";
-import { DANCE_ATLAS_PAGES, DANCE_FRAME_SIZE, danceAtlasUrl, frameAtlasRect, sampleFrameSequence } from "./frameSequence";
+import { DANCE_ATLAS_PAGES, DANCE_FIRST_FRAME_URL, DANCE_FRAME_SIZE, danceAtlasUrl, frameAtlasRect, sampleFrameSequence } from "./frameSequence";
 import styles from "./WeddingDance.module.css";
 
 export const FrameDanceActor = forwardRef<DanceActorHandle>(function FrameDanceActor(_, ref) {
@@ -84,6 +84,6 @@ export const FrameDanceActor = forwardRef<DanceActorHandle>(function FrameDanceA
 
   return <div className={styles.poseActor} data-dance-renderer={ready ? "frames" : "loading"} aria-hidden="true">
     <canvas ref={canvasRef} className={styles.riveCanvas} />
-    {!ready && <Image src="/story/wedding-dance/pose-1.webp" alt="" fill sizes="(max-width: 416px) 86vw, 358px" priority className={styles.poseImage} />}
+    {!ready && <Image src={DANCE_FIRST_FRAME_URL} alt="" fill sizes="(max-width: 416px) 86vw, 358px" priority className={styles.poseImage} />}
   </div>;
 });

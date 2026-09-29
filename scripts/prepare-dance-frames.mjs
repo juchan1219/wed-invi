@@ -41,5 +41,11 @@ for(let page=0;page<5;page++) {
   await sharp({create:{width:cellSize*4,height:cellSize*4,channels:4,background:'#00000000'}})
     .composite(composites).webp({quality:60,alphaQuality:70,effort:6}).toFile(resolve(destination,`dance-${page+1}.webp`));
 }
+// 캔버스가 첫 atlas를 디코딩하기 전에도 같은 크기·투명 여백으로 보여야 한다.
+// 타이트하게 잘린 pose-1.webp를 쓰면 준비 완료 순간 두 사람이 작아지는 것처럼 보인다.
+await sharp(resolve(destination,'dance-1.webp'))
+  .extract({left:0,top:0,width:cellSize,height:cellSize})
+  .webp({lossless:true,effort:6})
+  .toFile(resolve(destination,'first-frame.webp'));
 await writeFile(resolve(destination,'registration.json'),JSON.stringify({cellSize,columns:4,rows:4,frames:80,upscale:UPSCALE,audit},null,2));
 console.log(`Registered 80 drawings into five ${cellSize*4}px transparent atlases.`);

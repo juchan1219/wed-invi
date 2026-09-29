@@ -4,6 +4,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
 import styles from "./WeddingDance.module.css";
+import { DANCE_FIRST_FRAME_URL } from "./frameSequence";
 
 const RiveDanceActor = dynamic(
   () => import("./RiveDanceActor").then(({ RiveDanceActor }) => RiveDanceActor),
@@ -38,7 +39,7 @@ export const DanceActor = forwardRef<DanceActorHandle, { riveSrc: string }>(
         {state !== "failed" && <RiveDanceActor ref={bind} src={riveSrc} onReady={onReady} onFailure={onFailure} />}
         {state !== "ready" && <Image
             className={styles.poseImage}
-            src="/story/wedding-dance/pose-1.webp"
+            src={DANCE_FIRST_FRAME_URL}
             alt=""
             fill
             sizes="(max-width: 416px) 86vw, 358px"
