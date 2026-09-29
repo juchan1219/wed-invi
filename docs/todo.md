@@ -227,9 +227,9 @@
 - [ ] **마이그레이션 실행** — GitHub Actions의 **Migrate** 워크플로를 수동 실행(Run workflow).
       출력의 `대상:` 이 Supabase 호스트인지 확인할 것.
       (폴백: `vercel env pull .env.production.local` 후 `npm run db:migrate -- .env.production.local`)
-- [ ] **저장소 Variable `SITE_URL` 등록** — 배포 주소, 끝에 `/` 없이.
+- [x] **저장소 Variable `SITE_URL` 등록** — `https://wed-invi-88b2.vercel.app`.
       Settings > Secrets and variables > Actions > Variables
-- [ ] **Keepalive 워크플로 수동 실행** — green이어야 합니다.
+- [x] **Keepalive 워크플로 수동 실행** — 2026-09-29 Keepalive #2 success, `ping` green.
       ⚠️ 이게 돌지 않으면 **7일 뒤 Supabase가 정지되어 편지·방명록이 죽습니다**
 - [ ] **카카오 개발자 앱** — JavaScript 키를 `NEXT_PUBLIC_KAKAO_JS_KEY` 에 등록 +
       **플랫폼 > Web > 사이트 도메인 등록** (도메인 등록을 빼먹으면 공유가 동작하지 않습니다)

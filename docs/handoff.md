@@ -41,14 +41,14 @@ Vercel 배포도 성공했으며 공개 주소 `https://wed-invi-88b2.vercel.app
 | **Vercel 배포** | 같은 커밋이 `wed-invi`와 `wed-invi-88b2` 두 프로젝트 모두 success |
 | **공개 주소** | `https://wed-invi-88b2.vercel.app` — 홈 200, 제목 정상 |
 | **Supabase 런타임 연결** | 위 주소의 `/api/health`가 `200 {"ok":true}` — transaction pooler 연결 확인 |
-| **GitHub Actions 설정** | Repository Secret 0개, Variable 0개. Keepalive #1은 `SITE_URL` 없음으로 실패 |
+| **GitHub Actions 설정** | Repository Secret 0개, Variable `SITE_URL` 등록. Keepalive #2 수동 실행 success |
 | **중복 Vercel 프로젝트** | 같은 저장소에 `wed-invi`와 `wed-invi-88b2`가 연결됨. 공개·DB 정상인 `wed-invi-88b2`를 기준으로 정리 필요 |
 
 ### 아직 시작도 안 한 것
 
 - Vercel 로그인 후 `wed-invi-88b2`를 기준 프로젝트로 확정하고 중복 `wed-invi` 연결 정리
 - Vercel **Blob 스토어** 생성 (⚠️ Access mode **Public** 필수, 생성 후 변경 불가)
-- GitHub 저장소 **Secret `DIRECT_URL`** / **Variable `SITE_URL`** 등록
+- GitHub 저장소 **Secret `DIRECT_URL`** 등록
 - 배포 DB에 **마이그레이션 적용** (Actions의 `Migrate` 워크플로 수동 실행)
 - **Keepalive** 워크플로 첫 수동 실행
 - **도메인 `주은예찬.com`** 연결 (가비아 구입)
@@ -153,13 +153,13 @@ CI 환경 시뮬레이션(.env.local 없이 환경변수만)   마이그레이�
 워크플로 YAML 3개                                 파싱 통과
 깨끗한 체크아웃의 `npm run typecheck`              생성 전 실패 → `next typegen` 포함 후 통과
 GitHub Actions CI #3 (`909a7a4`)                   success (DB 통합 테스트 포함)
+GitHub Actions Keepalive #2 (`c18f033`)            success (`SITE_URL`로 `/api/health` 호출)
 Vercel `wed-invi-88b2` 홈 · `/api/health`           200 · `200 {"ok":true}`
 ```
 
 ### 확인 못 한 것 — 사실처럼 쓰지 말 것
 
 - **Migrate 워크플로 실제 성공.** 아직 Repository Secret `DIRECT_URL`이 없다
-- **Keepalive 워크플로 실제 성공.** 예약 실행은 `SITE_URL` 없음으로 실패했다
 - **한글 도메인**의 SSL 발급과 카카오 공유 매칭
 - 갤러리 29장이 실제 화면에서 어떻게 보이는지 (3열 × 10줄이 된다)
 - 지도 앱 딥링크·클립보드·`navigator.share`·`.ics`·Blob 업로드 — 전부 실기기 전용
