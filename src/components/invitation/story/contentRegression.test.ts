@@ -15,7 +15,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 
 function installImageModuleHook() {
   const require = createRequire(import.meta.url);
-  require.extensions[".jpg"] = (module) => {
+  const loadImage = (module: NodeModule) => {
     module.exports = {
       __esModule: true,
       default: {
@@ -26,6 +26,8 @@ function installImageModuleHook() {
       },
     };
   };
+  require.extensions[".jpg"] = loadImage;
+  require.extensions[".webp"] = loadImage;
 }
 
 test("the invitation shows the requested parents and child relations", () => {
@@ -109,4 +111,13 @@ test("the invitation document clips accidental horizontal overflow", () => {
   });
   assert.equal(clipped, true);
   dom.window.close();
+});
+
+test("the dance shortcut shares the music control's top row", () => {
+  const css = readFileSync(new URL("./WeddingDance.module.css", import.meta.url), "utf8");
+  const skipRule = css.match(/\.skip\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+
+  assert.match(skipRule, /top:\s*max\(0\.8rem,\s*env\(safe-area-inset-top\)\)/);
+  assert.match(skipRule, /transform:\s*translateX\(/);
+  assert.doesNotMatch(skipRule, /transform:[^;]*safe-area-inset-top/);
 });

@@ -5,6 +5,7 @@ import { Greeting } from "./Greeting";
 import { CeremonyInfo } from "./CeremonyInfo";
 import { Gallery } from "./Gallery";
 import { MapSection } from "./MapSection";
+import { MusicControl } from "./MusicControl";
 import { AccountSection } from "./AccountSection";
 import { ContactSection } from "./ContactSection";
 import { ShareFooter } from "./ShareFooter";
@@ -23,6 +24,7 @@ import type { LetterView } from "@/lib/letters";
 export function Invitation({ letter }: { letter?: { recipientName: string; letters: LetterView[] } }) {
   const invitation = (
     <ToastProvider>
+      <MusicControl />
       <WeddingDance />
       <div id="invitation-content">
         <CeremonyInfo />

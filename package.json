@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:story": "tsx --test scripts/og-image.test.ts src/app/*.test.tsx src/components/admin/*.test.tsx src/components/invitation/story/*.test.ts src/components/letter/*.test.ts src/lib/date.test.ts",
+    "test:story": "tsx --test scripts/*.test.ts src/app/*.test.tsx src/components/admin/*.test.tsx src/components/invitation/*.test.tsx src/components/invitation/story/*.test.ts src/components/letter/*.test.ts src/lib/*.test.ts",
     "typecheck": "next typegen && tsc --noEmit",
     "photos:prep": "tsx scripts/prep-photos.ts",
     "og:build": "tsx scripts/build-og.ts",

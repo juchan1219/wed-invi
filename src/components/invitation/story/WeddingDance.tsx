@@ -49,7 +49,11 @@ export function WeddingDance() {
       aria-label="예찬과 주은의 웨딩 댄스"
     >
       <a className={styles.skip} href="#location">
-        오시는 길
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
+          <circle cx="12" cy="10" r="2.2" />
+        </svg>
+        <span>오시는 길</span>
       </a>
 
       <ol className={styles.transcript} aria-label="웨딩 댄스 전체 대본">

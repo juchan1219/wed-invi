@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 파일명에 크롭 지점·비트레이트·버전을 넣은 배경음악은 내용이 바뀌면 새 이름으로 배포한다.
+  // 4MB 음원을 재방문 때 다시 받지 않도록 장기 캐시한다.
+  headers() {
+    return [
+      {
+        source: "/audio/merry-go-round-49s-128k-v1.m4a",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
+  },
+
   // 개발 전용. 휴대폰에서 `http://192.168.x.x:3000`으로 접속하면 Next 16이 dev 리소스(JS chunk·HMR)를
   // cross-origin으로 보고 403을 내서 hydration이 안 되고, 댄스가 정적 fallback 목록으로 고정된다.
   // 사설 IP 대역만 허용한다. 배포(next start/Vercel)에는 영향이 없다.
