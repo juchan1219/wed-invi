@@ -224,9 +224,9 @@
   background-size: auto, 17px 19px, 23px 29px, auto;
 }
 
-/* 펼친 편지 아래의 3D 종이를 숨기면 Safari·인앱 브라우저가 합성 레이어를 제거하면서
-   본문을 한 프레임 비우기도 한다. 불투명한 .letter가 완전히 덮으므로 레이어를 그대로 둔다. */
-.scene[data-phase="folded"] .letter { pointer-events: none; }
+/* 펼친 편지 아래의 3D 종이를 숨기거나, 펼침 완료 순간 article의 DOM/CSS 상태를 바꾸면
+   Safari·인앱 브라우저가 합성 레이어를 한 프레임 비우기도 한다. 불투명한 .letter가 완전히
+   덮으므로 종이 레이어와 article의 렌더 상태를 그대로 둔다. */
 
 .counter {
   margin: -1.1rem 0 0.8rem;

@@ -20,11 +20,11 @@ function installDom() {
     `<!doctype html><html><head><style>${css}</style></head><body><div id="root"></div></body></html>`,
     { url: "http://localhost/i/test" },
   );
-  const animation = {
-    cancel() {},
-    finish() {},
-    finished: Promise.resolve(),
-  };
+  const animationCalls: Array<{
+    element: Element;
+    keyframes: Keyframe[] | PropertyIndexedKeyframes | null;
+    options?: number | KeyframeAnimationOptions;
+  }> = [];
   Object.defineProperties(globalThis, {
     window: { configurable: true, writable: true, value: dom.window },
     document: { configurable: true, writable: true, value: dom.window.document },
@@ -40,7 +40,14 @@ function installDom() {
   });
   Object.defineProperty(dom.window.Element.prototype, "animate", {
     configurable: true,
-    value: () => animation,
+    value(this: Element, keyframes: Keyframe[] | PropertyIndexedKeyframes | null, options?: number | KeyframeAnimationOptions) {
+      animationCalls.push({ element: this, keyframes, options });
+      return {
+        cancel() {},
+        finish() {},
+        finished: Promise.resolve(),
+      };
+    },
   });
   Object.defineProperties(dom.window.HTMLDialogElement.prototype, {
     showModal: {
@@ -52,12 +59,12 @@ function installDom() {
       value() { this.removeAttribute("open"); },
     },
   });
-  return { container: dom.window.document.querySelector("#root")!, dom };
+  return { container: dom.window.document.querySelector("#root")!, dom, animationCalls };
 }
 
 installCssModuleHook();
 
-test("편지 본문이 나타난 뒤에도 아래 종이 레이어를 제거하지 않아 합성 프레임이 끊기지 않는다", async () => {
+test("편지 본문 reveal 종료 시 합성 레이어와 React phase를 교체하지 않는다", async () => {
   const environment = installDom();
   const { LetterDialog } = await import("./LetterDialog");
   const { createRoot } = await import("react-dom/client");
@@ -73,10 +80,13 @@ test("편지 본문이 나타난 뒤에도 아래 종이 레이어를 제거하�
     await Promise.resolve();
   });
 
-  const scene = environment.container.querySelector<HTMLElement>("[data-phase]")!;
+  const phaseDrivenScene = environment.container.querySelector<HTMLElement>("[data-phase]");
   const sheet = environment.container.querySelector<HTMLElement>(".sheet")!;
   const article = environment.container.querySelector<HTMLElement>("article")!;
-  assert.equal(scene.dataset.phase, "open");
+  const articleAnimation = environment.animationCalls.find((call) => call.element === article);
+  assert.ok(articleAnimation);
+  assert.equal((articleAnimation.options as KeyframeAnimationOptions).fill, "backwards");
+  assert.equal(phaseDrivenScene, null);
   assert.equal(environment.dom.window.getComputedStyle(article).visibility, "visible");
   assert.equal(environment.dom.window.getComputedStyle(sheet).visibility, "visible");
 

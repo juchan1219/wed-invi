@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { formatCeremonyDateShort } from "@/lib/date";
 import type { LetterView } from "@/lib/letters";
 import { LetterMarkdown } from "./LetterMarkdown";
@@ -70,7 +70,8 @@ export function LetterDialog({
   const closing = useRef(false);
   const [reduced] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>(reduced ? "open" : "folded");
+  const phaseRef = useRef<Phase>(reduced ? "open" : "folded");
+  const suppressOpeningClick = useRef(false);
   const titleId = useId();
   const sheet = describeLetterSheet(letters, index);
 
@@ -136,10 +137,12 @@ export function LetterDialog({
     if (index > 0) article.focus({ preventScroll: true });
 
     if (reduced) {
+      phaseRef.current = "open";
       running.current = [stack.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: "both" })];
       return;
     }
 
+    phaseRef.current = "folded";
     const t = index === 0 ? TIMING.first : TIMING.next;
     const unfoldAt = t.rise + t.stamp + t.hold;
     const textAt = unfoldAt + t.unfold * TEXT_START;
@@ -173,25 +176,40 @@ export function LetterDialog({
         { delay: unfoldAt, duration: t.unfold, easing: EASE_UNFOLD, fill: "both" },
       ),
       shadeRef.current!.animate([{ opacity: 1 }, { opacity: 0 }], { delay: unfoldAt, duration: t.unfold, fill: "both" }),
-      // 마지막 애니메이션이다 — 이게 끝나면 phase가 "open"이 된다(날개의 남은 안착은 편지에 가려 보이지 않는다).
+      // scrollable article 자체를 Safari의 forwards-fill 합성 레이어로 남기지 않는다.
+      // backwards는 지연 중에만 opacity:0을 적용하고 종료 즉시 원래 opacity:1로 돌아가므로,
+      // 애니메이션 종료와 React 재렌더가 겹칠 때 iOS에서 생기던 한 프레임 공백을 피한다.
       article.animate([{ opacity: 0 }, { opacity: 1 }], {
         delay: textAt,
         duration: t.text,
         easing: "ease-out",
-        fill: "both",
+        fill: "backwards",
       }),
     ];
     running.current = animations;
     animations.at(-1)!.finished.then(() => {
       sheetElement.style.willChange = "";
       flap.style.willChange = "";
-      setPhase("open");
+      // 시각적 완료 시 React 상태나 DOM 속성을 바꾸면 iOS Safari가 article 합성 레이어를
+      // 한 프레임 비우므로, 상호작용 상태만 ref에 기록한다.
+      phaseRef.current = "open";
     }).catch(() => {});
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 펼치는 도중 편지를 누르면 기다리지 않고 끝 상태로 건너뛴다.
-  const skip = () => {
-    if (phase === "folded") for (const animation of running.current) animation.finish();
+  const skip = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (phaseRef.current !== "folded") return;
+    // 투명한 article 안의 링크/버튼이 이 탭으로 함께 눌리지 않게 뒤따르는 click을 막는다.
+    suppressOpeningClick.current = true;
+    event.preventDefault();
+    for (const animation of running.current) animation.finish();
+  };
+
+  const suppressSkippedClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!suppressOpeningClick.current) return;
+    suppressOpeningClick.current = false;
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const goNext = () => {
@@ -203,8 +221,8 @@ export function LetterDialog({
     running.current = [exit];
     exit.finished.then(() => {
       // 다음 편지지의 효과가 같은 프레임에 시작되므로 이 퇴장 애니메이션은 그때 취소된다(깜빡임 없음).
+      phaseRef.current = reduced ? "open" : "folded";
       setIndex((current) => current + 1);
-      setPhase(reduced ? "open" : "folded");
     }).catch(() => {});
   };
 
@@ -234,7 +252,12 @@ export function LetterDialog({
       </button>
       <div ref={frameRef} className={styles.frame}>
         <div ref={stackRef} className={styles.stack}>
-          <div className={styles.scene} data-phase={phase} onPointerDown={skip}>
+          <div
+            className={styles.scene}
+            onPointerDown={skip}
+            onPointerCancel={() => { suppressOpeningClick.current = false; }}
+            onClickCapture={suppressSkippedClick}
+          >
             <div ref={sheetRef} className={styles.sheet} aria-hidden="true">
               <div className={`${styles.paper} ${styles.bottom}`} />
               <div ref={flapRef} className={styles.flap}>
