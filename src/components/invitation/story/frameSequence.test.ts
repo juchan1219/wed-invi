@@ -51,6 +51,41 @@ test('every atlas page exists, is transparent and matches the cells it holds',as
   }
 });
 
+test('no frame carries a floating fragment of the neighbouring cell',async()=>{
+  // 2026-10-04 사용자 보고: 신랑 왼쪽에 작은 검은 점이 떠 있었다. 시트의 열 경계가
+  // 옆 칸 그림의 끝부분을 이 칸 안에 남겨 둔 것이다(`sheet-cells.mjs` 의 골짜기 탐색).
+  // 사람·드레스는 전부 한 덩어리로 이어져 있으므로, 칸마다 연결 성분이 하나여야 한다.
+  const ALPHA_MIN=32;
+  for(let page=0;page<DANCE_ATLAS_PAGES;page++){
+    const {data,info}=await sharp(`public${danceAtlasUrl(page)}`).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    const cols=info.width/DANCE_FRAME_SIZE,rows=info.height/DANCE_FRAME_SIZE;
+    for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+      const ox=col*DANCE_FRAME_SIZE,oy=row*DANCE_FRAME_SIZE,n=DANCE_FRAME_SIZE;
+      const seen=new Uint8Array(n*n),qx=new Int32Array(n*n),qy=new Int32Array(n*n);
+      const solid=(x:number,y:number)=>data[((oy+y)*info.width+(ox+x))*4+3]>ALPHA_MIN;
+      const found:number[]=[];
+      for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+        if(seen[y*n+x])continue;
+        seen[y*n+x]=1;
+        if(!solid(x,y))continue;
+        let head=0,tail=0,area=0;qx[tail]=x;qy[tail]=y;tail++;
+        while(head<tail){
+          const cx=qx[head],cy=qy[head];head++;area++;
+          for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+            const nx=cx+dx,ny=cy+dy;
+            if(nx<0||ny<0||nx>=n||ny>=n||seen[ny*n+nx])continue;
+            seen[ny*n+nx]=1;
+            if(solid(nx,ny)){qx[tail]=nx;qy[tail]=ny;tail++;}
+          }
+        }
+        found.push(area);
+      }
+      assert.equal(found.length,1,
+        `page ${page} r${row}c${col} 에 떠 있는 조각이 ${found.length-1}개 있습니다 (면적 ${found.slice(1).join(', ')})`);
+    }
+  }
+});
+
 test('the sharper dance atlases stay within a three megabyte mobile payload budget',()=>{
   const bytes=Array.from({length:DANCE_ATLAS_PAGES},(_,page)=>
     statSync(`public${danceAtlasUrl(page)}`).size,

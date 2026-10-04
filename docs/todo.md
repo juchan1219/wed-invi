@@ -245,6 +245,16 @@
 - [x] **계좌 안내문 줄바꿈 변경 (2026-10-04 사용자 요청)** — `참석이 어려우신 분들을 위해 계좌번호를 남깁니다.` /
       `너그러운 마음으로 양해 부탁드립니다.` 두 줄로. 단어는 그대로고 `<br>` 위치만 옮겼다
 
+- [x] **춤 프레임의 떠 있는 검은 점 제거 (2026-10-04 사용자 보고)** — 프레임 17·18(atlas `dance-2`)
+      신랑 왼쪽의 작은 조각. 생성 오류가 아니라 시트 열 경계가 옆 칸 그림 끝을 이 칸에 남긴 것이었다.
+      원본 `embrace.png` 는 고치지 않았다 — 조각의 왼쪽 끝이 그 칸 경계 상자의 왼쪽 경계여서
+      지우면 프레임이 재정렬되고 인물이 움직인다. `upscaled/embrace@4x.png` 에서만 지우고
+      `npm run dance:frames` 재실행. 배경·좌표·측정값은 [assets/dance-frames/README.md](../assets/dance-frames/README.md)
+      - 검증: `dance-2` 외 atlas 5장·`first-frame.webp`·`registration.json` 바이트 단위 동일,
+        예산 2,993,082B, 전 80프레임 고립 성분 0개, 전후 크롭 육안 확인(인물 위치·크기 불변)
+      - 회귀 테스트: `frameSequence.test.ts` "no frame carries a floating fragment" (옛 파일로 실패 확인)
+      - ⚠️ `upscaled/` 는 git 제외. `dance:upscale` 재실행 후에는 조각을 다시 지워야 한다
+
 ### [`src/config/admins.ts`](../src/config/admins.ts)
 
 - [ ] 필요하면 작성자 이름 변경 (기본: 예찬 / 주은)
