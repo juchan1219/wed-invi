@@ -2,8 +2,16 @@
  * 청첩장 콘텐츠는 전부 이 파일에 모여 있다.
  * 문구·날짜·계좌·좌표를 바꿀 때 다른 파일을 열 필요가 없도록 하는 것이 목적이다.
  *
- * TODO(사용자): 아래 값들을 실제 정보로 교체하세요. `PLACEHOLDER` 주석이 붙은 곳이 필수입니다.
+ * ⚠️ 단 하나의 예외: **전화번호와 계좌번호는 이 파일에 적지 않는다.**
+ * 이 저장소는 공개라서 숫자를 적으면 git 히스토리에 영구히 남는다.
+ * 두 값만 환경변수로 받고, 나머지(이름·은행·예금주·라벨)는 여기 그대로 둔다.
+ * 등록할 변수 목록과 넣는 곳은 [docs/env.md](../../docs/env.md) 를 보라.
+ *
+ * 값이 비어 있으면 해당 항목이 조용히 사라지는 대신 섹션이 안내 문구를 보인다
+ * (`withNumber`, `ContactList`). 배포 후 실제 화면에서 눈으로 확인할 것.
  */
+
+import { publicValue, withNumber } from "@/lib/contentEnv";
 
 export type Person = {
   name: string;
@@ -41,21 +49,35 @@ export const wedding = {
     ogImage: "/og.jpg",
   },
 
+  // 전화번호는 환경변수에서만 온다 (파일 상단 주석 참고).
+  // `process.env.X` 를 통째로 적어야 Next가 빌드 시 인라인한다 — 키를 변수로 돌려 읽으면 안 된다.
   groom: {
-    name: "김예찬", // PLACEHOLDER
+    name: "김예찬",
     /** '장남', '차남', '아들' 등 */
     relation: "차남",
-    phone: "010-0000-0000", // PLACEHOLDER
-    father: { name: "김종웅", phone: "010-0000-0000" } as Person, // PLACEHOLDER
-    mother: { name: "권순주", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    phone: publicValue(process.env.NEXT_PUBLIC_PHONE_GROOM),
+    father: {
+      name: "김종웅",
+      phone: publicValue(process.env.NEXT_PUBLIC_PHONE_GROOM_FATHER),
+    } as Person,
+    mother: {
+      name: "권순주",
+      phone: publicValue(process.env.NEXT_PUBLIC_PHONE_GROOM_MOTHER),
+    } as Person,
   },
 
   bride: {
     name: "이주은",
     relation: "장녀",
-    phone: "010-0000-0000", // PLACEHOLDER
-    father: { name: "이병석", phone: "010-0000-0000" } as Person, // PLACEHOLDER
-    mother: { name: "박윤경", phone: "010-0000-0000" } as Person, // PLACEHOLDER
+    phone: publicValue(process.env.NEXT_PUBLIC_PHONE_BRIDE),
+    father: {
+      name: "이병석",
+      phone: publicValue(process.env.NEXT_PUBLIC_PHONE_BRIDE_FATHER),
+    } as Person,
+    mother: {
+      name: "박윤경",
+      phone: publicValue(process.env.NEXT_PUBLIC_PHONE_BRIDE_MOTHER),
+    } as Person,
   },
 
   ceremony: {
@@ -101,50 +123,63 @@ export const wedding = {
      * (문단 사이 여백을 CSS로 일관되게 주기 위해 문자열 개행 대신 배열을 쓴다.)
      */
     body: [
-      "서로가 마주 보며 다져온 사랑을",
-      "이제 함께 한곳을 바라보며",
-      "걸어갈 수 있는 큰 사랑으로 키우고자 합니다.",
+      "귀하게 만난 두 사람이",
+      "여러 계절을 함께했습니다.",
+      "운명처럼 시작된 인연을",
       "",
-      "저희 두 사람이 새로운 시작을 하는 날,",
-      "귀한 걸음 하시어 축복해 주시면",
-      "더없는 기쁨으로 간직하겠습니다.",
+      "주어진 사랑으로 잘 가꾸고",
+      "은은한 행복을 나누며",
+      "이제 평생을 함께하려 합니다.",
+      "",
+      "소중한 분들과 이 기쁨을 나누고 싶습니다.",
     ],
   },
 
+  // 계좌번호도 환경변수에서만 온다. 은행·예금주·라벨은 이름과 함께 이미 공개된
+  // 정보라 여기 그대로 두고, 번호가 없는 항목은 `withNumber` 가 목록에서 뺀다.
   accounts: {
-    groom: [
+    groom: withNumber([
       {
         label: "신랑 김예찬",
-        bank: "국민은행",
-        number: "000000-00-000000",
+        bank: "하나은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_GROOM),
         holder: "김예찬",
       },
-      {
-        label: "아버지 김종웅",
-        bank: "신한은행",
-        number: "000-000-000000",
-        holder: "김종웅",
-      },
-    ] as Account[], // PLACEHOLDER
-    bride: [
+    ]) as Account[],
+    bride: withNumber([
       {
         label: "신부 이주은",
-        bank: "카카오뱅크",
-        number: "0000-00-0000000",
+        bank: "하나은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_BRIDE),
         holder: "이주은",
       },
       {
         label: "아버지 이병석",
-        bank: "우리은행",
-        number: "0000-000-000000",
+        bank: "국민은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_BRIDE_FATHER),
         holder: "이병석",
       },
-    ] as Account[], // PLACEHOLDER
+      {
+        label: "어머니 박윤경",
+        bank: "농협은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_BRIDE_MOTHER),
+        holder: "박윤경",
+      },
+    ]) as Account[],
   },
 
   guestbook: {
-    /** 방명록 섹션을 통째로 끄고 싶으면 false */
-    enabled: true,
+    /**
+     * 방명록('축하 메시지') 섹션을 통째로 끄고 싶으면 false.
+     *
+     * 2026-10-04 사용자 요청으로 **false**. 청첩장에서 섹션이 사라지고
+     * `POST /api/guestbook` 은 403을 돌려준다. `GET` 은 거부가 아니라 빈 목록 200이다
+     * (방명록이 죽어도 청첩장 본문은 멀쩡해야 한다는 기존 설계 — `api/guestbook/route.ts`).
+     *
+     * 기능을 지운 것은 아니라 다시 `true` 로 돌리면 그대로 살아난다 —
+     * DB 테이블·관리자 화면(`/admin/guestbook`)·기존 글은 건드리지 않았다.
+     */
+    enabled: false,
     maxNameLength: 20,
     maxMessageLength: 300,
   },

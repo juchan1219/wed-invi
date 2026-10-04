@@ -41,6 +41,57 @@ test("the invitation shows the requested parents and child relations", () => {
   assert.equal(wedding.bride.father.name, "이병석");
 });
 
+test("the greeting keeps the wording the couple chose", () => {
+  const dom = new JSDOM(renderToStaticMarkup(createElement(Greeting)));
+  // 섹션 라벨·제목도 <p> 라서 본문 첫 줄을 찾아 거기서부터 본다.
+  const paragraphs = Array.from(dom.window.document.querySelectorAll("p")).map((p) =>
+    p.textContent?.trim(),
+  );
+  const start = paragraphs.indexOf("귀하게 만난 두 사람이");
+
+  assert.notEqual(start, -1, "인사말 첫 줄을 찾지 못했습니다");
+  assert.deepEqual(paragraphs.slice(start, start + 7), [
+    "귀하게 만난 두 사람이",
+    "여러 계절을 함께했습니다.",
+    "운명처럼 시작된 인연을",
+    "주어진 사랑으로 잘 가꾸고",
+    "은은한 행복을 나누며",
+    "이제 평생을 함께하려 합니다.",
+    "소중한 분들과 이 기쁨을 나누고 싶습니다.",
+  ]);
+  // 빈 문자열 두 개가 문단 사이 여백 → 세 문단으로 끊어 읽힌다.
+  assert.equal(wedding.greeting.body.filter((line) => line === "").length, 2);
+
+  dom.window.close();
+});
+
+/** 2026-10-04 사용자 요청으로 '축하 메시지'(방명록)를 청첩장에서 뺐다. */
+test("the invitation leaves the guestbook section out", async () => {
+  assert.equal(wedding.guestbook.enabled, false);
+
+  // 섹션이 플래그 뒤에서만 렌더되는지 — 플래그를 무시한 직접 렌더가 끼어들면 잡힌다.
+  const source = readFileSync(new URL("../Invitation.tsx", import.meta.url), "utf8");
+  assert.match(source, /\{wedding\.guestbook\.enabled && <Guestbook \/>\}/);
+  assert.equal(source.match(/<Guestbook\s*\/>/g)?.length, 1);
+});
+
+test("the account section explains itself in the requested two lines", async () => {
+  const { AccountSection } = await import("../AccountSection");
+  const dom = new JSDOM(
+    renderToStaticMarkup(createElement(ToastProvider, null, createElement(AccountSection))),
+  );
+  // 섹션 라벨·제목도 <p> 라서 안내문만 집어낸다.
+  const intro = Array.from(dom.window.document.querySelectorAll("p")).find((p) =>
+    p.textContent?.includes("참석이 어려우신"),
+  )?.innerHTML;
+
+  assert.equal(
+    intro,
+    "참석이 어려우신 분들을 위해 계좌번호를 남깁니다.<br>너그러운 마음으로 양해 부탁드립니다.",
+  );
+  dom.window.close();
+});
+
 test("the location section exposes the dance shortcut target", async () => {
   installImageModuleHook();
   const { MapSection } = await import("../MapSection");

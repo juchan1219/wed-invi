@@ -38,6 +38,8 @@
 | `NEXT_PUBLIC_SITE_URL` | 직접 입력 | 직접 입력 | 로컬은 `http://localhost:3000`, 배포는 실제 주소 | OG 이미지·공유 링크가 깨짐 |
 | `BLOB_READ_WRITE_TOKEN` | (선택) | **자동 주입** | Vercel Blob 스토어 생성 시 자동 | 편지에 이미지만 못 넣음 |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | (선택) | 직접 입력 | developers.kakao.com → 앱 키 | 카카오톡 버튼만 숨겨짐 |
+| `NEXT_PUBLIC_PHONE_*` (6개) | 직접 입력 | 직접 입력 | 본인·혼주 전화번호 | 연락처 섹션이 빔 |
+| `NEXT_PUBLIC_ACCOUNT_*` (4개) | 직접 입력 | 직접 입력 | 통장·은행 앱 | 계좌 섹션이 빔 |
 
 **자동 주입**은 Vercel에서 Blob 스토어를 만들면 Vercel이 알아서 넣어준다는 뜻입니다.
 직접 입력할 필요도 없고, 하면 안 됩니다.
@@ -259,6 +261,42 @@ OG 태그의 절대 URL과 공유 링크를 만드는 데 쓰입니다.
 비워두면 카카오톡 버튼만 숨겨지고, OS 공유·링크 복사는 그대로 동작합니다.
 로컬에서 테스트하려면 카카오 사이트 도메인에 `http://localhost:3000` 도 추가하세요.
 
+### `NEXT_PUBLIC_PHONE_*` / `NEXT_PUBLIC_ACCOUNT_*` — 연락처·계좌 번호
+
+이 저장소는 **공개**입니다. 전화번호·계좌번호를 `src/config/wedding.ts` 에 적으면
+git 히스토리에 영구히 남고, 공개 저장소를 긁는 수집기의 대상이 됩니다.
+그래서 **번호만** 환경변수로 받습니다. 이름·은행·예금주·라벨은 설정 파일에 그대로 있습니다.
+
+| 이름 | 누구 |
+|---|---|
+| `NEXT_PUBLIC_PHONE_GROOM` | 신랑 |
+| `NEXT_PUBLIC_PHONE_GROOM_FATHER` / `_MOTHER` | 신랑 아버지 / 어머니 |
+| `NEXT_PUBLIC_PHONE_BRIDE` | 신부 |
+| `NEXT_PUBLIC_PHONE_BRIDE_FATHER` / `_MOTHER` | 신부 아버지 / 어머니 |
+| `NEXT_PUBLIC_ACCOUNT_GROOM` | 신랑 (하나은행) |
+| `NEXT_PUBLIC_ACCOUNT_BRIDE` | 신부 (하나은행) |
+| `NEXT_PUBLIC_ACCOUNT_BRIDE_FATHER` | 신부 아버지 (국민은행) |
+| `NEXT_PUBLIC_ACCOUNT_BRIDE_MOTHER` | 신부 어머니 (농협은행) |
+
+**이 값들은 비밀이 아닙니다.** 청첩장 화면에 그대로 보이고, `NEXT_PUBLIC_` 이라
+빌드 시 번들에 인라인되어 브라우저에 실립니다. 목적은 "숨기기"가 아니라
+**공개 저장소에 남기지 않기**입니다. 위 `NEXT_PUBLIC_SITE_URL` 항목의
+"비밀을 넣으면 안 됩니다" 경고와 모순이 아닙니다 — 애초에 비밀이 아닙니다.
+
+> ⚠️ **넣는 곳은 Vercel 환경변수입니다. GitHub Secret이 아닙니다.**
+> `NEXT_PUBLIC_*` 는 **빌드 시점에** 번들로 박히고, 실제 사이트를 만드는 빌드는
+> Vercel에서만 돕니다. `ci.yml` 은 일부러 `npm run build` 를 돌리지 않으므로
+> GitHub에 넣은 값은 사이트에 반영되지 않습니다.
+
+등록 후 **재배포**해야 반영됩니다. 빌드 시점에 박히는 값이라 환경변수만 바꾸고
+재배포하지 않으면 이전 번들이 그대로 서빙됩니다.
+
+비워두면 그 항목만 목록에서 사라집니다(`withNumber`). 전부 비면 섹션이
+"등록된 연락처가 없습니다" / "등록된 계좌가 없습니다" 안내를 보입니다 —
+빈칸이 뜨는 것보다 누락을 알아채기 쉽게 한 것입니다.
+
+하이픈은 포함해 적으세요. 계좌 복사 버튼이 숫자만 떼어 복사합니다.
+
 ---
 
 ## GitHub Actions 에 넣는 값
@@ -275,6 +313,8 @@ OG 태그의 절대 URL과 공유 링크를 만드는 데 쓰입니다.
 - `SITE_URL` 은 비밀이 아니고 눈으로 확인·수정할 수 있어야 하므로 **Variable** 탭입니다.
   (Secret에 넣으면 워크플로가 값을 못 찾아 실패합니다 — `vars.SITE_URL` 로 읽습니다.)
 - `ci.yml` 은 등록할 값이 없습니다. 러너 안에 Postgres 컨테이너를 띄워 두 URL을 직접 만들어 씁니다.
+- **연락처·계좌(`NEXT_PUBLIC_PHONE_*`·`NEXT_PUBLIC_ACCOUNT_*`)는 여기 넣지 않습니다.**
+  빌드 시점에 번들로 박히는 값이고 배포 빌드는 Vercel에서만 돌기 때문입니다. Vercel 환경변수에 등록하세요.
 
 커스텀 도메인을 붙였다면 `SITE_URL` 도 함께 갱신하세요. 옛 주소가 아직 살아 있으면
 keepalive는 계속 green이라 빼먹은 것을 알아채기 어렵습니다.
