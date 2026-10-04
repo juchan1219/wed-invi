@@ -168,6 +168,56 @@
   .scrollHint i { animation: none; }
 }
 
+/*
+ * 춤 구간 위에 떠 있는 두 개의 pill.
+ *   `.skipDance` — **우측 하단**, 춤을 건너뛰어 청첩장 본문으로 (2026-10-05 사용자 요청)
+ *   `.skip`      — 우상단, 오시는 길로. 음악 토글 한 칸 왼쪽
+ *
+ * 셋을 우상단에 나란히 놓으면 320px 에서 빽빽해지고 translateX 오프셋을 전부
+ * 다시 계산해야 해서, 건너뛰기는 아래로 내렸다.
+ *
+ * 규칙을 합치지 않고 따로 쓴 이유: `.skip` 한 규칙 안에 `top` 과 `transform` 이
+ * 함께 있는지를 `contentRegression.test.ts` 가 검사한다. 공통 속성을 빼내면 그게 깨진다.
+ *
+ * 둘 다 `margin-bottom: -2.9rem` 이라 세로 공간을 차지하지 않는다. 둘 다 우측 정렬이고
+ * sticky 의 `top` 만 다르다 — 하나는 화면 위, 하나는 화면 아래.
+ */
+.skipDance {
+  position: sticky;
+  z-index: 10;
+  /*
+   * 화면 **우측 하단**. sticky 의 top 을 화면 높이에서 뺀 값으로 주면 구간 내내
+   * 아래쪽에 붙어 있는다(.stage 안의 absolute 가 아니라 형제로 두는 이유는,
+   * .stage 가 pending 동안 aria-hidden 이어서 링크가 스크린리더에서 빠지기 때문).
+   *
+   * 아래 여유는 가운데 "아래로 스크롤" 안내(.scrollHint)와 같은 식으로 계산한다 —
+   * iOS Safari 하단 툴바는 safe-area 에 잡히지 않아 맨 아래에 붙이면 가려진다.
+   */
+  top: calc(100svh - 2.9rem - max(2.75rem, calc(env(safe-area-inset-bottom) + 1.75rem)));
+  display: flex;
+  align-items: center;
+  width: max-content;
+  height: 2.9rem;
+  margin-bottom: -2.9rem;
+  /* 우측 정렬. 가운데 안내 문구와 가로로 나뉜다. */
+  margin-left: auto;
+  margin-right: max(0.8rem, env(safe-area-inset-right));
+  gap: 0.35rem;
+  padding: 0 0.85rem;
+  border: 1px solid rgba(23, 23, 23, 0.55);
+  border-radius: 999px;
+  background: rgba(253, 251, 247, 0.94);
+  box-shadow: 0 6px 18px rgba(23, 23, 23, 0.12);
+  color: #171717;
+  font-size: 0.72rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  -webkit-tap-highlight-color: transparent;
+}
+.skipDance svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.skipDance:active { scale: 0.97; }
+.skipDance:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
+
 .skip {
   position: sticky;
   z-index: 10;
@@ -223,6 +273,7 @@
 
 .story[data-motion="reduce"] { height: auto; }
 .story[data-motion="reduce"] .stage,
+.story[data-motion="reduce"] .skipDance,
 .story[data-motion="reduce"] .ending { display: none; }
 .story[data-motion="reduce"] .fallback {
   display: grid;
@@ -236,6 +287,7 @@
 @media (prefers-reduced-motion: reduce) {
   .story[data-motion="pending"] { height: auto; }
   .story[data-motion="pending"] .stage,
+  .story[data-motion="pending"] .skipDance,
   .story[data-motion="pending"] .ending { display: none; }
   .story[data-motion="pending"] .fallback {
     display: grid;
