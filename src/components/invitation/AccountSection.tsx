@@ -11,7 +11,10 @@ export function AccountSection() {
     <Section label="Account" title="마음 전하실 곳">
       <Reveal>
         <p className="mb-7 text-center text-sm leading-7 text-ink-soft">
-          참석이 어려우신 분들을 위해 계좌번호를 남깁니다.
+          {/* 어르신용(`/big`)에서는 글자가 커서 세 줄로 끊어 읽히게 한다. 기본 크기는 두 줄. */}
+          참석이 어려우신 분들을 위해{" "}
+          <br className="large-type-only" />
+          계좌번호를 남깁니다.
           <br />
           너그러운 마음으로 양해 부탁드립니다.
         </p>

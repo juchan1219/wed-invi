@@ -6,7 +6,7 @@ export function Greeting() {
   return (
     <Section label="Invitation" title={wedding.greeting.title}>
       <Reveal className="text-center">
-        <div className="space-y-1 text-[0.94rem] leading-8 text-ink-soft">
+        <div className="space-y-1 text-body leading-8 text-ink-soft">
           {wedding.greeting.body.map((line, i) =>
             // 빈 문자열은 문단 사이 여백으로 쓴다.
             line === "" ? (

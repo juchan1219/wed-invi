@@ -75,7 +75,7 @@ test("the invitation leaves the guestbook section out", async () => {
   assert.equal(source.match(/<Guestbook\s*\/>/g)?.length, 1);
 });
 
-test("the account section explains itself in the requested two lines", async () => {
+test("the account section breaks into two lines normally and three in large type", async () => {
   const { AccountSection } = await import("../AccountSection");
   const dom = new JSDOM(
     renderToStaticMarkup(createElement(ToastProvider, null, createElement(AccountSection))),
@@ -85,10 +85,15 @@ test("the account section explains itself in the requested two lines", async () 
     p.textContent?.includes("참석이 어려우신"),
   )?.innerHTML;
 
+  // 기본 크기는 두 줄(`<br>` 하나만 보임), 어르신용은 세 줄.
+  // `.large-type-only` 는 기본에서 display:none 이라 줄을 만들지 않는다.
   assert.equal(
     intro,
-    "참석이 어려우신 분들을 위해 계좌번호를 남깁니다.<br>너그러운 마음으로 양해 부탁드립니다.",
+    '참석이 어려우신 분들을 위해 <br class="large-type-only">계좌번호를 남깁니다.' +
+      "<br>너그러운 마음으로 양해 부탁드립니다.",
   );
+  // 공백이 `<br>` 뒤로 가면 큰 글씨에서 둘째 줄 머리에 공백이 남는다.
+  assert.match(intro!, /위해 <br class="large-type-only">계좌/);
   dom.window.close();
 });
 

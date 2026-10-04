@@ -21,7 +21,14 @@ import type { LetterView } from "@/lib/letters";
  * 본문에는 편지 자리를 두지 않는다(2026-09-19 사용자 요청). 춤의 바로가기는 오시는 길로 이동한다.
  * 캘린더부터는 오른쪽 위 플로팅 편지 버튼(`LetterFab`)이 뜬다. 편지가 없으면 둘 다 없다.
  */
-export function Invitation({ letter }: { letter?: { recipientName: string; letters: LetterView[] } }) {
+export function Invitation({
+  letter,
+  largeType = false,
+}: {
+  letter?: { recipientName: string; letters: LetterView[] };
+  /** 어르신용(`/big`) 변형. 글자 크기는 CSS가 맡고, 여기서는 갤러리 사진 수만 줄인다. */
+  largeType?: boolean;
+}) {
   const invitation = (
     <ToastProvider>
       <MusicControl />
@@ -30,7 +37,7 @@ export function Invitation({ letter }: { letter?: { recipientName: string; lette
         <CeremonyInfo />
         <Greeting />
       </div>
-      <Gallery />
+      <Gallery largeType={largeType} />
       <MapSection />
       <AccountSection />
       <ContactSection />

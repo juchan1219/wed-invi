@@ -27,7 +27,7 @@ export function CeremonyInfo() {
                   <th
                     key={w}
                     scope="col"
-                    className={`pb-2 text-[0.7rem] font-normal ${
+                    className={`pb-2 text-weekday font-normal ${
                       i === 0 ? "text-accent" : "text-ink-faint"
                     }`}
                   >

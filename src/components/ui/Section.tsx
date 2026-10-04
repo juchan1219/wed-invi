@@ -23,7 +23,7 @@ export function Section({
       {(label || title) && (
         <Reveal className="mb-10 text-center">
           {label && (
-            <p className="text-[0.65rem] tracking-[0.3em] text-accent uppercase">
+            <p className="text-label tracking-[0.3em] text-accent uppercase">
               {label}
             </p>
           )}
