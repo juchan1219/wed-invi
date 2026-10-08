@@ -11,6 +11,21 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
+      // 색인 차단을 **비-HTML 응답까지** 넓힌다. layout.tsx의 `robots` 는 HTML
+      // 메타태그만 만들어서 `og.jpg`·`/audio/*`·`/uploads/*` 에는 적용되지 않았다.
+      // `noimageindex` 는 사진 색인을, `noarchive` 는 캐시 사본을 막는다.
+      //
+      // ⚠️ Wayback Machine 은 `noarchive` 와 robots.txt 를 **무시한다.**
+      //    이걸로 아카이브를 막았다고 적지 말 것.
+      // 뒤의 두 헤더는 최신 브라우저 기본값과 같아 실익이 거의 없다 — 의도 명시용이다.
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, noimageindex" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
     ];
   },
 

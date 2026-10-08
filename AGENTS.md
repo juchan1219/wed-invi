@@ -181,6 +181,12 @@ Supabase 무료 플랜은 **7일간 활동이 없으면 프로젝트를 정지**
 
 ## 실수하기 쉬운 지점
 
+- **Vercel Bot Protection 룰셋을 challenge 로 켜지 말 것.** `keepalive.yml` 의 맨 `curl`
+  (UA `curl/8.x`, GitHub 러너 IP)이 JS 챌린지를 받아 `/api/health` 가 실패하고, 7일 뒤
+  Supabase 가 정지해 편지·방명록이 죽는다. **AI Bots 룰셋(Deny)은 안전하다** — 실측으로
+  카카오톡 스크래퍼·Googlebot·curl 은 통과(200), AI 크롤러만 403 임을 확인했다.
+- **계좌·연락처 아코디언의 `mountOnOpen` 을 지우지 말 것.** 지우면 전화번호 6개와 계좌번호
+  4건이 다시 초기 HTML 에 평문으로 실린다(`privacyMarkup.test.tsx` 가 잡는다).
 - **개인화 URL을 공유 버튼에 넣지 말 것.** 청첩장 하단 "공유하기"는 항상 기본 주소(`/`)를 보낸다.
   현재 주소를 쓰면 하객이 자기 편지 링크를 남에게 전달하게 된다. [`ShareFooter.tsx`](src/components/invitation/ShareFooter.tsx)
 - **OG 태그에 수신자 이름을 넣지 말 것.** 같은 이유다. 개인화 문구는 관리자가 카톡 공유를 보낼 때

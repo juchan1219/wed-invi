@@ -21,10 +21,10 @@ export function ContactSection() {
     <Section label="Contact" title="연락하기">
       <Reveal>
         <div className="space-y-2">
-          <Accordion title="신랑측">
+          <Accordion title="신랑측" mountOnOpen>
             <ContactList contacts={groomSide} />
           </Accordion>
-          <Accordion title="신부측">
+          <Accordion title="신부측" mountOnOpen>
             <ContactList contacts={brideSide} />
           </Accordion>
         </div>

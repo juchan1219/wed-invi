@@ -20,10 +20,10 @@ export function AccountSection() {
         </p>
 
         <div className="space-y-2">
-          <Accordion title="신랑측 계좌번호">
+          <Accordion title="신랑측 계좌번호" mountOnOpen>
             <AccountList accounts={wedding.accounts.groom} />
           </Accordion>
-          <Accordion title="신부측 계좌번호">
+          <Accordion title="신부측 계좌번호" mountOnOpen>
             <AccountList accounts={wedding.accounts.bride} />
           </Accordion>
         </div>
