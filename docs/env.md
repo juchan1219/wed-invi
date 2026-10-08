@@ -39,7 +39,7 @@
 | `BLOB_READ_WRITE_TOKEN` | (선택) | **자동 주입** | Vercel Blob 스토어 생성 시 자동 | 편지에 이미지만 못 넣음 |
 | `NEXT_PUBLIC_KAKAO_JS_KEY` | (선택) | 직접 입력 | developers.kakao.com → 앱 키 | 카카오톡 버튼만 숨겨짐 |
 | `NEXT_PUBLIC_PHONE_*` (6개) | 직접 입력 | 직접 입력 | 본인·혼주 전화번호 | 연락처 섹션이 빔 |
-| `NEXT_PUBLIC_ACCOUNT_*` (4개) | 직접 입력 | 직접 입력 | 통장·은행 앱 | 계좌 섹션이 빔 |
+| `NEXT_PUBLIC_ACCOUNT_*` (6개) | 직접 입력 | 직접 입력 | 통장·은행 앱 | 계좌 섹션이 빔 |
 
 **자동 주입**은 Vercel에서 Blob 스토어를 만들면 Vercel이 알아서 넣어준다는 뜻입니다.
 직접 입력할 필요도 없고, 하면 안 됩니다.
@@ -274,6 +274,8 @@ git 히스토리에 영구히 남고, 공개 저장소를 긁는 수집기의 �
 | `NEXT_PUBLIC_PHONE_BRIDE` | 신부 |
 | `NEXT_PUBLIC_PHONE_BRIDE_FATHER` / `_MOTHER` | 신부 아버지 / 어머니 |
 | `NEXT_PUBLIC_ACCOUNT_GROOM` | 신랑 (하나은행) |
+| `NEXT_PUBLIC_ACCOUNT_GROOM_FATHER` | 신랑 아버지 (국민은행) |
+| `NEXT_PUBLIC_ACCOUNT_GROOM_MOTHER` | 신랑 어머니 (농협은행) |
 | `NEXT_PUBLIC_ACCOUNT_BRIDE` | 신부 (하나은행) |
 | `NEXT_PUBLIC_ACCOUNT_BRIDE_FATHER` | 신부 아버지 (국민은행) |
 | `NEXT_PUBLIC_ACCOUNT_BRIDE_MOTHER` | 신부 어머니 (농협은행) |

@@ -145,6 +145,18 @@ export const wedding = {
         number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_GROOM),
         holder: "김예찬",
       },
+      {
+        label: "아버지 김종웅",
+        bank: "국민은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_GROOM_FATHER),
+        holder: "김종웅",
+      },
+      {
+        label: "어머니 권순주",
+        bank: "농협은행",
+        number: publicValue(process.env.NEXT_PUBLIC_ACCOUNT_GROOM_MOTHER),
+        holder: "권순주",
+      },
     ]) as Account[],
     bride: withNumber([
       {
