@@ -288,6 +288,16 @@
         GitHub이 비활성화 전에 보내는 메일을 놓치지 말 것
       - 근본 해결: keepalive 를 **Vercel Cron** 으로 옮기면 GitHub 활동과 무관해진다(Hobby 하루 1회 가능)
 - [ ] 12월 초 점검 — keepalive 최근 실행이 green 인지, 워크플로가 비활성화되지 않았는지
+- [x] **Actions 실행 주기 확인 (2026-10-08 사용자 보고 "정기적으로 안 도는 것 같다")** —
+      확인 결과 **keepalive 는 매일 정상 실행 중**이다. 09-30~10-07 8일 연속 `schedule` / 전부 success,
+      워크플로 상태도 `active`. 라이브 `/api/health` 도 `{"ok":true}`
+      - 오해의 원인 둘:
+        1) 예약은 03:00 UTC(한국 정오)인데 실제 실행은 **08:53~10:03 UTC(한국 17:53~19:03)**.
+           GitHub 예약 워크플로의 알려진 지연이며 약 6~7시간 밀린다. 정오에 보면 그날 실행이 아직 없다
+        2) `ci.yml` 은 main push 때만, `migrate.yml` 은 `drizzle/**` 변경 때만 돈다(설계대로).
+           그래서 Actions 탭이 며칠씩 비어 보인다
+      - 실측값을 `keepalive.yml` 주석에 적어 두었다. 지연을 줄이려면 cron 의 분을 정시에서
+        흩으면 된다(예: `17 3 * * *`) — 아직 바꾸지 않았다
 
 ### [`src/config/admins.ts`](../src/config/admins.ts)
 
