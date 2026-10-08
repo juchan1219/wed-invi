@@ -151,8 +151,31 @@ Supabase 무료 플랜은 **7일간 활동이 없으면 프로젝트를 정지**
 - **`/api/health`를 지우거나 200 고정으로 바꾸지 말 것.** DB에 닿지 못하면 **반드시 503**이어야 한다.
 - **keepalive가 `/api/guestbook`을 두드리게 바꾸지 말 것.** 그 라우트는 DB가 죽어도 200을 돌려준다
   (하객 보호를 위한 의도적 설계). 그러면 keepalive가 영원히 green이라 정지를 못 잡는다.
-- 이 저장소는 private이라 public 저장소의 60일 무활동 cron 비활성화 정책 대상이 아니다.
-  그래도 실패 알림은 당일 확인하고, 매월 한 번 최근 실행이 green인지 점검할 것.
+- 🚨 **이 저장소는 public이다. 따라서 60일 무활동 cron 비활성화 정책의 대상이다.**
+  (2026-10-08 정정. 이전 문서는 "private이라 대상이 아니다"라고 적고 있었는데 사실과 반대였다.)
+
+  > In a public repository, scheduled workflows are automatically disabled when no
+  > repository activity has occurred in 60 days. — [GitHub Docs][gh-schedule]
+
+  **연쇄가 짧고 치명적이다.** 저장소에 60일간 아무 활동이 없으면 → keepalive cron이 꺼지고
+  → 7일 뒤 Supabase가 정지하고 → 하객이 편지·방명록에서 에러를 본다.
+  2026-10-08을 마지막 활동으로 치면 **12/07 cron 중지 → 12/14 DB 정지 → 예식(12/19) 5일 전**이다.
+
+  막는 법 (하나만 확실히 해도 된다):
+  1. **예식 전까지 60일을 넘기지 말 것.** 커밋 하나, 또는 Actions 탭에서 keepalive를
+     `Run workflow`로 수동 실행하는 것으로도 활동이 된다
+  2. GitHub이 비활성화 전에 저장소 관리자에게 메일을 보낸다 — **그 메일을 놓치지 말 것.**
+     꺼졌다면 Actions 탭에서 워크플로를 다시 켜고 한 번 수동 실행
+  3. 근본적으로 떼어내려면 keepalive를 **Vercel Cron**으로 옮기면 된다(Hobby도 하루 1회 가능).
+     그러면 GitHub 활동 여부와 무관해진다
+
+  저장소를 private으로 바꾸면 이 정책에서는 벗어나지만 **Vercel 배포가 끊긴다** —
+  소유자가 GitHub 조직(`juchan1219`)이고, Hobby 플랜은 조직 소유 private 저장소를 배포하지 않는다.
+  바꾸려면 개인 계정으로 이전하거나 Pro로 올려야 한다.
+
+  그리고 실패 알림은 당일 확인하고, 매월 한 번 최근 실행이 green인지 점검할 것.
+
+[gh-schedule]: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 
 ---
 

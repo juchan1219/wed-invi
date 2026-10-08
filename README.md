@@ -281,7 +281,10 @@ npm run dev
 
 - CI는 **`npm run build`를 돌리지 않습니다.** Vercel이 push마다 빌드하고 실패를 알려주므로, 같은 일을 두 번 하면 Actions 한도만 먹습니다. CI의 고유 가치는 유닛 테스트와 DB 통합 테스트입니다.
 - keepalive가 두드리는 `/api/health`는 DB에 `select 1`을 실행하고, 실패하면 **503**을 냅니다. `/api/guestbook`은 DB가 죽어도 하객에게 에러를 보이지 않으려고 200을 돌려주므로 keepalive 용도로 쓸 수 없습니다.
-- 이 저장소는 private이므로 GitHub의 "public 저장소 60일 무활동 시 schedule 비활성화" 정책 대상이 아닙니다. 그래도 매월 한 번 최근 실행이 green인지 확인하고 실패 알림은 당일 처리하세요.
+- 🚨 **이 저장소는 public이라 GitHub의 "60일 무활동 시 schedule 자동 비활성화" 정책 대상입니다.**
+  60일간 저장소에 아무 활동이 없으면 keepalive가 꺼지고, 7일 뒤 Supabase가 정지해 편지·방명록이 죽습니다.
+  예식 전까지 60일 공백을 만들지 마세요 — 커밋 1개나 Actions 탭의 `Run workflow` 수동 실행으로도 충분합니다.
+  매월 한 번 최근 실행이 green인지 확인하고 실패 알림은 당일 처리하세요.
 
 ---
 

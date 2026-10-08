@@ -264,8 +264,11 @@ GitHub 저장소 → **Settings** → **Secrets and variables** → **Actions** 
 
 이후 keepalive가 실패하면 워크플로가 red가 되고 GitHub이 메일을 보냅니다. **그 메일을 무시하지 마세요.**
 
-> 이 저장소는 private이므로 GitHub의 "public 저장소 60일 무활동 시 schedule 비활성화" 정책
-> 대상이 아닙니다. 그래도 매월 1일 최근 실행이 green인지 확인하고, 실패 메일은 당일 처리하세요.
+> 🚨 **이 저장소는 public 이라 GitHub의 "60일 무활동 시 schedule 자동 비활성화" 정책 대상입니다.**
+> (2026-10-08 정정 — 이전에는 private이라 대상이 아니라고 적혀 있었습니다.)
+> 60일 공백 → cron 중지 → 7일 뒤 Supabase 정지 → 편지·방명록 사망. 예식 전까지 공백을 만들지 마세요.
+> 커밋 1개나 **Run workflow** 수동 실행으로도 활동이 인정됩니다.
+> 매월 1일 최근 실행이 green인지 확인하고, 실패 메일은 당일 처리하세요.
 > `/api/health`가 503이면 Supabase에서 **Resume**한 뒤 **Run workflow**를 다시 누릅니다.
 
 ---
@@ -436,6 +439,7 @@ Vercel Hobby 플랜은 **개인·비상업 용도** 한정입니다. 청첩장�
 따라서 **신경 쓸 것은 딱 하나** — 매월 한 번 최근 실행이 green인지 확인하고 실패 메일을
 당일 처리하는 것입니다.
 
-GitHub Actions는 **월 2,000분**입니다(이 저장소는 private입니다. public이면 무제한). 세 워크플로를 합쳐도
-회당 몇 분이라 여유가 큽니다(CI가 `npm run build` 를 돌리지 않는 이유 중 하나입니다 —
-빌드는 Vercel이 이미 합니다).
+GitHub Actions 분은 **이 저장소에서는 무제한**입니다 — public 저장소의 표준 러너는 무료입니다
+(2026-10-08 정정: 이전에는 "private이라 월 2,000분"으로 적혀 있었습니다. private Free 플랜이 2,000분입니다).
+CI가 `npm run build` 를 돌리지 않는 이유는 분을 아끼기 위해서가 아니라, Vercel이 이미 하는 빌드를
+두 번 하면서 피드백만 늦어지기 때문입니다.

@@ -5,6 +5,13 @@
 # 복구 버튼을 눌러야 돌아온다. Supabase는 최근 7일 동안 매일 몇 차례의 DB 요청을
 # 유지하는 것을 권장하므로 하루 한 번 실제 DB까지 확인한다.
 #
+# 🚨 이 워크플로 자체가 꺼질 수 있다. 이 저장소는 **public** 이고, GitHub은
+#    "In a public repository, scheduled workflows are automatically disabled when no
+#     repository activity has occurred in 60 days" 정책을 적용한다.
+#    60일 무활동 → cron 중지 → 7일 뒤 Supabase 정지 → 편지·방명록 사망.
+#    2026-10-08 기준으로 오늘이 마지막 활동이면 12/07 중지 → 12/14 정지 → 예식 5일 전이다.
+#    커밋 하나 또는 아래 `Run workflow` 수동 실행으로도 활동이 인정된다. (자세히: AGENTS.md)
+#
 # 필요한 저장소 Variable (시크릿 아님 — 눈으로 확인·수정할 수 있게):
 #   SITE_URL — 예: https://wed-invi.vercel.app  (끝에 / 없이)
 #   Settings > Secrets and variables > Actions > Variables > New repository variable

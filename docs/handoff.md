@@ -81,7 +81,7 @@
 | 결정 | 왜 |
 |---|---|
 | **Neon → Supabase** | 원래 Neon을 골랐던 이유(7일 정지)를 뒤집었다. 정지되어도 데이터는 보존되고 대시보드에서 복구 가능하며, cron으로 막을 수 있고, 사용자가 그 수동 관리를 감수하기로 했다. 전체 근거는 [requirements.md 「기술 선택 근거」](requirements.md) 와 [스펙](superpowers/specs/2026-09-27-supabase-migration-design.md) |
-| **배포는 Vercel 네이티브** | Actions가 배포까지 지휘하는 방안도 검토했으나, 스키마가 완성돼 있어 순서 보장의 이득이 적고 private 저장소의 Actions 2,000분을 더 먹는다 |
+| **배포는 Vercel 네이티브** | Actions가 배포까지 지휘하는 방안도 검토했으나, 스키마가 완성돼 있어 순서 보장의 이득이 적고 빌드를 두 번 하게 된다 (2026-10-08 정정: 예전엔 "private 저장소의 2,000분"을 이유로 적었으나 이 저장소는 public 이라 분은 무제한이다) |
 | **CI에서 `npm run build` 안 함** | Vercel이 매 push마다 빌드하고 실패를 알려준다. 두 번 할 이유가 없다 |
 | **keepalive는 `/api/health`** | `/api/guestbook` 은 DB가 죽어도 200을 돌려준다(하객 보호용 의도적 설계). 그걸 두드리면 워크플로가 영원히 초록이라 정지를 못 잡는다 |
 | **마이그레이션은 session pooler** | Supabase 공식 문서는 direct 연결을 권하지만 direct는 IPv6 전용이라 GitHub 러너·Vercel에서 못 붙는다. shared pooler는 모든 플랜에서 IPv4다 |

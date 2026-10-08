@@ -85,6 +85,14 @@ keepalive가 영원히 green이 된다.
 - `export const dynamic = "force-dynamic"` 과 `Cache-Control: no-store` —
   CDN 캐시가 응답하면 DB를 건드리지 않아 keepalive 목적이 깨진다
 
+> **⚠️ 2026-10-08 정정 (원문은 기록으로 남겨 둠)**
+> 아래 "저장소가 private" 전제는 **사실과 다릅니다.** 이 저장소는 public 입니다.
+> - Actions 분: public 저장소의 표준 러너는 **무료·무제한**입니다(월 2,000분은 private Free 플랜).
+>   따라서 "2,000분 한도" 를 근거로 든 부분은 성립하지 않습니다. 다만 결론(Actions에서
+>   빌드하지 않는다)은 중복 빌드·피드백 지연이라는 다른 이유로 그대로 유효합니다.
+> - 더 중요한 영향: public 저장소는 **60일 무활동 시 스케줄 워크플로가 자동 비활성화**됩니다.
+>   keepalive 가 멈추면 7일 뒤 Supabase 가 정지합니다. 대응은 [AGENTS.md](../../../AGENTS.md) 참고.
+
 ### 배포 — Vercel 네이티브 유지
 
 `main` push → Vercel이 자동 배포한다. GitHub Actions는 배포하지 않는다.
