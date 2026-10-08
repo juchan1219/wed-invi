@@ -170,38 +170,31 @@
 
 /*
  * 춤 구간 위에 떠 있는 두 개의 pill.
- *   `.skipDance` — **우측 하단**, 춤을 건너뛰어 청첩장 본문으로 (2026-10-05 사용자 요청)
- *   `.skip`      — 우상단, 오시는 길로. 음악 토글 한 칸 왼쪽
+ *   `.skipDance` — **무대 안** 우측 하단. 춤을 건너뛰어 청첩장 본문으로 (2026-10-05 사용자 요청)
+ *   `.skip`      — 무대 밖 sticky, 우상단. 오시는 길로. 음악 토글 한 칸 왼쪽
  *
  * 셋을 우상단에 나란히 놓으면 320px 에서 빽빽해지고 translateX 오프셋을 전부
  * 다시 계산해야 해서, 건너뛰기는 아래로 내렸다.
  *
+ * ⚠️ `.skipDance` 를 `.skip` 처럼 **형제 sticky 로 두지 말 것.** sticky 는 컨테이닝
+ *    블록(`.story`, 500svh) 바닥에 주차되므로, 춤이 끝나면 그 지점이 곧 캘린더 최상단이라
+ *    버튼이 `오시는 길` 뒤에 겹쳐 남는다(2026-10-08 사용자 보고). `.progress`·`.scrollHint`
+ *    처럼 **무대 안 absolute** 로 두면 무대의 `overflow: hidden` 에 잘리고 함께 사라진다.
+ *
  * 규칙을 합치지 않고 따로 쓴 이유: `.skip` 한 규칙 안에 `top` 과 `transform` 이
  * 함께 있는지를 `contentRegression.test.ts` 가 검사한다. 공통 속성을 빼내면 그게 깨진다.
- *
- * 둘 다 `margin-bottom: -2.9rem` 이라 세로 공간을 차지하지 않는다. 둘 다 우측 정렬이고
- * sticky 의 `top` 만 다르다 — 하나는 화면 위, 하나는 화면 아래.
  */
 .skipDance {
-  position: sticky;
-  z-index: 10;
-  /*
-   * 화면 **우측 하단**. sticky 의 top 을 화면 높이에서 뺀 값으로 주면 구간 내내
-   * 아래쪽에 붙어 있는다(.stage 안의 absolute 가 아니라 형제로 두는 이유는,
-   * .stage 가 pending 동안 aria-hidden 이어서 링크가 스크린리더에서 빠지기 때문).
-   *
-   * 아래 여유는 가운데 "아래로 스크롤" 안내(.scrollHint)와 같은 식으로 계산한다 —
-   * iOS Safari 하단 툴바는 safe-area 에 잡히지 않아 맨 아래에 붙이면 가려진다.
-   */
-  top: calc(100svh - 2.9rem - max(2.75rem, calc(env(safe-area-inset-bottom) + 1.75rem)));
+  position: absolute;
+  z-index: 5;
+  /* 아래 여유는 가운데 "아래로 스크롤" 안내(.scrollHint)와 같은 식으로 맞춘다 —
+     iOS Safari 하단 툴바는 safe-area 에 잡히지 않아 맨 아래에 붙이면 가려진다. */
+  right: max(0.8rem, env(safe-area-inset-right));
+  bottom: max(2.75rem, calc(env(safe-area-inset-bottom) + 1.75rem));
   display: flex;
   align-items: center;
   width: max-content;
   height: 2.9rem;
-  margin-bottom: -2.9rem;
-  /* 우측 정렬. 가운데 안내 문구와 가로로 나뉜다. */
-  margin-left: auto;
-  margin-right: max(0.8rem, env(safe-area-inset-right));
   gap: 0.35rem;
   padding: 0 0.85rem;
   border: 1px solid rgba(23, 23, 23, 0.55);
@@ -214,6 +207,17 @@
   backdrop-filter: blur(8px);
   -webkit-tap-highlight-color: transparent;
 }
+/* 무대 고정이 풀리면(= 캘린더가 보이기 시작하면) 즉시 감춘다. 무대 안 absolute 라
+   스크롤과 함께 올라가기는 하지만, 그 사이 약 150px 구간 동안 캘린더와 같이 보였다.
+   `--dance-exit` 트윈의 트리거가 `start: "bottom bottom"` — 정확히 그 순간이다.
+   visibility 까지 꺼야 초점·클릭에서도 빠진다(.letterSlot 과 같은 관용구). */
+.stage[data-exiting="yes"] .skipDance {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease-out, visibility 0s linear 0.18s;
+}
+
 .skipDance svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .skipDance:active { scale: 0.97; }
 .skipDance:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
@@ -273,8 +277,10 @@
 
 .story[data-motion="reduce"] { height: auto; }
 .story[data-motion="reduce"] .stage,
-.story[data-motion="reduce"] .skipDance,
 .story[data-motion="reduce"] .ending { display: none; }
+/* 하이드레이션 전에는 무대가 aria-hidden 이다. 포커스 가능한 링크를 그 안에 노출하지 않는다.
+   (`reduce` 는 무대 자체가 display:none 이라 자식도 함께 사라진다.) */
+.story[data-motion="pending"] .skipDance { display: none; }
 .story[data-motion="reduce"] .fallback {
   display: grid;
   gap: 1rem;
@@ -287,7 +293,6 @@
 @media (prefers-reduced-motion: reduce) {
   .story[data-motion="pending"] { height: auto; }
   .story[data-motion="pending"] .stage,
-  .story[data-motion="pending"] .skipDance,
   .story[data-motion="pending"] .ending { display: none; }
   .story[data-motion="pending"] .fallback {
     display: grid;

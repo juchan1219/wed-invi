@@ -48,16 +48,6 @@ export function WeddingDance() {
       data-motion={motionMode}
       aria-label="예찬과 주은의 웨딩 댄스"
     >
-      {/* 춤을 건너뛰어 청첩장 본문으로. 우측 하단 — 우상단에는 오시는 길·음악 토글이 있다.
-          위치는 CSS(.skipDance)가 정하고, 탭 순서에서 먼저 오도록 `오시는 길` 보다 앞에 둔다. */}
-      <a className={styles.skipDance} href="#invitation-content">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M5 7l7 7 7-7" />
-          <path d="M5 14l7 7 7-7" />
-        </svg>
-        <span>건너뛰기</span>
-      </a>
-
       <a className={styles.skip} href="#location">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
@@ -113,6 +103,16 @@ export function WeddingDance() {
           {firstAnnouncement.text}
         </p>
         <p className={styles.scrollHint} aria-hidden="true" data-dance-hint><span>아래로 스크롤</span><i /></p>
+        {/* 춤을 건너뛰어 청첩장 본문으로. **무대 안에** 두어야 한다 —
+            형제로 두면 sticky 가 `.story` 바닥에 주차돼 캘린더 최상단에 남는다(2026-10-08 사용자 보고).
+            `.progress`·`.scrollHint` 와 같은 패턴으로 무대가 사라질 때 함께 사라진다. */}
+        <a className={styles.skipDance} href="#invitation-content">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 7l7 7 7-7" />
+            <path d="M5 14l7 7 7-7" />
+          </svg>
+          <span>건너뛰기</span>
+        </a>
       </div>
 
       <div className={styles.fallback} aria-label="웨딩 댄스 장면">

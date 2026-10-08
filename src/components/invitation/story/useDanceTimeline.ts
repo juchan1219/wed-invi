@@ -155,7 +155,12 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
         gsap.to(exit, {
           amount: 1,
           ease: "none",
-          onUpdate: () => stageElement.style.setProperty("--dance-exit", exit.amount.toFixed(4)),
+          onUpdate: () => {
+            stageElement.style.setProperty("--dance-exit", exit.amount.toFixed(4));
+            // 고정이 풀리는 순간 = 캘린더가 보이기 시작하는 순간. 건너뛰기 버튼을 그때 감춘다
+            // (2026-10-08 사용자 보고: 캘린더 최상단에 버튼이 남아 있었다).
+            stageElement.dataset.exiting = exit.amount > 0 ? "yes" : "no";
+          },
           scrollTrigger: {
             trigger: rootElement,
             start: "bottom bottom",

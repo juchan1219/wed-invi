@@ -315,6 +315,14 @@
       어머니 권순주(농협). 환경변수 `NEXT_PUBLIC_ACCOUNT_GROOM_FATHER`·`_MOTHER` 신규.
       이제 신랑측 3건·신부측 3건. 번호는 소스에 없고 Vercel Production 에 등록
 
+- [x] **건너뛰기 버튼이 캘린더 최상단에 남던 문제 (2026-10-08 사용자 보고)** —
+      형제 `sticky` 는 `.story`(500svh) 바닥에 주차되는데 그 지점이 곧 캘린더 상단이었다.
+      무대 안 `absolute` 로 옮기고, 무대가 밀려 올라가는 150px 구간도 `data-exiting` 으로 감췄다
+      - 헤드리스 Chrome 50px 간격 스윕(390×844): 캘린더가 보이는 **모든** 지점에서 버튼 안 보임.
+        춤 중에는 그대로 보임
+      - 상태 확인: 춤 중 `visible/1/auto`, 캘린더 `hidden/0/none`, 역스크롤 복귀 `visible/1/auto`
+      - 클릭 → 청첩장 본문 top 0px 도착
+
 ### [`src/config/admins.ts`](../src/config/admins.ts)
 
 - [ ] 필요하면 작성자 이름 변경 (기본: 예찬 / 주은)
