@@ -171,7 +171,7 @@ test("the invitation document clips accidental horizontal overflow", () => {
 
 test("the dance shortcut shares the music control's top row", () => {
   const css = readFileSync(new URL("./WeddingDance.module.css", import.meta.url), "utf8");
-  const skipRule = css.match(/\.skip\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const skipRule = css.match(/^\.skip\s*\{([\s\S]*?)\}/m)?.[1] ?? "";
 
   assert.match(skipRule, /top:\s*max\(0\.8rem,\s*env\(safe-area-inset-top\)\)/);
   assert.match(skipRule, /transform:\s*translateX\(/);

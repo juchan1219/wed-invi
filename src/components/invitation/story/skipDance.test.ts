@@ -52,7 +52,7 @@ test("the skip control sits at the bottom right, clear of the scroll hint", () =
   assert.match(rule, /bottom:\s*max\(2\.75rem,\s*calc\(env\(safe-area-inset-bottom\)\s*\+\s*1\.75rem\)\)/);
 
   // 우상단 pill 은 그대로여야 한다 — 배치 계산을 건드리지 않았는지 확인한다.
-  const skipTop = css().match(/\.skip\s*\{([^}]*)\}/)?.[1] ?? "";
+  const skipTop = css().match(/^\.skip\s*\{([^}]*)\}/m)?.[1] ?? "";
   assert.match(skipTop, /position:\s*sticky/);
   assert.match(skipTop, /top:\s*max\(0\.8rem,\s*env\(safe-area-inset-top\)\)/);
   assert.match(skipTop, /transform:\s*translateX\(/);
@@ -64,20 +64,26 @@ test("the skip control sits at the bottom right, clear of the scroll hint", () =
  * `--dance-exit` 트윈의 트리거가 `start: "bottom bottom"` — 캘린더가 보이기 시작하는
  * 바로 그 순간이라, 같은 타이밍에 세팅되는 `data-exiting` 으로 감춘다.
  */
-test("the skip control hides the moment the stage starts leaving", () => {
+test("both floating pills hide the moment the stage starts leaving", () => {
+  // `오시는 길` 도 같은 이유로 캘린더 최상단에 붙어 따라왔다(2026-10-08 두 번째 보고).
   assert.match(
     css(),
-    /\.stage\[data-exiting="yes"\]\s*\.skipDance\s*\{[^}]*visibility:\s*hidden/,
+    /\.story\[data-exiting="yes"\]\s*\.skipDance,\s*\n\s*\.story\[data-exiting="yes"\]\s*\.skip\s*\{/,
+    "오시는 길 pill 도 함께 숨겨야 합니다",
+  );
+  assert.match(
+    css(),
+    /\.story\[data-exiting="yes"\][\s\S]{0,80}visibility:\s*hidden/,
     "data-exiting 일 때 건너뛰기를 숨기는 규칙이 없습니다",
   );
-  const rule = css().match(/\.stage\[data-exiting="yes"\]\s*\.skipDance\s*\{([^}]*)\}/)?.[1] ?? "";
+  const rule = css().match(/\.story\[data-exiting="yes"\][^{]*\{([^}]*)\}/)?.[1] ?? "";
   // opacity 만으로는 초점·클릭이 남는다.
   assert.match(rule, /opacity:\s*0/);
   assert.match(rule, /pointer-events:\s*none/);
 
   // 플래그를 세우는 쪽도 함께 고정한다 — 한쪽만 지우면 조용히 깨진다.
   const hook = readFileSync(new URL("./useDanceTimeline.ts", import.meta.url), "utf8");
-  assert.match(hook, /dataset\.exiting\s*=/, "useDanceTimeline 이 data-exiting 을 세우지 않습니다");
+  assert.match(hook, /rootElement\.dataset\.exiting\s*=/, "useDanceTimeline 이 루트에 data-exiting 을 세우지 않습니다 — .skip 은 무대 밖이라 루트여야 합니다");
 });
 
 test("the skip control is absent when there is no dance to skip", () => {

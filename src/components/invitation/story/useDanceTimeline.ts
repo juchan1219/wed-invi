@@ -157,9 +157,11 @@ export function useDanceTimeline({ root, stage, actor, enabled }: DanceTimelineO
           ease: "none",
           onUpdate: () => {
             stageElement.style.setProperty("--dance-exit", exit.amount.toFixed(4));
-            // 고정이 풀리는 순간 = 캘린더가 보이기 시작하는 순간. 건너뛰기 버튼을 그때 감춘다
-            // (2026-10-08 사용자 보고: 캘린더 최상단에 버튼이 남아 있었다).
-            stageElement.dataset.exiting = exit.amount > 0 ? "yes" : "no";
+            // 고정이 풀리는 순간 = 캘린더가 보이기 시작하는 순간. 떠 있는 두 버튼을 그때 감춘다
+            // (2026-10-08 사용자 보고: 건너뛰기·오시는 길이 캘린더 최상단에 붙어 따라왔다).
+            // **무대가 아니라 루트에 둔다** — `오시는 길`은 무대 밖 형제라 무대 선택자로는 못 잡는다.
+            // 이 훅은 `motionMode === "full"` 일 때만 돌므로 동작 줄이기에서는 플래그가 서지 않는다.
+            rootElement.dataset.exiting = exit.amount > 0 ? "yes" : "no";
           },
           scrollTrigger: {
             trigger: rootElement,

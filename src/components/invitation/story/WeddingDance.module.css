@@ -197,21 +197,31 @@
   height: 2.9rem;
   gap: 0.35rem;
   padding: 0 0.85rem;
-  border: 1px solid rgba(23, 23, 23, 0.55);
+  /* 유튜브의 건너뛰기처럼 반투명 검정 + 흰 글자 (2026-10-08 사용자 요청).
+     `오시는 길`·음악 토글의 아이보리 체계와 일부러 대비시켜 다른 성격의 동작임을 보인다.
+     알파 0.6: 아이보리(#fdfbf7) 위에서 흰 글자 대비 4.80:1 — WCAG AA(4.5:1)를 넘기는
+     **사실상의 하한**이다(0.55 는 4.07 로 미달). 글자가 11.5px 라 여유가 크지 않으므로
+     더 투명하게 하려면 `text-shadow` 로 가독성을 보강해야 한다.
+     테두리는 검은 캐릭터 위에 겹칠 때 윤곽이 사라지지 않도록 옅은 흰색으로 둔다. */
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
-  background: rgba(253, 251, 247, 0.94);
-  box-shadow: 0 6px 18px rgba(23, 23, 23, 0.12);
-  color: #171717;
+  background: rgba(23, 23, 23, 0.6);
+  box-shadow: 0 6px 18px rgba(23, 23, 23, 0.22);
+  color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
   backdrop-filter: blur(8px);
   -webkit-tap-highlight-color: transparent;
 }
-/* 무대 고정이 풀리면(= 캘린더가 보이기 시작하면) 즉시 감춘다. 무대 안 absolute 라
-   스크롤과 함께 올라가기는 하지만, 그 사이 약 150px 구간 동안 캘린더와 같이 보였다.
+/* 무대 고정이 풀리면(= 캘린더가 보이기 시작하면) 떠 있는 두 버튼을 즉시 감춘다.
    `--dance-exit` 트윈의 트리거가 `start: "bottom bottom"` — 정확히 그 순간이다.
-   visibility 까지 꺼야 초점·클릭에서도 빠진다(.letterSlot 과 같은 관용구). */
-.stage[data-exiting="yes"] .skipDance {
+   visibility 까지 꺼야 초점·클릭에서도 빠진다(.letterSlot 과 같은 관용구).
+
+   ⚠️ 플래그는 `.story`(루트)에 선다. `.skip` 은 무대 **밖** 형제라 무대 선택자로는
+      못 잡는다. 둘 다 sticky/absolute 로 떠 있어서, 감추지 않으면 `.story` 바닥에
+      주차돼 캘린더 최상단에 붙어 따라온다(2026-10-08 사용자 보고 2건). */
+.story[data-exiting="yes"] .skipDance,
+.story[data-exiting="yes"] .skip {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -220,7 +230,8 @@
 
 .skipDance svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .skipDance:active { scale: 0.97; }
-.skipDance:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
+/* 어두운 배경이라 검은 초점 테두리는 보이지 않는다. 흰색으로 바꾼다. */
+.skipDance:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 5px rgba(23, 23, 23, 0.55); }
 
 .skip {
   position: sticky;
