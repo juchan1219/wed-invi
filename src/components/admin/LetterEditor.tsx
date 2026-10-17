@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Bold, Heading2, ImagePlus, Italic, Link2, List, Quote } from "lucide-react";
 import { wedding } from "@/config/wedding";
 import { adminLabel, type AdminId } from "@/config/admins";
 import { copyText } from "@/lib/clipboard";
@@ -366,29 +367,38 @@ function Toolbar(props: {
   onImage: () => void;
   imageBusy: boolean;
 }) {
-  const items: [string, () => void][] = [
-    ["굵게", props.onBold],
-    ["기울임", props.onItalic],
-    ["제목", props.onHeading],
-    ["인용", props.onQuote],
-    ["목록", props.onList],
-    ["링크", props.onLink],
-    ["이미지", props.onImage],
+  const items = [
+    { label: "굵게", icon: Bold, onClick: props.onBold },
+    { label: "기울임", icon: Italic, onClick: props.onItalic },
+    { label: "제목", icon: Heading2, onClick: props.onHeading },
+    { label: "인용", icon: Quote, onClick: props.onQuote },
+    { label: "목록", icon: List, onClick: props.onList },
+    { label: "링크", icon: Link2, onClick: props.onLink },
+    { label: "이미지", icon: ImagePlus, onClick: props.onImage },
   ];
 
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
-      {items.map(([label, onClick]) => (
-        <button
-          key={label}
-          type="button"
-          onClick={onClick}
-          disabled={label === "이미지" && props.imageBusy}
-          className="rounded-md border border-line px-2.5 py-1.5 text-xs text-ink-soft active:bg-paper-deep disabled:cursor-wait disabled:opacity-50"
-        >
-          {label}
-        </button>
-      ))}
+    <div role="group" aria-label="편지 서식 도구" className="mt-3 grid grid-cols-4 gap-1.5 rounded-xl border border-line bg-paper-deep/60 p-1.5 sm:grid-cols-7">
+      {items.map(({ label, icon: Icon, onClick }) => {
+        const isImage = label === "이미지";
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={onClick}
+            aria-label={isImage ? "이미지 업로드" : label}
+            disabled={isImage && props.imageBusy}
+            className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg border px-1 text-ink-soft shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent active:bg-accent/15 disabled:cursor-wait disabled:opacity-50 ${
+              isImage
+                ? "col-span-2 border-accent/20 bg-accent/10 text-accent hover:bg-accent/15 sm:col-span-1"
+                : "border-line/70 bg-paper hover:border-accent/30 hover:bg-paper-deep"
+            }`}
+          >
+            <Icon aria-hidden="true" size={20} strokeWidth={2.1} />
+            <span className="text-xs font-medium leading-tight">{label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
