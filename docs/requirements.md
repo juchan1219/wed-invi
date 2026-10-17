@@ -566,7 +566,7 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
 요구: Supabase 무료 프로젝트가 7일 무활동으로 정지되지 않도록 GitHub Actions가 하루 두 번
 **최종 `/api/health` 응답까지** 확인해야 한다. 운영 `SITE_URL`의 루트 도메인은 `www`로 308
 리다이렉트되므로, 최초 3xx만 성공으로 보고 끝나면 안 된다. 워크플로는 리다이렉트를 따라가
-DB의 `select 1`까지 실행하고, 최종 응답이 2xx가 아니면 red가 되어야 한다.
+DB의 `select 1`까지 실행하고, 최종 응답이 HTTP 200과 JSON `{"ok":true}`가 아니면 red가 되어야 한다.
 
 2026-10-17 장애에서는 기존 `curl --fail`이 308을 실패로 취급하지 않고 리다이렉트도 따라가지 않아,
 Keepalive #5~#22가 실제 DB를 건드리지 않은 채 모두 green이었다. 그 결과 Supabase가 7일 무활동으로
@@ -590,7 +590,7 @@ JSON `{"ok":true}`를 모두 확인한 경우에만 green이어야 한다.
 | 최종 응답만 판정 | ✅ `curl --location` 뒤 실제 최종 HTTP 코드를 캡처해 200만 허용 |
 | 진짜 health 응답만 판정 | ✅ `jq`로 JSON 객체 한 개의 `ok:true` 확인. 200 HTML·`ok:false` 거부 |
 | 잘못된 green 회귀 방지 | ✅ 실제 워크플로 스크립트 테스트에서 최종 302·빈 204·200 HTML·`ok:false`를 실패로 확인 |
-| 운영 워크플로 검증 | 배포 후 push 트리거 실행 결과 확인 예정 |
+| 운영 워크플로 검증 | ✅ `fb2f4dc` push로 Keepalive #25의 `/api/health 호출` 단계 success, 실제 로그에 `{"ok":true}`와 `✓ DB가 응답했습니다.` 확인. 같은 push의 CI #19에서 DB 통합 테스트 단계 success |
 
 ### Vercel + Supabase
 

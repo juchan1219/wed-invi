@@ -379,9 +379,10 @@
 - [x] **Keepalive 수정 배포 확인** — 2026-10-18 `a917d3a`를 `main`에 push. push로 자동 실행된
       Keepalive #23과 그 안의 `/api/health 호출` 단계가 success이고, 루트 도메인의 308을 따라간
       최종 운영 `/api/health` 응답도 200임을 확인
-- [ ] **Keepalive 성공 판정 강화** — 리다이렉트 후 최종 HTTP 200과 JSON `{"ok":true}`를
-      모두 확인한다. 최종 3xx, 빈 204, 200 HTML, `ok:false`는 작업 실패로 처리하고
-      실제 워크플로 스크립트 회귀 테스트와 운영 실행에서 확인한다.
+- [x] **Keepalive 성공 판정 강화 (2026-10-18)** — 리다이렉트 후 최종 HTTP 200과 JSON `{"ok":true}`를
+      모두 확인한다. 실제 워크플로 스크립트 테스트에서 최종 302·빈 204·200 HTML·`ok:false`가
+      실패하는 것을 수정 전 RED → 수정 후 GREEN으로 확인. `fb2f4dc` push로 실행된
+      Keepalive #25의 `/api/health 호출` 단계가 success이고 로그에 `{"ok":true}`가 출력됐다.
 - [x] **관리자 로그인 편의 보강** — 기존 30일 자동 로그인 쿠키를 유지하고 Chrome 등
       비밀번호 관리자가 인식하는 표준 username/password 자동완성 필드 추가. 비밀번호는 코드에 저장하지 않음
 - [x] **관리자 로그인 진행 상태 (2026-09-30 사용자 보고)** — 요청 중 버튼 안에 spinner와 `확인 중...`을 표시하고

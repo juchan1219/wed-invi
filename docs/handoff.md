@@ -21,6 +21,9 @@ green이었지만 루트 도메인의 `www` 308을 따라가지 않아 실제 DB
 09:17·21:17 KST 하루 두 번으로 늘리고, workflow 변경 push 시 즉시 검증되게 했다.
 Supabase restoration 완료와 운영 health 200 복귀도 확인했다. 수정 커밋 `a917d3a`를 `main`에
 push했고, 그 push로 실행된 Keepalive #23의 `/api/health 호출` 단계가 success인 것도 확인했다.
+추가로 `fb2f4dc`에서 최종 HTTP 200과 JSON `{"ok":true}`를 모두 확인하도록 강화했고,
+Keepalive #25의 실제 로그에서 성공 응답을 확인했다. 최종 302·빈 204·200 HTML·`ok:false`는
+회귀 테스트에서 실패로 판정된다.
 
 ---
 
@@ -58,6 +61,7 @@ push했고, 그 push로 실행된 Keepalive #23의 `/api/health 호출` 단계�
 | **Keepalive 수정 배포** | `a917d3a`를 `main`에 push. push 트리거 Keepalive #23 success |
 | **실제 DB 호출 단계** | Keepalive #23의 `/api/health 호출` 단계 completed/success |
 | **운영 health** | 루트 도메인의 308을 따라간 최종 `/api/health` 응답 200 |
+| **엄격한 성공 판정** | `fb2f4dc` push 트리거 Keepalive #25 success. 로그에 `{"ok":true}`와 `✓ DB가 응답했습니다.` 출력 |
 
 ### 남은 것
 
