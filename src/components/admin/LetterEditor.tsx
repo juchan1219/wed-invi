@@ -20,6 +20,7 @@ export type LetterDraft = {
 };
 
 type Tab = "write" | "preview";
+type ImageUploadStage = "processing" | "uploading";
 
 export function LetterEditor({ initial }: { initial?: LetterDraft }) {
   const router = useRouter();
@@ -31,6 +32,7 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
   const [body, setBody] = useState(initial?.body ?? "");
   const [tab, setTab] = useState<Tab>("write");
   const [saving, setSaving] = useState(false);
+  const [imageUploadStage, setImageUploadStage] = useState<ImageUploadStage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedToken, setSavedToken] = useState<string | null>(initial?.token ?? null);
 
@@ -135,11 +137,12 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
     const file = event.target.files?.[0];
     // 같은 파일을 다시 골라도 change가 발생하도록 값을 비운다.
     event.target.value = "";
-    if (!file) return;
+    if (!file || imageUploadStage) return;
 
-    toast("이미지를 올리는 중...");
+    setImageUploadStage("processing");
     try {
       const resized = await resizeImage(file);
+      setImageUploadStage("uploading");
       const form = new FormData();
       form.append("file", resized.file);
       form.append("width", String(resized.width));
@@ -159,6 +162,8 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
       toast("이미지를 넣었습니다");
     } catch (error) {
       toast(error instanceof ImageTooLargeError ? error.message : "이미지를 처리하지 못했습니다");
+    } finally {
+      setImageUploadStage(null);
     }
   }
 
@@ -221,6 +226,21 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
         </span>
       </div>
 
+      {imageUploadStage && (
+        <div role="status" aria-live="polite" className="mt-3 flex items-center gap-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-3 text-accent">
+          <span aria-hidden="true" className="size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">
+              {imageUploadStage === "processing" ? "이미지 최적화 중…" : "이미지 업로드 중…"}
+            </p>
+            <p className="mt-0.5 text-xs opacity-80">완료되면 본문에 자동으로 추가됩니다.</p>
+          </div>
+          <span className="shrink-0 text-xs tabular-nums opacity-75">
+            {imageUploadStage === "processing" ? "1 / 2" : "2 / 2"}
+          </span>
+        </div>
+      )}
+
       {tab === "write" ? (
         <>
           <Toolbar
@@ -231,6 +251,7 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
             onList={() => insertAtCursor("\n- ")}
             onLink={() => wrapSelection("[", "](https://)")}
             onImage={() => fileInputRef.current?.click()}
+            imageBusy={imageUploadStage !== null}
           />
           <textarea
             ref={textareaRef}
@@ -245,6 +266,7 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
             type="file"
             accept="image/jpeg,image/png,image/webp,image/avif"
             onChange={handleImagePick}
+            disabled={imageUploadStage !== null}
             className="hidden"
           />
         </>
@@ -276,7 +298,7 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving || name.length === 0 || phoneLast4.length !== 4 || body.trim().length === 0}
+          disabled={saving || imageUploadStage !== null || name.length === 0 || phoneLast4.length !== 4 || body.trim().length === 0}
           className="flex-1 rounded-lg bg-ink py-3 text-sm text-paper disabled:opacity-40"
         >
           {saving ? "저장 중..." : "저장"}
@@ -342,6 +364,7 @@ function Toolbar(props: {
   onList: () => void;
   onLink: () => void;
   onImage: () => void;
+  imageBusy: boolean;
 }) {
   const items: [string, () => void][] = [
     ["굵게", props.onBold],
@@ -360,7 +383,8 @@ function Toolbar(props: {
           key={label}
           type="button"
           onClick={onClick}
-          className="rounded-md border border-line px-2.5 py-1.5 text-xs text-ink-soft active:bg-paper-deep"
+          disabled={label === "이미지" && props.imageBusy}
+          className="rounded-md border border-line px-2.5 py-1.5 text-xs text-ink-soft active:bg-paper-deep disabled:cursor-wait disabled:opacity-50"
         >
           {label}
         </button>

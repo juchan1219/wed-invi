@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { useMemo, useState } from "react";
 import { ADMINS, adminLabel } from "@/config/admins";
 import type { RecipientRow } from "@/lib/admin-letters";
@@ -106,24 +106,6 @@ function RecipientCard({ recipient }: { recipient: SerializedRecipient }) {
             {recipient.name}
             <span className="ml-2 text-xs text-ink-faint">···{recipient.phoneLast4}</span>
           </p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {ADMINS.map((admin) => {
-              const written = recipient.authors.includes(admin.id);
-              return (
-                <Link
-                  key={admin.id}
-                  href={`/admin/letters/${recipient.token}?author=${admin.id}`}
-                  className={`rounded-full px-2.5 py-1 text-[0.7rem] ${
-                    written
-                      ? "bg-accent/15 text-accent"
-                      : "border border-dashed border-line text-ink-faint"
-                  }`}
-                >
-                  {admin.label} {written ? "✓" : "쓰기"}
-                </Link>
-              );
-            })}
-          </div>
         </div>
 
         <span
@@ -137,9 +119,49 @@ function RecipientCard({ recipient }: { recipient: SerializedRecipient }) {
         </span>
       </div>
 
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {ADMINS.map((admin) => {
+          const written = recipient.authors.includes(admin.id);
+          return (
+            <Link
+              key={admin.id}
+              href={`/admin/letters/${recipient.token}?author=${admin.id}`}
+              aria-label={`${admin.label} 편지 ${written ? "열기" : "쓰기"}`}
+              className={`group flex min-h-14 items-center justify-between gap-1 rounded-lg border px-3 py-2 text-left shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.98] ${
+                written
+                  ? "border-accent/30 bg-accent/10 text-accent hover:bg-accent/20"
+                  : "border-line bg-paper text-ink-soft hover:border-accent/40 hover:bg-paper-deep"
+              }`}
+            >
+              <RecipientLetterLinkContent label={admin.label} written={written} />
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="mt-3">
         <ShareButtons token={recipient.token} name={recipient.name} />
       </div>
     </li>
+  );
+}
+
+function RecipientLetterLinkContent({ label, written }: { label: string; written: boolean }) {
+  const { pending } = useLinkStatus();
+
+  return (
+    <>
+      <span className="min-w-0 text-xs leading-tight">
+        <span className="block opacity-75">{label} </span>
+        <span className="mt-0.5 block font-semibold" role={pending ? "status" : undefined}>
+          {pending ? "불러오는 중…" : written ? "편지 열기" : "편지 쓰기"}
+        </span>
+      </span>
+      <span aria-hidden="true" className="shrink-0 text-base transition-transform group-hover:translate-x-0.5">
+        {pending ? (
+          <span className="block size-4 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
+        ) : "→"}
+      </span>
+    </>
   );
 }
