@@ -1,6 +1,6 @@
 # 인수인계 — 배포 진행 상황
 
-**마지막 갱신: 2026-09-30 · 예식 D-80 (2026-12-19 12:30 KST)**
+**마지막 갱신: 2026-10-18 · 예식 D-62 (2026-12-19 12:30 KST)**
 
 지금 하고 있는 일은 **배포**다. 코드는 사실상 준비돼 있고, 남은 것은 대부분
 **콘솔 클릭과 값 등록**이다. 이 문서는 "지금 어디까지 왔고 다음에 뭘 누르면 되는지"만 적는다.
@@ -15,9 +15,12 @@
 
 새 Vercel 계정의 `burgund32-4178/wed-invi`가 기준 프로젝트다. 기존 `juchan0702` Supabase DB,
 서울 Public Vercel Blob, 새 Cloudflare 계정과 `주은예찬.com`을 모두 연결했다.
-공개 주소 `https://www.주은예찬.com`의 홈·관리자·DB health가 정상이고, GitHub Actions의
-마이그레이션과 keepalive도 green이다. keepalive는 매일 12:00 KST에 실행된다. 관리자 로그인은
-30일 세션과 브라우저 비밀번호 저장을 지원하며, OG는 갤러리 첫 장 중심 크롭·favicon은 `💍`이다.
+2026-10-17 Supabase가 7일 무활동으로 정지되어 `/admin`이 500을 반환했다. Keepalive는 매일
+green이었지만 루트 도메인의 `www` 308을 따라가지 않아 실제 DB를 깨우지 못한 것이 원인이었다.
+로컬에서는 `curl --location --fail` 수정과 실제 workflow 실행 회귀 테스트까지 완료했다. 정기 실행도
+09:17·21:17 KST 하루 두 번으로 늘리고, workflow 변경 push 시 즉시 검증되게 했다.
+Supabase restoration 완료와 운영 health 200 복귀도 확인했다. `main` push와 수정된 Keepalive
+수동 실행 확인이 남았다.
 
 ---
 
@@ -50,6 +53,7 @@
 
 ### 남은 것
 
+- **최우선:** 이 수정 `main` push → Keepalive 수동 실행 → 로그의 `✓ DB가 응답했습니다.` 확인
 - **카카오 개발자 앱** 생성 + JavaScript 키와 플랫폼 Web 도메인 등록
 - 실제 사진으로 **Vercel Blob 업로드** 확인
 - 지도 앱·공유·카카오톡·캘린더 등 실기기 확인 ([todo.md](todo.md) 3절)
@@ -59,17 +63,22 @@
 
 ## 다음에 할 일 — 이 순서대로
 
-### 1. 카카오 개발자 앱
+### 1. Keepalive 운영 복구 확인
+
+Supabase restoration과 운영 `/api/health` 200 복귀는 확인했다. 이 변경을 `main`에 push하고
+Actions → Keepalive → Run workflow를 실행해 로그의 `✓ DB가 응답했습니다.`를 확인한다.
+
+### 2. 카카오 개발자 앱
 
 `NEXT_PUBLIC_KAKAO_JS_KEY`를 등록하고, 플랫폼 Web 사이트 도메인에 한글과 퓨니코드 주소를
 모두 추가한 뒤 재배포한다. 자세한 절차는 [deploy.md 8번](deploy.md).
 
-### 2. 실기기·Blob 확인
+### 3. 실기기·Blob 확인
 
 관리자에서 실제 사진 한 장을 첨부해 Blob 업로드를 확인하고, 이어서 [todo.md 3절](todo.md)의
 지도 앱·복사·공유·카카오톡·캘린더 항목을 휴대전화에서 확인한다.
 
-### 3. 예전 Vercel 프로젝트 정리
+### 4. 예전 Vercel 프로젝트 정리
 
 새 프로젝트가 기준이고 운영 트래픽도 모두 새 계정으로 간다. 예전 Vercel 계정에 다시 접근할 수
 있을 때 중복 프로젝트의 Git 연결을 해제하거나 프로젝트를 삭제해 불필요한 이중 빌드를 끝낸다.
@@ -84,6 +93,7 @@
 | **배포는 Vercel 네이티브** | Actions가 배포까지 지휘하는 방안도 검토했으나, 스키마가 완성돼 있어 순서 보장의 이득이 적고 빌드를 두 번 하게 된다 (2026-10-08 정정: 예전엔 "private 저장소의 2,000분"을 이유로 적었으나 이 저장소는 public 이라 분은 무제한이다) |
 | **CI에서 `npm run build` 안 함** | Vercel이 매 push마다 빌드하고 실패를 알려준다. 두 번 할 이유가 없다 |
 | **keepalive는 `/api/health`** | `/api/guestbook` 은 DB가 죽어도 200을 돌려준다(하객 보호용 의도적 설계). 그걸 두드리면 워크플로가 영원히 초록이라 정지를 못 잡는다 |
+| **커스텀 도메인 3xx를 따라간다** | 루트 도메인은 `www`로 308을 보낸다. `curl --fail`만으로는 3xx가 성공이라 실제 DB를 깨우지 못하므로 `--location --fail`로 최종 health를 검사한다 |
 | **마이그레이션은 session pooler** | Supabase 공식 문서는 direct 연결을 권하지만 direct는 IPv6 전용이라 GitHub 러너·Vercel에서 못 붙는다. shared pooler는 모든 플랜에서 IPv4다 |
 | **이미지 저장소는 Vercel Blob 유지** | 이미 동작하고 바꿀 이유가 없다 |
 
@@ -104,6 +114,7 @@ CI 환경 시뮬레이션(.env.local 없이 환경변수만)   마이그레이�
 GitHub Actions CI #3 (`909a7a4`)                   success (DB 통합 테스트 포함)
 GitHub Actions Keepalive #2 (`c18f033`)            success (`SITE_URL`로 `/api/health` 호출)
 Vercel `wed-invi-88b2` 홈 · `/api/health`           200 · `200 {"ok":true}`
+Keepalive redirect 회귀 테스트                    수정 전 최종 health 미도달로 RED → 수정 후 GREEN
 ```
 
 ### 확인 못 한 것 — 사실처럼 쓰지 말 것
@@ -133,6 +144,10 @@ Vercel `wed-invi-88b2` 홈 · `/api/health`           200 · `200 {"ok":true}`
    이 저장소에 `http.postBuffer = 524288000` 을 설정해 뒀다.
 
 5. **Vercel 빌드 로그와 GitHub Actions 로그는 다른 곳이다.** 실패 보고를 받으면 어느 쪽인지부터 확인할 것.
+
+6. **`curl --fail`은 308을 실패로 보지 않고, 기본값은 리다이렉트를 따라가지 않는다.**
+   루트 도메인을 `SITE_URL`로 쓸 때 Keepalive가 green이어도 DB에는 닿지 않을 수 있었다.
+   `--location --fail`과 실제 run block 회귀 테스트를 유지할 것.
 
 ---
 

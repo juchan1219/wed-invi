@@ -560,6 +560,26 @@ URL만 보고 이름을 역산하거나 다른 하객의 편지를 찍어서 열
 
 ## 기술 선택 근거
 
+### 커스텀 도메인에서도 실제 DB를 깨우는 Keepalive (2026-10-17 운영 장애) ✅
+
+요구: Supabase 무료 프로젝트가 7일 무활동으로 정지되지 않도록 GitHub Actions가 하루 두 번
+**최종 `/api/health` 응답까지** 확인해야 한다. 운영 `SITE_URL`의 루트 도메인은 `www`로 308
+리다이렉트되므로, 최초 3xx만 성공으로 보고 끝나면 안 된다. 워크플로는 리다이렉트를 따라가
+DB의 `select 1`까지 실행하고, 최종 응답이 2xx가 아니면 red가 되어야 한다.
+
+2026-10-17 장애에서는 기존 `curl --fail`이 308을 실패로 취급하지 않고 리다이렉트도 따라가지 않아,
+Keepalive #5~#22가 실제 DB를 건드리지 않은 채 모두 green이었다. 그 결과 Supabase가 7일 무활동으로
+정지되어 인증된 `/admin`의 하객 목록 조회가 500을 반환했다.
+
+| 요구 | 구현 |
+|---|---|
+| 루트 → `www` 308을 따라 실제 health 호출 | ✅ `.github/workflows/keepalive.yml`의 curl에 `--location` 적용 |
+| DB가 죽으면 green 금지 | ✅ 리다이렉트 후 최종 응답에 `--fail` 적용. `/api/health`는 DB `select 1` 실패 시 503 |
+| 같은 장애 회귀 방지 | ✅ `scripts/keepalive-workflow.test.ts`가 실제 workflow run block을 로컬 308 서버에 실행하고 최종 health 도달을 검증 |
+| 단일 정기 실행 누락에 대한 여유 | ✅ 00:17·12:17 UTC(09:17·21:17 KST), 12시간 간격으로 실행 |
+| 워크플로 수정 즉시 운영 검증 | ✅ `main`의 `keepalive.yml` 변경 push에도 1회 실행 |
+| 운영 재확인 | ⏳ Supabase restoration 완료와 운영 `/api/health` 200은 확인. `main` push 후 수정된 Keepalive 수동 실행은 남음 |
+
 ### Vercel + Supabase
 
 > **2026-09-27: 이 결정은 한 번 뒤집혔습니다.** 원래는 Neon을 골랐고 Supabase를 명시적으로
@@ -578,7 +598,7 @@ Neon은 5분 후 scale-to-zero → 다음 쿼리에 ~500ms 자동 복귀라 이 
 
 - 일시정지는 **삭제가 아닙니다.** 데이터·스토리지가 보존되고 대시보드에서 복구됩니다.
 - GitHub Actions cron(`.github/workflows/keepalive.yml`)이 주기적으로 깨우면 정지 자체가
-  일어나지 않습니다. 현재는 Supabase 권고에 맞춰 매일 호출합니다.
+  일어나지 않습니다. 현재는 하루 두 번 호출합니다.
 - 🚨 **단, 이 저장소는 public 이라 60일 무활동 시 그 cron 자체가 자동 비활성화됩니다**
   (2026-10-08 정정 — 이전에는 "private이라 대상 아님"으로 반대로 적혀 있었습니다).
   예식 전까지 저장소 활동 60일 공백을 만들지 않아야 합니다. 자세한 연쇄와 대응은 [AGENTS.md](../AGENTS.md).
@@ -601,7 +621,8 @@ transaction/session pooler를 각각 6543/5432로 연결했다. GitHub Actions `
 `sonny.ns.cloudflare.com`이며, Cloudflare DNS의 루트와 `www`는 DNS only CNAME으로 Vercel을
 가리킨다. Vercel Blob은 Seoul(`icn1`)·Public으로 생성했다.
 
-**2026-09-30 운영 보강:** keepalive를 매일 03:00 UTC(12:00 KST)로 늘렸다. 관리자 로그인은
+**2026-10-18 운영 보강:** keepalive를 매일 00:17·12:17 UTC(09:17·21:17 KST), 하루 두 번으로
+늘리고 워크플로 변경 push에도 즉시 실행되게 했다. 관리자 로그인은
 기존 30일 서명·HttpOnly 세션을 유지하고, 표준 `username`/`current-password` 자동완성 필드로
 브라우저 비밀번호 관리자 저장을 지원한다. 비밀번호는 애플리케이션 코드에 포함하지 않는다.
 

@@ -3,7 +3,7 @@
 # Supabase는 **7일간 DB 활동이 없으면 프로젝트를 일시정지**한다. 정지되면 하객이
 # 편지·방명록에서 에러를 본다. 데이터는 보존되지만, 사람이 대시보드에 들어가
 # 복구 버튼을 눌러야 돌아온다. Supabase는 최근 7일 동안 매일 몇 차례의 DB 요청을
-# 유지하는 것을 권장하므로 하루 한 번 실제 DB까지 확인한다.
+# 유지하는 것을 권장하므로 하루 두 번 실제 DB까지 확인한다.
 #
 # 🚨 이 워크플로 자체가 꺼질 수 있다. 이 저장소는 **public** 이고, GitHub은
 #    "In a public repository, scheduled workflows are automatically disabled when no
@@ -18,14 +18,15 @@
 name: Keepalive
 
 on:
+  # 워크플로 자체를 고친 push에서는 새 설정이 실제 운영 주소에서도 동작하는지 즉시 검증한다.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/keepalive.yml"
   schedule:
-    # 예약은 03:00 UTC(한국 12:00)지만 **실제로는 그때 돌지 않는다.**
-    # GitHub의 예약 워크플로는 러너가 붐비면 밀린다. 2026-09-30~10-07 실측은
-    # 매일 08:53~10:03 UTC(한국 17:53~19:03)로 **약 6~7시간 지연**이었다.
-    # 하루에 한 번은 확실히 돌므로 Supabase 7일 기준에는 여유가 크다.
-    # 한국 시간 정오에 안 돌아간다고 고장난 것으로 오해하지 말 것(2026-10-08 확인).
-    # 지연을 줄이려면 정시(`0`)를 피해 분을 흩는 방법이 알려져 있다(예: "17 3 * * *").
-    - cron: "0 3 * * *"
+    # 매일 00:17, 12:17 UTC (한국 09:17, 21:17). 정각 혼잡을 피하면서 12시간 간격으로 확인한다.
+    # GitHub 예약 실행은 러너 혼잡 시 지연될 수 있으므로 표시 시각과 실제 시작 시각은 다를 수 있다.
+    - cron: "17 0,12 * * *"
   workflow_dispatch:
 
 jobs:
@@ -44,11 +45,12 @@ jobs:
             exit 1
           fi
 
-          # --fail: 200이 아니면 0이 아닌 코드로 끝난다 → 워크플로 red → GitHub이 메일 발송.
+          # --location: 루트 도메인이 www로 리다이렉트돼도 최종 /api/health까지 따라간다.
+          # --fail: 최종 응답이 200이 아니면 0이 아닌 코드로 끝난다 → 워크플로 red → GitHub이 메일 발송.
           # --retry: Vercel 함수와 Supabase 컴퓨트의 콜드 스타트를 흡수한다.
           #
           # /api/guestbook 을 대신 두드리면 안 된다. 그 라우트는 DB가 죽어도 200을 돌려준다.
-          curl --fail --show-error --silent \
+          curl --location --fail --show-error --silent \
                --retry 3 --retry-delay 10 --retry-all-errors \
                --max-time 30 \
                "$SITE_URL/api/health"
