@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { wedding } from "@/config/wedding";
 import { adminLabel, type AdminId } from "@/config/admins";
 import { copyText } from "@/lib/clipboard";
-import { resizeImage } from "@/lib/resize-image";
+import { ImageTooLargeError, resizeImage } from "@/lib/resize-image";
 import { LetterMarkdown } from "@/components/letter/LetterMarkdown";
 import { useToast } from "@/components/ui/Toast";
 import { useAuthor } from "./AuthorChip";
@@ -146,6 +146,10 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
       form.append("height", String(resized.height));
 
       const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      if (res.status === 413) {
+        toast("이미지가 너무 큽니다. 다른 사진을 선택해 주세요.");
+        return;
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         toast(data.error ?? "이미지 업로드에 실패했습니다");
@@ -153,8 +157,8 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
       }
       insertAtCursor(`\n\n![](${data.url})\n\n`);
       toast("이미지를 넣었습니다");
-    } catch {
-      toast("이미지를 처리하지 못했습니다");
+    } catch (error) {
+      toast(error instanceof ImageTooLargeError ? error.message : "이미지를 처리하지 못했습니다");
     }
   }
 
@@ -252,7 +256,7 @@ export function LetterEditor({ initial }: { initial?: LetterDraft }) {
               <p className="text-sm text-ink-faint">아직 쓴 내용이 없습니다.</p>
             ) : (
               <>
-                <LetterMarkdown body={body} />
+                <LetterMarkdown body={body} imageSizes="(max-width: 416px) calc(100vw - 3rem), 368px" />
                 <p className="mt-7 text-right font-serif text-sm text-ink-faint">
                   {adminLabel(author)} 드림
                 </p>

@@ -12,7 +12,15 @@ import rehypeSanitize from "rehype-sanitize";
  * rehype-sanitize를 반드시 통과시킨다. 편지는 관리자만 쓰지만,
  * 마크다운 안의 raw HTML을 그대로 렌더하면 XSS 경로가 생긴다.
  */
-export function LetterMarkdown({ body }: { body: string }) {
+const LETTER_IMAGE_SIZES = "(max-width: 418px) calc(88vw - 3.2rem), 317px";
+
+export function LetterMarkdown({
+  body,
+  imageSizes = LETTER_IMAGE_SIZES,
+}: {
+  body: string;
+  imageSizes?: string;
+}) {
   return (
     // 편지지에 쓴 글처럼 명조로 쓴다. 관리자 미리보기도 같은 컴포넌트라 모양이 그대로 일치한다.
     <div className="font-serif text-[0.94rem] leading-8 text-ink-soft">
@@ -57,7 +65,7 @@ export function LetterMarkdown({ body }: { body: string }) {
           code: ({ children }) => (
             <code className="rounded bg-paper-deep px-1.5 py-0.5 text-[0.85em]">{children}</code>
           ),
-          img: ({ src, alt }) => <LetterImage src={src} alt={alt ?? ""} />,
+          img: ({ src, alt }) => <LetterImage src={src} alt={alt ?? ""} sizes={imageSizes} />,
         }}
       >
         {body}
@@ -71,7 +79,7 @@ export function LetterMarkdown({ body }: { body: string }) {
  * 그 값으로 next/image에 width/height를 넘겨 최적화와 레이아웃 안정성을 함께 얻는다.
  * 크기를 못 읽으면(외부에서 붙여넣은 주소 등) 평범한 <img>로 떨어진다.
  */
-function LetterImage({ src, alt }: { src?: string | Blob; alt: string }) {
+function LetterImage({ src, alt, sizes }: { src?: string | Blob; alt: string; sizes: string }) {
   if (typeof src !== "string" || src.length === 0) return null;
 
   const size = parseSizeFromFilename(src);
@@ -83,7 +91,7 @@ function LetterImage({ src, alt }: { src?: string | Blob; alt: string }) {
         alt={alt}
         width={size.width}
         height={size.height}
-        sizes="(max-width: 416px) 100vw, 416px"
+        sizes={sizes}
         className="my-5 h-auto w-full rounded-lg"
         loading="lazy"
       />

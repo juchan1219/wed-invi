@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
+import { MAX_UPLOAD_BYTES } from "@/lib/image-upload";
 
 /**
  * 편지 본문에 넣을 이미지 업로드.
@@ -17,7 +18,6 @@ import { put } from "@vercel/blob";
  *    Private 스토어는 생성 후 Public 으로 바꿀 수 없으니, 잘못 만들었다면 지우고 다시 만들 것.
  */
 
-const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -45,8 +45,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "이미지가 너무 큽니다. (최대 8MB)" }, { status: 400 });
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return NextResponse.json({ error: "이미지가 너무 큽니다. (최대 4MB)" }, { status: 400 });
   }
   if (!isPositiveInteger(width) || !isPositiveInteger(height)) {
     return NextResponse.json({ error: "이미지 크기를 읽지 못했습니다." }, { status: 400 });
