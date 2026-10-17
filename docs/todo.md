@@ -376,9 +376,9 @@
       `curl --location --fail`로 리다이렉트를 따라 최종 health 응답을 검사하고, 실제 워크플로의
       run block을 308 테스트 서버에 실행하는 회귀 테스트를 추가함. 수정 전 health 미도달로 RED,
       수정 후 최종 health 도달로 GREEN 확인
-- [ ] **Keepalive 수정 배포 확인** — Supabase restoration 완료와 운영 `/api/health`의
-      `200 {"ok":true}` 복귀는 2026-10-18 확인. 이제 이 변경을 `main`에 push하고
-      Actions → Keepalive → Run workflow를 수동 실행해 로그의 `✓ DB가 응답했습니다.`를 확인할 것
+- [x] **Keepalive 수정 배포 확인** — 2026-10-18 `a917d3a`를 `main`에 push. push로 자동 실행된
+      Keepalive #23과 그 안의 `/api/health 호출` 단계가 success이고, 루트 도메인의 308을 따라간
+      최종 운영 `/api/health` 응답도 200임을 확인
 - [x] **관리자 로그인 편의 보강** — 기존 30일 자동 로그인 쿠키를 유지하고 Chrome 등
       비밀번호 관리자가 인식하는 표준 username/password 자동완성 필드 추가. 비밀번호는 코드에 저장하지 않음
 - [x] **관리자 로그인 진행 상태 (2026-09-30 사용자 보고)** — 요청 중 버튼 안에 spinner와 `확인 중...`을 표시하고

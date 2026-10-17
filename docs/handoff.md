@@ -19,8 +19,8 @@
 green이었지만 루트 도메인의 `www` 308을 따라가지 않아 실제 DB를 깨우지 못한 것이 원인이었다.
 로컬에서는 `curl --location --fail` 수정과 실제 workflow 실행 회귀 테스트까지 완료했다. 정기 실행도
 09:17·21:17 KST 하루 두 번으로 늘리고, workflow 변경 push 시 즉시 검증되게 했다.
-Supabase restoration 완료와 운영 health 200 복귀도 확인했다. `main` push와 수정된 Keepalive
-수동 실행 확인이 남았다.
+Supabase restoration 완료와 운영 health 200 복귀도 확인했다. 수정 커밋 `a917d3a`를 `main`에
+push했고, 그 push로 실행된 Keepalive #23의 `/api/health 호출` 단계가 success인 것도 확인했다.
 
 ---
 
@@ -51,9 +51,16 @@ Supabase restoration 완료와 운영 health 200 복귀도 확인했다. `main` 
 | **GitHub Actions** | Secret `DIRECT_URL`, Variable `SITE_URL` 등록. Migrate #1·Keepalive #3 success |
 | **관리자 로그인** | 30일 HttpOnly 세션 유지. 브라우저 비밀번호 관리자가 인식하도록 표준 username/password 자동완성 필드 추가 |
 
+### 2026-10-18에 확인한 장애 복구 상태
+
+| 항목 | 확인 결과 |
+|---|---|
+| **Keepalive 수정 배포** | `a917d3a`를 `main`에 push. push 트리거 Keepalive #23 success |
+| **실제 DB 호출 단계** | Keepalive #23의 `/api/health 호출` 단계 completed/success |
+| **운영 health** | 루트 도메인의 308을 따라간 최종 `/api/health` 응답 200 |
+
 ### 남은 것
 
-- **최우선:** 이 수정 `main` push → Keepalive 수동 실행 → 로그의 `✓ DB가 응답했습니다.` 확인
 - **카카오 개발자 앱** 생성 + JavaScript 키와 플랫폼 Web 도메인 등록
 - 실제 사진으로 **Vercel Blob 업로드** 확인
 - 지도 앱·공유·카카오톡·캘린더 등 실기기 확인 ([todo.md](todo.md) 3절)
@@ -63,22 +70,17 @@ Supabase restoration 완료와 운영 health 200 복귀도 확인했다. `main` 
 
 ## 다음에 할 일 — 이 순서대로
 
-### 1. Keepalive 운영 복구 확인
-
-Supabase restoration과 운영 `/api/health` 200 복귀는 확인했다. 이 변경을 `main`에 push하고
-Actions → Keepalive → Run workflow를 실행해 로그의 `✓ DB가 응답했습니다.`를 확인한다.
-
-### 2. 카카오 개발자 앱
+### 1. 카카오 개발자 앱
 
 `NEXT_PUBLIC_KAKAO_JS_KEY`를 등록하고, 플랫폼 Web 사이트 도메인에 한글과 퓨니코드 주소를
 모두 추가한 뒤 재배포한다. 자세한 절차는 [deploy.md 8번](deploy.md).
 
-### 3. 실기기·Blob 확인
+### 2. 실기기·Blob 확인
 
 관리자에서 실제 사진 한 장을 첨부해 Blob 업로드를 확인하고, 이어서 [todo.md 3절](todo.md)의
 지도 앱·복사·공유·카카오톡·캘린더 항목을 휴대전화에서 확인한다.
 
-### 4. 예전 Vercel 프로젝트 정리
+### 3. 예전 Vercel 프로젝트 정리
 
 새 프로젝트가 기준이고 운영 트래픽도 모두 새 계정으로 간다. 예전 Vercel 계정에 다시 접근할 수
 있을 때 중복 프로젝트의 Git 연결을 해제하거나 프로젝트를 삭제해 불필요한 이중 빌드를 끝낸다.

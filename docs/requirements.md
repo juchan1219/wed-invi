@@ -578,7 +578,7 @@ Keepalive #5~#22가 실제 DB를 건드리지 않은 채 모두 green이었다. 
 | 같은 장애 회귀 방지 | ✅ `scripts/keepalive-workflow.test.ts`가 실제 workflow run block을 로컬 308 서버에 실행하고 최종 health 도달을 검증 |
 | 단일 정기 실행 누락에 대한 여유 | ✅ 00:17·12:17 UTC(09:17·21:17 KST), 12시간 간격으로 실행 |
 | 워크플로 수정 즉시 운영 검증 | ✅ `main`의 `keepalive.yml` 변경 push에도 1회 실행 |
-| 운영 재확인 | ⏳ Supabase restoration 완료와 운영 `/api/health` 200은 확인. `main` push 후 수정된 Keepalive 수동 실행은 남음 |
+| 운영 재확인 | ✅ `a917d3a` push로 실행된 Keepalive #23과 그 안의 `/api/health 호출` 단계 success, 최종 운영 health 200 확인 |
 
 ### Vercel + Supabase
 
