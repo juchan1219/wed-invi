@@ -581,6 +581,17 @@ Keepalive #5~#22가 실제 DB를 건드리지 않은 채 모두 green이었다. 
 | 워크플로 수정 즉시 운영 검증 | ✅ `main`의 `keepalive.yml` 변경 push에도 1회 실행 |
 | 운영 재확인 | ✅ `a917d3a` push로 실행된 Keepalive #23과 그 안의 `/api/health 호출` 단계 success, 최종 운영 health 200 확인 |
 
+추가 요구(2026-10-18): `curl --location --fail`만으로는 Location 없는 최종 3xx나
+HTTP 200의 엉뚱한 본문까지 성공할 수 있다. Keepalive는 최종 HTTP **200**과
+JSON `{"ok":true}`를 모두 확인한 경우에만 green이어야 한다.
+
+| 추가 요구 | 구현 |
+|---|---|
+| 최종 응답만 판정 | ✅ `curl --location` 뒤 실제 최종 HTTP 코드를 캡처해 200만 허용 |
+| 진짜 health 응답만 판정 | ✅ `jq`로 JSON 객체 한 개의 `ok:true` 확인. 200 HTML·`ok:false` 거부 |
+| 잘못된 green 회귀 방지 | ✅ 실제 워크플로 스크립트 테스트에서 최종 302·빈 204·200 HTML·`ok:false`를 실패로 확인 |
+| 운영 워크플로 검증 | 배포 후 push 트리거 실행 결과 확인 예정 |
+
 ### Vercel + Supabase
 
 > **2026-09-27: 이 결정은 한 번 뒤집혔습니다.** 원래는 Neon을 골랐고 Supabase를 명시적으로

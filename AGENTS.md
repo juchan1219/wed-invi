@@ -146,7 +146,8 @@ OG는 갤러리 첫 장을 두 사람 중심으로 크롭하며 `npm run og:buil
 Supabase 무료 플랜은 **7일간 활동이 없으면 프로젝트를 정지**한다. 정지되면 하객이 편지·방명록에서
 에러를 본다(데이터는 보존되며 대시보드에서 복구 가능).
 
-`.github/workflows/keepalive.yml`이 매일 12:00 KST에 `/api/health`를 두드려 이를 막는다.
+`.github/workflows/keepalive.yml`이 매일 09:17·21:17 KST에 `/api/health`를 두드려 이를 막는다.
+최종 HTTP 200과 JSON `{"ok":true}`를 모두 확인한 경우에만 성공으로 처리한다.
 
 - **`/api/health`를 지우거나 200 고정으로 바꾸지 말 것.** DB에 닿지 못하면 **반드시 503**이어야 한다.
 - **keepalive가 `/api/guestbook`을 두드리게 바꾸지 말 것.** 그 라우트는 DB가 죽어도 200을 돌려준다

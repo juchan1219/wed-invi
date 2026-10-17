@@ -277,10 +277,11 @@ npm run dev
 |---|---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | `main` push · PR (`docs/`·`photos/`·`*.md`만 바뀐 건 제외) | 타입 검사 → 유닛 테스트 → 러너 안 Postgres에 마이그레이션 → DB 통합 테스트 | 없음 |
 | [`migrate.yml`](.github/workflows/migrate.yml) | `main` push 중 `drizzle/` 변경 · 수동 실행 | 배포 DB(Supabase)에 마이그레이션 적용 | Secret `DIRECT_URL` |
-| [`keepalive.yml`](.github/workflows/keepalive.yml) | 매일 03:00 UTC · 수동 실행 | `<SITE_URL>/api/health` 호출로 Supabase를 깨움 | Variable `SITE_URL` |
+| [`keepalive.yml`](.github/workflows/keepalive.yml) | 매일 00:17·12:17 UTC · 수동 실행 · 워크플로 변경 push | `<SITE_URL>/api/health`의 최종 HTTP 200과 `{"ok":true}`를 확인해 Supabase를 깨움 | Variable `SITE_URL` |
 
 - CI는 **`npm run build`를 돌리지 않습니다.** Vercel이 push마다 빌드하고 실패를 알려주므로, 같은 일을 두 번 하면 Actions 한도만 먹습니다. CI의 고유 가치는 유닛 테스트와 DB 통합 테스트입니다.
 - keepalive가 두드리는 `/api/health`는 DB에 `select 1`을 실행하고, 실패하면 **503**을 냅니다. `/api/guestbook`은 DB가 죽어도 하객에게 에러를 보이지 않으려고 200을 돌려주므로 keepalive 용도로 쓸 수 없습니다.
+- Keepalive는 루트 도메인의 리다이렉트를 따라간 뒤 최종 응답이 **HTTP 200 + JSON `{"ok":true}`**일 때만 성공합니다. 3xx·빈 204·200 HTML도 실패 처리합니다.
 - 🚨 **이 저장소는 public이라 GitHub의 "60일 무활동 시 schedule 자동 비활성화" 정책 대상입니다.**
   60일간 저장소에 아무 활동이 없으면 keepalive가 꺼지고, 7일 뒤 Supabase가 정지해 편지·방명록이 죽습니다.
   예식 전까지 60일 공백을 만들지 마세요 — 커밋 1개나 Actions 탭의 `Run workflow` 수동 실행으로도 충분합니다.

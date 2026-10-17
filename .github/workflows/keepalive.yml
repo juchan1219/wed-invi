@@ -46,14 +46,26 @@ jobs:
           fi
 
           # --location: 루트 도메인이 www로 리다이렉트돼도 최종 /api/health까지 따라간다.
-          # --fail: 최종 응답이 200이 아니면 0이 아닌 코드로 끝난다 → 워크플로 red → GitHub이 메일 발송.
+          # --fail: 최종 4xx/5xx를 실패로 처리한다. 아래에서 200과 JSON 본문도 별도로 확인한다.
           # --retry: Vercel 함수와 Supabase 컴퓨트의 콜드 스타트를 흡수한다.
           #
           # /api/guestbook 을 대신 두드리면 안 된다. 그 라우트는 DB가 죽어도 200을 돌려준다.
-          curl --location --fail --show-error --silent \
-               --retry 3 --retry-delay 10 --retry-all-errors \
-               --max-time 30 \
-               "$SITE_URL/api/health"
+          response=$(curl --location --fail --show-error --silent \
+                          --retry 3 --retry-delay 10 --retry-all-errors \
+                          --max-time 30 --write-out '\n%{http_code}' \
+                          "$SITE_URL/api/health")
+          status="${response##*$'\n'}"
+          body="${response%$'\n'*}"
 
-          echo ""
+          if [ "$status" != "200" ]; then
+            echo "✗ /api/health 최종 HTTP 상태: $status (200 필요)"
+            exit 1
+          fi
+          if ! printf '%s' "$body" | jq --slurp --exit-status \
+               'length == 1 and (.[0] | type == "object" and .ok == true)' >/dev/null 2>&1; then
+            echo '✗ /api/health 응답이 유효한 {"ok":true} JSON이 아닙니다.'
+            exit 1
+          fi
+
+          echo "$body"
           echo "✓ DB가 응답했습니다."
