@@ -54,7 +54,7 @@ test("페이지 진입 시 최적화된 배경음악을 반복 재생하고 버�
 
   const audio = environment.container.querySelector<HTMLAudioElement>("audio")!;
   const button = environment.container.querySelector<HTMLButtonElement>("button")!;
-  assert.equal(audio.getAttribute("src"), "/audio/merry-go-round-49s-128k-v1.m4a");
+  assert.equal(audio.getAttribute("src"), "/audio/young-and-married-30s-96k-v1.m4a");
   assert.equal(audio.loop, true);
   assert.equal(audio.preload, "metadata");
   assert.equal(playCalls, 1, "진입할 때 소리 있는 자동재생을 한 번 시도해야 한다");

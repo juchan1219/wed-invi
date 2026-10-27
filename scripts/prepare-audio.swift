@@ -1,8 +1,11 @@
 import AVFoundation
 import Foundation
 
-guard CommandLine.arguments.count == 3 else {
-  fputs("사용법: swift scripts/prepare-audio.swift <원본.mp3> <결과.m4a>\n", stderr)
+// 원본(MP3·MP4 영상 모두 가능)의 오디오 트랙에서 <시작초> 이전을 잘라내고 AAC M4A로 다시 인코딩한다.
+guard CommandLine.arguments.count == 5,
+      let startSeconds = Double(CommandLine.arguments[3]),
+      let bitrateKbps = Int(CommandLine.arguments[4]) else {
+  fputs("사용법: swift scripts/prepare-audio.swift <원본.mp3|mp4> <결과.m4a> <시작초> <비트레이트kbps>\n", stderr)
   exit(2)
 }
 
@@ -22,7 +25,7 @@ Task {
 
     try? FileManager.default.removeItem(at: output)
     let reader = try AVAssetReader(asset: asset)
-    let start = CMTime(seconds: 49, preferredTimescale: 44_100)
+    let start = CMTime(seconds: startSeconds, preferredTimescale: 44_100)
     reader.timeRange = CMTimeRange(start: start, duration: duration - start)
     let readerOutput = AVAssetReaderTrackOutput(
       track: track,
@@ -38,7 +41,7 @@ Task {
       AVFormatIDKey: kAudioFormatMPEG4AAC,
       AVSampleRateKey: 44_100,
       AVNumberOfChannelsKey: 2,
-      AVEncoderBitRateKey: 128_000,
+      AVEncoderBitRateKey: bitrateKbps * 1000,
     ])
     guard writer.canAdd(writerInput) else { throw NSError(domain: "wed-invi.audio", code: 3) }
     writer.add(writerInput)

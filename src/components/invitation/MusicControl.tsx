@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./MusicControl.module.css";
 
-const MUSIC_SRC = "/audio/merry-go-round-49s-128k-v1.m4a";
+const MUSIC_SRC = "/audio/young-and-married-30s-96k-v1.m4a";
 const MUTED_KEY = "wed-invi:music-muted";
 
 type PlaybackState = "pending" | "playing" | "paused";

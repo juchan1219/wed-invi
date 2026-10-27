@@ -116,13 +116,15 @@ OG 이미지는 갤러리 첫 장을 두 사람 중심으로 1200×630 크롭합
 
 ### 1-1. 배경음악 준비
 
-현재 배경음악은 제공 MP3의 49초부터 끝까지를 AAC 128kbps M4A로 변환한
-`public/audio/merry-go-round-49s-128k-v1.m4a`입니다. 파일명에 변환 조건과 버전을 넣고 1년 캐시하므로,
+현재 배경음악은 제공 MP4(AKMU 「Young and Married」 영상, 11.2MB)의 오디오 트랙에서 30초부터 끝까지를
+AAC 96kbps M4A로 변환한 `public/audio/young-and-married-30s-96k-v1.m4a`(148초, 약 1.8MB)입니다.
+원본 오디오가 128kbps이고 휴대폰 스피커·이어폰 재생이 대부분이라 96kbps로 낮춰 용량을 줄였습니다. 파일명에 변환 조건과 버전을 넣고 1년 캐시하므로,
 음원을 교체할 때는 파일명 버전과 `MusicControl.tsx`·`next.config.ts` 경로도 함께 올립니다.
 macOS에서는 다음처럼 다시 생성합니다.
 
 ```bash
-swift scripts/prepare-audio.swift /absolute/path/to/source.mp3 public/audio/merry-go-round-49s-128k-v2.m4a
+# 인자: 원본(mp3·mp4) 결과.m4a 시작초 비트레이트kbps
+swift scripts/prepare-audio.swift /absolute/path/to/source.mp4 public/audio/young-and-married-30s-96k-v2.m4a 30 96
 ```
 
 브라우저 정책상 소리 있는 자동재생은 차단될 수 있습니다. 앱은 진입 시 재생을 시도하고 차단되면 첫 페이지

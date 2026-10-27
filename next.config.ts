@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // 파일명에 크롭 지점·비트레이트·버전을 넣은 배경음악은 내용이 바뀌면 새 이름으로 배포한다.
-  // 4MB 음원을 재방문 때 다시 받지 않도록 장기 캐시한다.
+  // 1.8MB 음원을 재방문 때 다시 받지 않도록 장기 캐시한다.
   headers() {
     return [
       {
-        source: "/audio/merry-go-round-49s-128k-v1.m4a",
+        source: "/audio/young-and-married-30s-96k-v1.m4a",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],

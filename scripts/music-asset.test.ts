@@ -17,11 +17,11 @@ function readM4aDurationSeconds(buffer: Buffer): number {
   return duration / timescale;
 }
 
-test("배경음악은 49초 앞부분이 제거된 모바일용 M4A다", async () => {
-  const file = path.join(process.cwd(), "public", "audio", "merry-go-round-49s-128k-v1.m4a");
+test("배경음악은 30초 앞부분이 제거된 모바일용 M4A다", async () => {
+  const file = path.join(process.cwd(), "public", "audio", "young-and-married-30s-96k-v1.m4a");
   const [buffer, metadata] = await Promise.all([readFile(file), stat(file)]);
   assert.equal(buffer.subarray(4, 8).toString("ascii"), "ftyp");
-  assert.ok(metadata.size < 5 * 1024 * 1024, `음원은 5MB 미만이어야 한다: ${metadata.size} bytes`);
+  assert.ok(metadata.size < 2.5 * 1024 * 1024, `음원은 2.5MB 미만이어야 한다: ${metadata.size} bytes`);
   const duration = readM4aDurationSeconds(buffer);
-  assert.ok(duration >= 261 && duration <= 263, `49초 크롭 후 길이는 약 262초여야 한다: ${duration}`);
+  assert.ok(duration >= 147 && duration <= 149, `30초 크롭 후 길이는 약 148초여야 한다: ${duration}`);
 });
