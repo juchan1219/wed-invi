@@ -9,17 +9,16 @@ import { Section } from "@/components/ui/Section";
 import { Lightbox } from "./Lightbox";
 
 /**
- * @param largeType 어르신용(`/big`) 여부. 설정에 적힌 번호의 사진을 뺀다.
+ * @param largeType 어르신용(`/big`) 여부. 기본·어르신용 각각 설정에 적힌 번호의 사진을 뺀다.
  *   배열에서 아예 빼야 한다 — CSS로 숨기면 라이트박스가 인덱스로 동작해
  *   "크게 보기"가 엉뚱한 사진을 연다.
  */
 export function Gallery({ largeType = false }: { largeType?: boolean }) {
   const [openAt, setOpenAt] = useState<number | null>(null);
-  const photos = largeType
-    ? galleryPhotos.filter(
-        (_, i) => !(wedding.gallery.hiddenInLargeType as readonly number[]).includes(i + 1),
-      )
-    : galleryPhotos;
+  const hidden: readonly number[] = largeType
+    ? wedding.gallery.hiddenInLargeType
+    : wedding.gallery.hiddenInDefault;
+  const photos = galleryPhotos.filter((_, i) => !hidden.includes(i + 1));
 
   if (photos.length === 0) {
     return (

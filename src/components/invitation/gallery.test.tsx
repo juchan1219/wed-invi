@@ -27,12 +27,17 @@ function installImageModuleHook() {
 }
 
 const EXPECTED_HIDDEN = [3, 11, 14, 17, 24, 25, 26, 27, 28, 29];
+const EXPECTED_HIDDEN_DEFAULT = [14];
 
 test("the photos hidden from the large-type invitation are the ones that were asked for", () => {
   assert.deepEqual([...wedding.gallery.hiddenInLargeType], EXPECTED_HIDDEN);
 });
 
-test("the plain gallery shows every photo and the large-type one drops the hidden numbers", async () => {
+test("the photos hidden from the default invitation are the ones that were asked for", () => {
+  assert.deepEqual([...wedding.gallery.hiddenInDefault], EXPECTED_HIDDEN_DEFAULT);
+});
+
+test("each gallery drops only its own hidden numbers and keeps the order", async () => {
   installImageModuleHook();
   const { galleryPhotos } = await import("@/assets/photos/manifest");
   const { Gallery } = await import("./Gallery");
@@ -51,14 +56,10 @@ test("the plain gallery shows every photo and the large-type one drops the hidde
   const all = shown(false);
   const big = shown(true);
 
-  assert.equal(all.length, galleryPhotos.length, "기본 갤러리는 모든 사진을 보여야 합니다");
-  assert.equal(big.length, galleryPhotos.length - EXPECTED_HIDDEN.length);
-  for (const n of EXPECTED_HIDDEN) {
-    assert.ok(all.includes(n), `기본 갤러리에 ${n}번이 있어야 합니다`);
-    assert.ok(!big.includes(n), `어르신용에서 ${n}번이 빠져야 합니다`);
-  }
+  const every = galleryPhotos.map((_, i) => i + 1);
   // 남은 사진의 순서는 그대로여야 한다.
-  assert.deepEqual(big, all.filter((n) => !EXPECTED_HIDDEN.includes(n)));
+  assert.deepEqual(all, every.filter((n) => !EXPECTED_HIDDEN_DEFAULT.includes(n)));
+  assert.deepEqual(big, every.filter((n) => !EXPECTED_HIDDEN.includes(n)));
 });
 
 test("the large-type page asks the invitation for the large-type variant", async () => {

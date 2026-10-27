@@ -274,6 +274,10 @@ Rive는 환경변수로만 켜는 실험 시안으로 보관한다. 아래 Rive 
   목록은 `wedding.gallery.hiddenInLargeType`, 전달은 `Invitation`·`Gallery` 의 `largeType` prop.
   CSS로 숨기지 않는 이유: 라이트박스가 배열 인덱스로 동작해 숨기기만 하면
   "크게 보기"가 엉뚱한 사진을 연다
+- **기본 청첩장(`/`·`/i/<토큰>`)에서는 갤러리 14번을 뺀다** (2026-10-28 사용자 요청) ✅ — 29장 → 28장.
+  목록은 `wedding.gallery.hiddenInDefault`. 어르신용은 `hiddenInLargeType` 만 따른다(14번은 원래 거기서도 빠져 있어 `/big` 은 그대로 19장).
+  파일을 지우지 않은 이유: 갤러리 원본이 `photos/` 에 없어 `photos:prep` 을 다시 돌리면 사진이 전부 지워진다.
+  `manifest.ts` 는 생성물이라 손으로 고치지 않는다
 - 검색 노출이 필요 없는 주소라 `robots: noindex`
 - 하단 "청첩장을 전달해 주세요" 는 기존대로 기본 주소(`/`)를 공유한다 — 전달받은 사람은
   보통 크기로 본다. 큰 글씨가 필요한 분께는 `/big` 링크를 직접 보내야 한다
