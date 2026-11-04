@@ -26,8 +26,10 @@ function installImageModuleHook() {
   require.extensions[".webp"] = loadImage;
 }
 
-const EXPECTED_HIDDEN = [3, 11, 14, 17, 24, 25, 26, 27, 28, 29];
-const EXPECTED_HIDDEN_DEFAULT = [14];
+const EXPECTED_HIDDEN = [4, 12, 15, 18, 25, 26, 27, 28, 29, 30];
+const EXPECTED_HIDDEN_DEFAULT = [15];
+// 2026-11-04 사용자 요청: 3번에 추가한 사진은 기본·어르신용 모두에 보여야 한다.
+const ADDED_THIRD_PHOTO = 3;
 
 test("the photos hidden from the large-type invitation are the ones that were asked for", () => {
   assert.deepEqual([...wedding.gallery.hiddenInLargeType], EXPECTED_HIDDEN);
@@ -60,6 +62,12 @@ test("each gallery drops only its own hidden numbers and keeps the order", async
   // 남은 사진의 순서는 그대로여야 한다.
   assert.deepEqual(all, every.filter((n) => !EXPECTED_HIDDEN_DEFAULT.includes(n)));
   assert.deepEqual(big, every.filter((n) => !EXPECTED_HIDDEN.includes(n)));
+
+  // 추가한 사진은 양쪽 모두 세 번째 칸에 나온다.
+  assert.equal(all[2], ADDED_THIRD_PHOTO);
+  assert.equal(big[2], ADDED_THIRD_PHOTO);
+  assert.equal(all.length, 29);
+  assert.equal(big.length, 20);
 });
 
 test("the large-type page asks the invitation for the large-type variant", async () => {

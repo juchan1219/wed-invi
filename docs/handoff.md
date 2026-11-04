@@ -33,7 +33,7 @@ Keepalive #25의 실제 로그에서 성공 응답을 확인했다. 최종 302·
 
 | | 내용 |
 |---|---|
-| 사진 | 플레이스홀더 → 실제 웨딩 사진. 갤러리 29장 + hero + OG. 바른손 청첩장에서 가져옴 |
+| 사진 | 플레이스홀더 → 실제 웨딩 사진. 갤러리 29장 + hero + OG. 바른손 청첩장에서 가져옴. 2026-11-04 일부를 스튜디오 보정본으로 교체하고 1장을 추가해 30장 ([requirements.md](requirements.md) 「1-1」) |
 | DB | Neon HTTP 드라이버 → **Supabase + postgres.js**. `prepare:false`·`max:1`·`idle_timeout:20` |
 | 로컬 | `docker-compose.dev.yml` 에서 Neon HTTP 프록시 컨테이너 삭제. 이제 Postgres 하나뿐 |
 | 신규 | `/api/health` — `select 1` → 200 / 503. keepalive가 두드릴 대상 |

@@ -391,6 +391,9 @@ git push
 사진을 바꿨다면 `npm run photos:prep` 을 먼저 돌리고, 생성물까지 함께 커밋하세요
 (`src/assets/photos/` 와 `public/og.jpg` 는 커밋 대상입니다).
 
+> ⚠️ 2026-11-04 이후로는 `photos/` 가 보정 전 상태라 `photos:prep` 을 돌리면 보정본 교체가 되돌아갑니다.
+> [requirements.md](requirements.md) 「1-1」을 먼저 보세요.
+
 같은 push에서 GitHub Actions도 함께 돕니다 — `CI` 가 타입 검사와 테스트를, `drizzle/` 이
 바뀌었으면 `Migrate` 가 배포 DB에 마이그레이션을 적용합니다. **배포 자체는 Actions가 아니라
 Vercel이 합니다.**

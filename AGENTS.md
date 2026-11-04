@@ -101,6 +101,10 @@ public/og.jpg       1200×630 (자동 생성, 커밋 대상)
 [`scripts/prep-photos.ts`](scripts/prep-photos.ts) 상단 주석에 있다.
 OG는 갤러리 첫 장을 두 사람 중심으로 크롭하며 `npm run og:build`로 별도 재생성할 수 있다.
 
+⚠️ **`npm run photos:prep`을 그대로 돌리지 말 것.** 2026-11-04에 일부 사진을 스튜디오 보정본으로 직접 교체했는데,
+로컬 `photos/`에는 보정 전 사진과 옛 지도가 남아 있어 돌리는 순간 교체와 지도가 되돌아간다.
+짝 목록과 콜라주 크롭 좌표는 [requirements.md](docs/requirements.md) 「1-1」에 있다.
+
 편지에 첨부하는 이미지는 파일명에 크기를 박는다 (`letters/<uuid>-1200x900.jpg`).
 원격 이미지는 `next/image`가 크기를 모르는데, 파일명에서 읽어오면 레이아웃이 밀리지 않는다.
 → `addRandomSuffix`를 켜면 확장자 앞에 무작위 문자열이 끼어 이 규칙이 깨진다. 켜지 말 것.
