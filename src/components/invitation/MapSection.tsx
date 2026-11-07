@@ -83,7 +83,7 @@ export function MapSection() {
             <Accordion key={t.title} title={t.title}>
               <ul className="space-y-1.5 text-sm leading-relaxed text-ink-soft">
                 {t.lines.map((line, i) => (
-                  <li key={i}>{line}</li>
+                  <li key={i} className="whitespace-pre-line">{line}</li>
                 ))}
               </ul>
             </Accordion>
